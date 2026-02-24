@@ -1,0 +1,132 @@
+{
+	"textures": {
+        "shared-earth" : {
+            "file":  "shared/earthtile.png",
+            "wrapU": "repeated",
+            "wrapV": "repeated"
+        },
+        "shared-goal":   "shared/goaldoor.png",
+        "rocket-rocket": {
+            "file": "rocket/rocket.png",
+            "mipmaps": true,
+            "minfilter": "linear mipmap linear",
+            "magfilter": "linear mipmap linear"
+        },
+        "rocket-main":  {
+            "file" : "rocket/flames.png",
+            "mipmaps" : true,
+            "minfilter": "linear mipmap linear",
+            "magfilter": "linear mipmap linear",
+            "sprites" : {
+                "fire": {
+                    "rows": 1,
+                    "cols": 4
+                }
+            }
+        },
+        "rocket-left": {
+            "file" : "rocket/flames-left.png",
+            "mipmaps" : true,
+            "minfilter": "linear mipmap linear",
+            "magfilter": "linear mipmap linear",
+            "sprites" : {
+                "fire": {
+                    "rows": 1,
+                    "cols": 4
+                }
+            }
+        },
+        "rocket-right": {
+            "file" : "rocket/flames-right.png",
+            "mipmaps" : true,
+            "minfilter": "linear mipmap linear",
+            "magfilter": "linear mipmap linear",
+            "sprites" : {
+                "fire": {
+                    "rows": 1,
+                    "cols": 4
+                }
+            }
+        },
+        "rocket-crate01": {
+            "file": "rocket/crate01.png",
+            "mipmaps" : true,
+            "minfilter": "linear mipmap linear",
+            "magfilter": "linear mipmap linear"
+        },
+        "rocket-crate02": {
+            "file" : "rocket/crate02.png",
+            "mipmaps" : true,
+            "minfilter": "linear mipmap linear",
+            "magfilter": "linear mipmap linear"
+        },
+        "platform-traci"    : "platform/traci.png",
+        "platform-rope"     : "platform/ropebridge.png",
+        "platform-barrier"  : "platform/barrier.png",
+        "platform-bullet"   : "platform/bullet.png",
+        "ragdoll-bubble"    : "ragdoll/bubble.png",
+        "ragdoll-crosshair" : "ragdoll/crosshair.png",
+        "ragdoll-foreground": "ragdoll/foreground.png",
+        "ragdoll-background": "ragdoll/background.png"
+        "ragdoll-torso" : {
+            "file" : "ragdoll/scuba_torso.png",
+            "mipmaps"   : true,
+            "minfilter" : "linear mipmap linear",
+            "magfilter" : "linear mipmap linear"
+        },
+        "ragdoll-head" : {
+            "file" : "ragdoll/scuba_head.png",
+            "mipmaps"   : true,
+            "minfilter" : "linear mipmap linear",
+            "magfilter" : "linear mipmap linear"
+        },
+        "ragdoll-thigh" : {
+            "file" : "ragdoll/scuba_thigh.png",
+            "mipmaps"   : true,
+            "minfilter" : "linear mipmap linear",
+            "magfilter" : "linear mipmap linear"
+        },
+        "ragdoll-shin": {
+            "file" :    "ragdoll/scuba_shin.png",
+            "mipmaps"   : true,
+            "minfilter" : "linear mipmap linear",
+            "magfilter" : "linear mipmap linear"
+        },
+        "ragdoll-arm": {
+            "file" : "ragdoll/scuba_arm.png",
+            "mipmaps"   : true,
+            "minfilter" : "linear mipmap linear",
+            "magfilter" : "linear mipmap linear"
+        },
+        "ragdoll-forearm": {
+            "file" : "ragdoll/scuba_forearm.png",
+            "mipmaps"   : true,
+            "minfilter" : "linear mipmap linear",
+            "magfilter" : "linear mipmap linear"
+        }
+    },
+    "jsons"  : {
+        "rocket-constants"  : "rocket/constants.json",
+        "platform-constants": "platform/constants.json",
+        "ragdoll-constants" : "ragdoll/constants.json"
+    },
+    "soundfx" : {
+        "rocket-bump"       : "rocket/bump.wav",
+        "rocket-mainburn"   : "rocket/afterburner.wav",
+        "rocket-leftburn"   : "rocket/sideburner-left.wav",
+        "rocket-rightburn"  : "rocket/sideburner-right.wav",
+        "platform-jump"     : "platform/jump.wav",
+        "platform-pew"      : "platform/pew.wav",
+        "platform-plop"     : "platform/plop.wav",
+        "ragdoll-glub1"     : "ragdoll/bubble01.wav",
+        "ragdoll-glub2"     : "ragdoll/bubble02.wav",
+        "ragdoll-glub3"     : "ragdoll/bubble03.wav",
+        "ragdoll-glub4"     : "ragdoll/bubble04.wav"
+    },
+    "fonts": {
+        "shared-retro": {
+            "file": "shared/RetroGame.ttf",
+            "size": 64
+        }
+    }
+}
