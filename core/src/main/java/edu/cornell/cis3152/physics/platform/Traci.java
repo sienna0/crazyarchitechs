@@ -44,6 +44,9 @@ import edu.cornell.gdiac.physics2.*;
  * simple fixture so that we can attach it to the obstacle WITHOUT using joints.
  */
 public class Traci extends ObstacleSprite {
+    // TODO: rename this to Zuko
+    // TODO: add takePicture class and call functions as necessary
+
     /** The initializing data (to avoid magic numbers) */
     private final JsonValue data;
     /** The width of Traci's avatar */

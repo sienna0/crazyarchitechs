@@ -7,7 +7,7 @@
     "rock" : {
         "weight" : 3.0,
         "texture" : 3.0,
-        ""
+        "temp" : 3.0
     },
     "balloon" : {
 
