@@ -13,3 +13,4 @@ public class Picture {
     // TODO: add any other picture functions we might need
 
 }
+
