@@ -225,7 +225,8 @@ public class Traci extends ObstacleSprite {
     public boolean isFacingRight() {
         return faceRight;
     }
-
+    // TODO: rename this to Zuko
+    // TODO: add takePicture class and call functions as necessary
     /**
      * Creates a new Traci avatar with the given physics data
      *

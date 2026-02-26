@@ -119,6 +119,7 @@ public class PlatformScene extends PhysicsScene implements ContactListener {
      * Lays out the game geography.
      */
     private void populateLevel() {
+        // TODO: change this to Level 1 geography
         float units = height/bounds.height;
 
         // Add level goal

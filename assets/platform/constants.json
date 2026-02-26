@@ -4,6 +4,17 @@
         "gravity" : -14.7,
         "volume": 0.8
     },
+    "rock" : {
+        "weight" : 3.0,
+        "texture" : 3.0,
+        ""
+    },
+    "balloon" : {
+
+    },
+    "ice" : {
+
+    },
     "goal" : {
         "pos"       : [4.0, 14.0],
         "size"      : 3.0,
