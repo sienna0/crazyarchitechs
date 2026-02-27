@@ -25,7 +25,7 @@ import edu.cornell.gdiac.util.*;
  *
  * This supports both a keyboard and X-Box controller. In previous solutions,
  * we only detected the X-Box controller on start-up. This class allows us to
- * hot-swap in a controller on the fly.
+ * hot-swap in a controller on the fly. Hello 
  */
 public class InputController {
     // Sensitivity for moving crosshair with gameplay
