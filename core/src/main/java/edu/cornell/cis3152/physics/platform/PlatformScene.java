@@ -55,7 +55,7 @@ public class PlatformScene extends PhysicsScene implements ContactListener {
     private float volume;
 
     /** Reference to the character avatar */
-    private Traci avatar;
+    private Zuko avatar;
     /** Reference to the goalDoor (for collision detection) */
     private Door goalDoor;
 
@@ -159,7 +159,7 @@ public class PlatformScene extends PhysicsScene implements ContactListener {
 
         // Create Traci
         texture = directory.getEntry( "platform-traci", Texture.class );
-        avatar = new Traci(units, constants.get("traci"));
+        avatar = new Zuko(units, constants.get("traci"));
         avatar.setTexture(texture);
         addSprite(avatar);
         // Have to do after body is created

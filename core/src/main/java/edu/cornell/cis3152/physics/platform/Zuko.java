@@ -43,7 +43,7 @@ import edu.cornell.gdiac.physics2.*;
  * While we could have made the fixture a separate obstacle, we want it to be a
  * simple fixture so that we can attach it to the obstacle WITHOUT using joints.
  */
-public class Traci extends ObstacleSprite {
+public class Zuko extends ObstacleSprite {
     // TODO: rename this to Zuko
     // TODO: add takePicture class and call functions as necessary
 
@@ -241,7 +241,7 @@ public class Traci extends ObstacleSprite {
      * @param units     The physics units
      * @param data      The physics constants for Traci
      */
-    public Traci(float units, JsonValue data) {
+    public Zuko(float units, JsonValue data) {
         this.data = data;
         JsonValue debugInfo = data.get("debug");
 
