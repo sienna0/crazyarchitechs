@@ -9,11 +9,15 @@
         "texture" : 3.0,
         "temp" : 3.0
     },
-    "balloon" : {
-
+    "cloud" : {
+        "weight" : 0.0,
+        "texture" : 2.0,
+        "temp" : 2.0
     },
     "ice" : {
-
+        "weight" : 3.0,
+        "texture" : 0.0,
+        "temp" : 0.0
     },
     "goal" : {
         "pos"       : [4.0, 14.0],
