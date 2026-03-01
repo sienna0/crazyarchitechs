@@ -272,7 +272,7 @@ public class Zuko extends ObstacleSprite {
     /**
      * returns the object currently under the mouse
      *
-     * @return
+     * @return the object currently under the mouse
      */
     public GameObject getCurrentTarget() {
         return currentTarget;
