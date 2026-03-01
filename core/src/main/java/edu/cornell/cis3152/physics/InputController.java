@@ -84,6 +84,19 @@ public class InputController {
     /** For the gamepad crosshair control */
     private float momentum;
 
+    /** Whether the camera but was pressed */
+    private boolean leftClickPressed;
+    private boolean leftClickPrevious;
+
+    /** Timer for double click detection */
+    private float doubleClickTimer;
+
+    /** The maximum time between clicks for a double click */
+    private static final float doubleClickTime = 0.3f;
+
+    /** Whether a double click was detected*/
+    private boolean doubleClicked;
+
     /** An X-Box controller (if it is connected) */
     XBoxController xbox;
 
@@ -244,6 +257,7 @@ public class InputController {
         exitPrevious = exitPressed;
         nextPrevious = nextPressed;
         prevPrevious = prevPressed;
+        leftClickPrevious = leftClickPressed;
 
         // Check to see if a GamePad is connected
         if (xbox != null && xbox.isConnected()) {
@@ -330,6 +344,19 @@ public class InputController {
 
         // Mouse results
         tertiaryPressed = Gdx.input.isButtonPressed(Input.Buttons.LEFT);
+        leftClickPressed = Gdx.input.isButtonPressed(Input.Buttons.LEFT);
+        doubleClicked = false;
+        if (leftClickPressed && !leftClickPrevious) {
+            if (doubleClickTimer > 0) {
+                doubleClicked = true;
+                doubleClickTimer = 0;
+            } else {
+                doubleClickTimer = doubleClickTime;
+            }
+        }
+        if (doubleClickTimer > 0) {
+            doubleClickTimer -= Gdx.graphics.getDeltaTime();
+        }
         crosshair.set(Gdx.input.getX(), Gdx.input.getY());
         crosshair.scl(1/scale.x,-1/scale.y);
         crosshair.y += bounds.height;
@@ -345,5 +372,14 @@ public class InputController {
     private void clampPosition(Rectangle bounds) {
         crosshair.x = Math.max(bounds.x, Math.min(bounds.x+bounds.width, crosshair.x));
         crosshair.y = Math.max(bounds.y, Math.min(bounds.y+bounds.height, crosshair.y));
+    }
+
+    /**
+     * Returns true if a double click was detected.
+     *
+     * @return true if a double click was detected.
+     */
+    public boolean isDoubleClicked() {
+        return doubleClicked;
     }
 }

@@ -59,6 +59,8 @@ public class PlatformScene extends PhysicsScene implements ContactListener {
     /** Reference to the goalDoor (for collision detection) */
     private Door goalDoor;
 
+    //** Picture list */
+    private Array<Picture> pictures = new Array<>();
     /** Mark set to handle more sophisticated collision callbacks */
     protected ObjectSet<Fixture> sensorFixtures;
 
@@ -227,6 +229,22 @@ public class PlatformScene extends PhysicsScene implements ContactListener {
             createBullet();
         }
 
+        Vector2 mouse = input.getCrossHair();
+        GameObject target = findObjectUnderMouse(mouse.x, mouse.y);
+        avatar.setCurrentTarget(target);
+
+        if (input.isDoubleClicked() && avatar.canTakePicture()) {
+            avatar.takePicture();
+//            if (target != null) {
+//                Picture picture = new Picture(target); you can add this line when Arno changes it
+//                pictures.add(picture);
+//            }
+        }
+
+        if (avatar.isPictureTaken()) {
+            avatar.clearPictureTaken();
+        }
+
         avatar.applyForce();
         if (avatar.isJumping()) {
             SoundEffectManager sounds = SoundEffectManager.getInstance();
@@ -359,4 +377,47 @@ public class PlatformScene extends PhysicsScene implements ContactListener {
         sounds.stop("fire");
         sounds.stop("jump");
     }
+
+
+    /**
+     * Returns the GameObject under the mouse position, or null if there is none
+     *
+     * This method iterates through all sprites in the scene and checks if the mouse position falls within the bounds of each GameObject.
+     *
+     * @param mouseX the x-coordinate of the mouse
+     * @param mouseY the y-coordinate of the mouse
+     * @return the GameObject under the mouse or null if there is none
+     */
+    private GameObject findObjectUnderMouse(float mouseX, float mouseY) {
+
+        for (ObstacleSprite sprite : sprites ) {
+            if (sprite == avatar) {
+                continue;
+            }
+            if (!(sprite instanceof GameObject)) {
+                continue;
+            }
+            GameObject go = (GameObject) sprite;
+            Obstacle obj = go.getObstacle();
+            float u = obj.getPhysicsUnits();
+
+            Rectangle bounds = sprite.getMesh().computeBounds();
+            float centerX = obj.getX() * u;
+            float centerY = obj.getY() * u;
+
+            float minX = centerX + bounds.x;
+            float minY = centerY + bounds.y;
+            float maxX = minX + bounds.width;
+            float maxY = minY + bounds.height;
+
+            float posX = mouseX * u;
+            float posY = mouseY * u;
+
+            if (posX >= minX && posX <= maxX && posY >= minY && posY <= maxY) {
+                return go;
+            }
+        }
+        return null;
+    }
+
 }
