@@ -168,17 +168,17 @@ public class PlatformScene extends PhysicsScene implements ContactListener {
         avatar.createSensor();
 
 
-        // Create rope bridge
-        texture = directory.getEntry( "platform-rope", Texture.class );
-        RopeBridge bridge = new RopeBridge(units, constants.get("bridge"));
-        bridge.setTexture(texture);
-        addSpriteGroup(bridge);
+//        // Create rope bridge
+//        texture = directory.getEntry( "platform-rope", Texture.class );
+//        RopeBridge bridge = new RopeBridge(units, constants.get("bridge"));
+//        bridge.setTexture(texture);
+//        addSpriteGroup(bridge);
 
-        // Create spinning platform
-        texture = directory.getEntry( "platform-barrier", Texture.class );
-        Spinner spinPlatform = new Spinner(units,constants.get("spinner"));
-        spinPlatform.setTexture(texture);
-        addSpriteGroup(spinPlatform);
+//        // Create spinning platform
+//        texture = directory.getEntry( "platform-barrier", Texture.class );
+//        Spinner spinPlatform = new Spinner(units,constants.get("spinner"));
+//        spinPlatform.setTexture(texture);
+//        addSpriteGroup(spinPlatform);
     }
 
     /**
@@ -225,9 +225,9 @@ public class PlatformScene extends PhysicsScene implements ContactListener {
         avatar.setShooting(input.didSecondary());
 
         // Add a bullet if we fire
-        if (avatar.isShooting()) {
-            createBullet();
-        }
+//        if (avatar.isShooting()) {
+//            createBullet();
+//        }
 
         Vector2 mouse = input.getCrossHair();
         GameObject target = findObjectUnderMouse(mouse.x, mouse.y);
