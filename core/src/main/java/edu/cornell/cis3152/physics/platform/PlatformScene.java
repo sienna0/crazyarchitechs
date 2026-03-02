@@ -61,6 +61,11 @@ public class PlatformScene extends PhysicsScene implements ContactListener {
 
     //** Picture list */
     private Array<Picture> pictures = new Array<>();
+    private Picture activePicture;
+    private GameObject rock;
+    private GameObject cloud;
+    private float rockLiftCeilingY;
+    private boolean rockLiftActive;
     /** Mark set to handle more sophisticated collision callbacks */
     protected ObjectSet<Fixture> sensorFixtures;
 
@@ -114,6 +119,11 @@ public class PlatformScene extends PhysicsScene implements ContactListener {
         }
         setComplete(false);
         setFailure(false);
+        activePicture = null;
+        if (pictures != null) {
+            pictures.clear();
+        }
+        rockLiftActive = false;
         populateLevel();
     }
 
@@ -136,6 +146,7 @@ public class PlatformScene extends PhysicsScene implements ContactListener {
 
         // Create ground pieces
         texture = directory.getEntry( "shared-earth", Texture.class );
+        Texture earthTexture = texture;
 
         Surface wall;
         String wname = "wall";
@@ -167,18 +178,40 @@ public class PlatformScene extends PhysicsScene implements ContactListener {
         // Have to do after body is created
         avatar.createSensor();
 
+        float rockSize = 1.5f;
+        float cloudSize = 1.5f;
+        float platformLeftX = 25.0f;
+        float platformTopY = 10.0f;
 
-//        // Create rope bridge
-//        texture = directory.getEntry( "platform-rope", Texture.class );
-//        RopeBridge bridge = new RopeBridge(units, constants.get("bridge"));
-//        bridge.setTexture(texture);
-//        addSpriteGroup(bridge);
+        rock = new GameObject(Obj.ROCK, constants.get("rock"), units, platformLeftX - rockSize, 4.0f + rockSize / 2.0f, rockSize, rockSize, BodyDef.BodyType.DynamicBody, false);
+        rock.getObstacle().setDensity(5.0f);
+        rock.getObstacle().setFriction(0.8f);
+        rock.getObstacle().setRestitution(0.0f);
+        rock.setTexture(earthTexture);
+        addSprite(rock);
 
-//        // Create spinning platform
-//        texture = directory.getEntry( "platform-barrier", Texture.class );
-//        Spinner spinPlatform = new Spinner(units,constants.get("spinner"));
-//        spinPlatform.setTexture(texture);
-//        addSpriteGroup(spinPlatform);
+        cloud = new GameObject(Obj.CLOUD, constants.get("cloud"), units, 20.0f, platformTopY + 2.0f, cloudSize, cloudSize, BodyDef.BodyType.StaticBody, true);
+        cloud.getObstacle().setDensity(0.0f);
+        cloud.getObstacle().setFriction(0.0f);
+        cloud.getObstacle().setRestitution(0.0f);
+        cloud.setTexture(earthTexture);
+        addSprite(cloud);
+
+        rockLiftCeilingY = cloud.getObstacle().getY() - rockSize / 2.0f;
+
+        /* 
+        // Create rope bridge
+        texture = directory.getEntry( "platform-rope", Texture.class );
+        RopeBridge bridge = new RopeBridge(units, constants.get("bridge"));
+        bridge.setTexture(texture);
+        addSpriteGroup(bridge);
+
+        // Create spinning platform
+        texture = directory.getEntry( "platform-barrier", Texture.class );
+        Spinner spinPlatform = new Spinner(units,constants.get("spinner"));
+        spinPlatform.setTexture(texture);
+        addSpriteGroup(spinPlatform);
+        */
     }
 
     /**
@@ -233,16 +266,48 @@ public class PlatformScene extends PhysicsScene implements ContactListener {
         GameObject target = findObjectUnderMouse(mouse.x, mouse.y);
         avatar.setCurrentTarget(target);
 
-        if (input.isDoubleClicked() && avatar.canTakePicture()) {
-            avatar.takePicture();
-//            if (target != null) {
-//                Picture picture = new Picture(target); you can add this line when Arno changes it
-//                pictures.add(picture);
-//            }
+        if (input.didLeftClick()) {
+            SoundEffectManager sounds = SoundEffectManager.getInstance();
+            float picVolume = Math.min(1.0f, volume * 1.75f);
+
+            if (target != null && target.object == Obj.CLOUD) {
+                if (activePicture == null || activePicture.getSubject() != target) {
+                    if (avatar.canTakePicture()) {
+                        avatar.takePicture();
+                        Picture picture = new Picture(target);
+                        pictures.clear();
+                        pictures.add(picture);
+                        activePicture = picture;
+                    }
+                }
+                sounds.play("plop", plopSound, picVolume);
+            } else if (target != null && target.object == Obj.ROCK) {
+                if (activePicture != null && activePicture.getSubjectType() == Obj.CLOUD && rock != null && rock.getObstacle() != null && rock.getObstacle().getBody() != null) {
+                    rockLiftActive = !rockLiftActive;
+                    sounds.play("fire", fireSound, volume);
+                    if (rockLiftActive) {
+                        rock.putPicture(activePicture.getSubject());
+                    } else {
+                        rock.resetAttributes();
+                        rock.getObstacle().getBody().setGravityScale(1.0f);
+                    }
+                }
+            }
         }
 
         if (avatar.isPictureTaken()) {
             avatar.clearPictureTaken();
+        }
+
+        if (rockLiftActive && rock != null && rock.getObstacle() != null && rock.getObstacle().getBody() != null) {
+            Body body = rock.getObstacle().getBody();
+            if (body.getPosition().y < rockLiftCeilingY) {
+                body.setGravityScale(-1.0f);
+            } else {
+                body.setGravityScale(0.0f);
+                Vector2 v = body.getLinearVelocity();
+                body.setLinearVelocity(v.x, 0.0f);
+            }
         }
 
         avatar.applyForce();

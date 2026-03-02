@@ -1,6 +1,8 @@
 package edu.cornell.cis3152.physics.platform;
 
+import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.utils.JsonValue;
+import edu.cornell.gdiac.physics2.BoxObstacle;
 import edu.cornell.gdiac.physics2.ObstacleSprite;
 
 public class GameObject extends ObstacleSprite {
@@ -21,6 +23,22 @@ public class GameObject extends ObstacleSprite {
         weight = data.getFloat("weight");
         texture = data.getFloat("texture");
         temp = data.getFloat("temp");
+    }
+
+    public GameObject(Obj object, JsonValue data, float units, float x, float y, float w, float h, BodyDef.BodyType bodyType, boolean sensor) {
+        this(object, data);
+
+        BoxObstacle body = new BoxObstacle(x, y, w, h);
+        body.setBodyType(bodyType);
+        body.setPhysicsUnits(units);
+        body.setUserData(this);
+        body.setName(object.name().toLowerCase());
+        body.setSensor(sensor);
+        obstacle = body;
+
+        float drawW = w * units;
+        float drawH = h * units;
+        mesh.set(-drawW / 2.0f, -drawH / 2.0f, drawW, drawH);
     }
 
     public void putPicture(GameObject other) {

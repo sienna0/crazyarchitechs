@@ -382,4 +382,8 @@ public class InputController {
     public boolean isDoubleClicked() {
         return doubleClicked;
     }
+
+    public boolean didLeftClick() {
+        return leftClickPressed && !leftClickPrevious;
+    }
 }
