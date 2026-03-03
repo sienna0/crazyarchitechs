@@ -249,6 +249,11 @@ public class PlatformScene extends PhysicsScene implements ContactListener {
     public void update(float dt) {
         InputController input = InputController.getInstance();
 
+        if (input.didDropPhoto()) {
+            activePicture = null;
+            pictures.clear();
+        }
+
         // Process actions in object model
         avatar.setMovement(input.getHorizontal() * avatar.getForce());
         avatar.setJumping(input.didPrimary());

@@ -73,6 +73,9 @@ public class InputController {
     private boolean exitPressed;
     private boolean exitPrevious;
 
+    private boolean dropPressed;
+    private boolean dropPrevious;
+
     /** How much did we move horizontally? */
     private float horizontal;
     /** How much did we move vertically? */
@@ -182,6 +185,10 @@ public class InputController {
         return resetPressed && !resetPrevious;
     }
 
+    public boolean didDropPhoto() {
+        return dropPressed && !dropPrevious;
+    }
+
     /**
      * Returns true if the player wants to go to the next level.
      *
@@ -250,6 +257,7 @@ public class InputController {
     public void sync(Rectangle bounds, Vector2 scale) {
         // Copy state from last animation frame
         // Helps us ignore buttons that are held down
+        dropPrevious = dropPressed;
         primePrevious  = primePressed;
         secondPrevious = secondPressed;
         resetPrevious  = resetPressed;
@@ -317,6 +325,7 @@ public class InputController {
      */
     private void readKeyboard(Rectangle bounds, Vector2 scale, boolean secondary) {
         // Give priority to gamepad results
+        dropPressed = (secondary && dropPressed) || (Gdx.input.isKeyPressed(Input.Keys.Q));
         resetPressed = (secondary && resetPressed) || (Gdx.input.isKeyPressed(Input.Keys.R));
         debugPressed = (secondary && debugPressed) || (Gdx.input.isKeyPressed(Input.Keys.D));
         primePressed = (secondary && primePressed) || (Gdx.input.isKeyPressed(Input.Keys.UP));
