@@ -213,6 +213,7 @@ public class PlatformScene extends PhysicsScene implements ContactListener {
         rock.setTexture(earthTexture);
         addSprite(rock);
 
+        Texture cloudTexture = directory.getEntry( "cloud", Texture.class );
         // Cloud (normal mode = "floaty platform marker": gravity off, collides)
         cloud = new GameObject(
                 Obj.CLOUD, constants.get("cloud"), units, 20.0f, platformTopY + 2.0f, cloudSize,
@@ -222,7 +223,7 @@ public class PlatformScene extends PhysicsScene implements ContactListener {
         cloud.getObstacle().setFriction(CLOUD_BASE_FRICTION);
         cloud.getObstacle().setRestitution(0.0f);
         cloud.getObstacle().setGravityScale(0.0f);
-        cloud.setTexture(earthTexture);
+        cloud.setTexture(cloudTexture);
         addSprite(cloud);
 
         // Ceilings/targets

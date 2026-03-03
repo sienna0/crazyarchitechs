@@ -41,5 +41,6 @@ rocket/rocket.png
 rocket/sideburner-left.wav
 rocket/sideburner-right.wav
 shared/RetroGame.ttf
+shared/cloud.png
 shared/earthtile.png
 shared/goaldoor.png
