@@ -12,11 +12,9 @@
  */
 package edu.cornell.cis3152.physics.platform;
 
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.*;
 import com.badlogic.gdx.utils.*;
-import com.badlogic.gdx.audio.*;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.physics.box2d.*;
 
@@ -62,10 +60,28 @@ public class PlatformScene extends PhysicsScene implements ContactListener {
     //** Picture list */
     private Array<Picture> pictures = new Array<>();
     private Picture activePicture;
+
     private GameObject rock;
     private GameObject cloud;
+
+    // Rock lift behavior (cloud photo on rock)
     private float rockLiftCeilingY;
     private boolean rockLiftActive;
+
+    // Cloud behavior (rock photo on cloud)
+    private boolean cloudDropActive;      // true = cloud behaves like rock (falls)
+    private boolean cloudReturnActive;    // true = cloud is lifting back up
+    private float cloudLiftCeilingY;      // target Y to lift back to
+
+    // Tuning constants (keep these simple & consistent)
+    private static final float ROCK_DENSITY = 5.0f;
+    private static final float ROCK_FRICTION = 0.8f;
+
+    private static final float CLOUD_BASE_DENSITY = 2.0f; // NOT zero for DynamicBody
+    private static final float CLOUD_BASE_FRICTION = 0.0f;
+
+    private static final float CLOUD_LIFT_GRAVITY = -0.5f; // negative gravityScale to lift up smoothly
+
     /** Mark set to handle more sophisticated collision callbacks */
     protected ObjectSet<Fixture> sensorFixtures;
 
@@ -97,33 +113,37 @@ public class PlatformScene extends PhysicsScene implements ContactListener {
 
         if (world != null) {
             for (ObstacleSprite sprite : sprites) {
-                Obstacle obj = sprite.getObstacle();
                 sprite.getObstacle().deactivatePhysics( world );
             }
         }
         sprites.clear();
         addQueue.clear();
+
         if (world != null) {
-            Array<Body> bodies = new Array<Body>();
+            Array<Body> bodies = new Array<>();
             world.getBodies(bodies);
             for(Body b : bodies) {
                 world.destroyBody( b );
             }
-            //world.dispose();
-            //world = null;
         }
 
         if (world == null) {
             world = new World( gravity, false );
             world.setContactListener( this );
         }
+
         setComplete(false);
         setFailure(false);
+
         activePicture = null;
         if (pictures != null) {
             pictures.clear();
         }
+
         rockLiftActive = false;
+        cloudDropActive = false;
+        cloudReturnActive = false;
+
         populateLevel();
     }
 
@@ -131,14 +151,11 @@ public class PlatformScene extends PhysicsScene implements ContactListener {
      * Lays out the game geography.
      */
     private void populateLevel() {
-        // TODO: change this to Level 1 geography
         float units = height/bounds.height;
 
         // Add level goal
         Texture texture = directory.getEntry( "shared-goal", Texture.class );
-
         JsonValue goal = constants.get("goal");
-        JsonValue goalpos = goal.get("pos");
         goalDoor = new Door(units, goal);
         goalDoor.setTexture( texture );
         goalDoor.getObstacle().setName("goal");
@@ -175,7 +192,6 @@ public class PlatformScene extends PhysicsScene implements ContactListener {
         avatar = new Zuko(units, constants.get("traci"));
         avatar.setTexture(texture);
         addSprite(avatar);
-        // Have to do after body is created
         avatar.createSensor();
 
         float rockSize = 1.5f;
@@ -183,48 +199,41 @@ public class PlatformScene extends PhysicsScene implements ContactListener {
         float platformLeftX = 25.0f;
         float platformTopY = 10.0f;
 
-        rock = new GameObject(Obj.ROCK, constants.get("rock"), units, platformLeftX - rockSize, 4.0f + rockSize / 2.0f, rockSize, rockSize, BodyDef.BodyType.DynamicBody, false);
-        rock.getObstacle().setDensity(5.0f);
-        rock.getObstacle().setFriction(0.8f);
+        // Rock
+        rock = new GameObject(
+                Obj.ROCK, constants.get("rock"), units,
+                platformLeftX - rockSize, 4.0f + rockSize / 2.0f,
+                rockSize, rockSize,
+                BodyDef.BodyType.DynamicBody,
+                false
+        );
+        rock.getObstacle().setDensity(ROCK_DENSITY);
+        rock.getObstacle().setFriction(ROCK_FRICTION);
         rock.getObstacle().setRestitution(0.0f);
         rock.setTexture(earthTexture);
         addSprite(rock);
 
-        cloud = new GameObject(Obj.CLOUD, constants.get("cloud"), units, 20.0f, platformTopY + 2.0f, cloudSize, cloudSize, BodyDef.BodyType.StaticBody, true);
-        cloud.getObstacle().setDensity(0.0f);
-        cloud.getObstacle().setFriction(0.0f);
+        // Cloud (normal mode = "floaty platform marker": gravity off, collides)
+        cloud = new GameObject(
+                Obj.CLOUD, constants.get("cloud"), units, 20.0f, platformTopY + 2.0f, cloudSize,
+                cloudSize, BodyDef.BodyType.DynamicBody, false
+        );
+        cloud.getObstacle().setDensity(CLOUD_BASE_DENSITY);
+        cloud.getObstacle().setFriction(CLOUD_BASE_FRICTION);
         cloud.getObstacle().setRestitution(0.0f);
+        cloud.getObstacle().setGravityScale(0.0f);
         cloud.setTexture(earthTexture);
         addSprite(cloud);
 
+        // Ceilings/targets
         rockLiftCeilingY = cloud.getObstacle().getY() - rockSize / 2.0f;
 
-        /* 
-        // Create rope bridge
-        texture = directory.getEntry( "platform-rope", Texture.class );
-        RopeBridge bridge = new RopeBridge(units, constants.get("bridge"));
-        bridge.setTexture(texture);
-        addSpriteGroup(bridge);
-
-        // Create spinning platform
-        texture = directory.getEntry( "platform-barrier", Texture.class );
-        Spinner spinPlatform = new Spinner(units,constants.get("spinner"));
-        spinPlatform.setTexture(texture);
-        addSpriteGroup(spinPlatform);
-        */
+        // Cloud returns to its initial Y (lift target)
+        cloudLiftCeilingY = cloud.getObstacle().getY();
+        cloudDropActive = false;
+        cloudReturnActive = false;
     }
 
-    /**
-     * Returns whether to process the update loop
-     *
-     * At the start of the update loop, we check if it is time
-     * to switch to a new game mode. If not, the update proceeds
-     * normally.
-     *
-     * @param dt    Number of seconds since last animation frame
-     *
-     * @return whether to process the update loop
-     */
     public boolean preUpdate(float dt) {
         if (!super.preUpdate(dt)) {
             return false;
@@ -234,33 +243,16 @@ public class PlatformScene extends PhysicsScene implements ContactListener {
             setFailure(true);
             return false;
         }
-
         return true;
     }
 
-    /**
-     * Advances the core gameplay loop of this world.
-     *
-     * This method contains the specific update code for this mini-game. It
-     * does not handle collisions, as those are managed by the parent class
-     * PhysicsScene. This method is called after input is synced to the current
-     * frame, but before collisions are resolved. The very last thing that it
-     * should do is apply forces to the appropriate objects.
-     *
-     * @param dt    Number of seconds since last animation frame
-     */
     public void update(float dt) {
         InputController input = InputController.getInstance();
 
         // Process actions in object model
-        avatar.setMovement(input.getHorizontal() *avatar.getForce());
+        avatar.setMovement(input.getHorizontal() * avatar.getForce());
         avatar.setJumping(input.didPrimary());
         avatar.setShooting(input.didSecondary());
-
-        // Add a bullet if we fire
-//        if (avatar.isShooting()) {
-//            createBullet();
-//        }
 
         Vector2 mouse = input.getCrossHair();
         GameObject target = findObjectUnderMouse(mouse.x, mouse.y);
@@ -270,26 +262,53 @@ public class PlatformScene extends PhysicsScene implements ContactListener {
             SoundEffectManager sounds = SoundEffectManager.getInstance();
             float picVolume = Math.min(1.0f, volume * 1.75f);
 
-            if (target != null && target.object == Obj.CLOUD) {
-                if (activePicture == null || activePicture.getSubject() != target) {
+            if (target != null) {
+                if (activePicture == null) {
                     if (avatar.canTakePicture()) {
                         avatar.takePicture();
                         Picture picture = new Picture(target);
                         pictures.clear();
                         pictures.add(picture);
                         activePicture = picture;
+                        sounds.play("plop", plopSound, picVolume);
                     }
-                }
-                sounds.play("plop", plopSound, picVolume);
-            } else if (target != null && target.object == Obj.ROCK) {
-                if (activePicture != null && activePicture.getSubjectType() == Obj.CLOUD && rock != null && rock.getObstacle() != null && rock.getObstacle().getBody() != null) {
-                    rockLiftActive = !rockLiftActive;
-                    sounds.play("fire", fireSound, volume);
-                    if (rockLiftActive) {
-                        rock.putPicture(activePicture.getSubject());
-                    } else {
-                        rock.resetAttributes();
-                        rock.getObstacle().getBody().setGravityScale(1.0f);
+                } else {
+                    if (activePicture.getSubject() != null && activePicture.getSubject() != target) {
+                        Obj src = activePicture.getSubjectType();
+                        Obj dst = target.object;
+                        if (src == Obj.CLOUD && dst == Obj.ROCK && rock != null && rock.getObstacle() != null && rock.getObstacle().getBody() != null) {
+                            rockLiftActive = !rockLiftActive;
+                            sounds.play("fire", fireSound, volume);
+
+                            if (rockLiftActive) {
+                                rock.putPicture(activePicture.getSubject());
+                            } else {
+                                rock.resetAttributes();
+                                rock.getObstacle().getBody().setGravityScale(1.0f);
+                            }
+                        }
+
+                        if (src == Obj.ROCK && dst == Obj.CLOUD && cloud != null && cloud.getObstacle() != null && cloud.getObstacle().getBody() != null) {
+                            cloudDropActive = !cloudDropActive;
+                            sounds.play("fire", fireSound, volume);
+
+                            if (cloudDropActive) {
+                                cloud.putPicture(activePicture.getSubject());
+                                cloud.getObstacle().setDensity(ROCK_DENSITY);
+                                cloud.getObstacle().setFriction(ROCK_FRICTION);
+                                cloud.getObstacle().getBody().resetMassData();
+
+                                cloudReturnActive = false;
+                            } else {
+                                cloud.resetAttributes();
+
+                                cloud.getObstacle().setDensity(CLOUD_BASE_DENSITY);
+                                cloud.getObstacle().setFriction(CLOUD_BASE_FRICTION);
+                                cloud.getObstacle().getBody().resetMassData();
+
+                                cloudReturnActive = true;
+                            }
+                        }
                     }
                 }
             }
@@ -299,6 +318,7 @@ public class PlatformScene extends PhysicsScene implements ContactListener {
             avatar.clearPictureTaken();
         }
 
+        // ROCK lift behavior (cloud photo on rock)
         if (rockLiftActive && rock != null && rock.getObstacle() != null && rock.getObstacle().getBody() != null) {
             Body body = rock.getObstacle().getBody();
             if (body.getPosition().y < rockLiftCeilingY) {
@@ -310,6 +330,25 @@ public class PlatformScene extends PhysicsScene implements ContactListener {
             }
         }
 
+        if (cloud != null && cloud.getObstacle() != null && cloud.getObstacle().getBody() != null) {
+            Body body = cloud.getObstacle().getBody();
+
+            if (cloudDropActive) {
+                body.setGravityScale(1.0f);
+            } else if (cloudReturnActive) {
+                if (body.getPosition().y < cloudLiftCeilingY) {
+                    body.setGravityScale(CLOUD_LIFT_GRAVITY);
+                } else {
+                    body.setGravityScale(0.0f);
+                    Vector2 v = body.getLinearVelocity();
+                    body.setLinearVelocity(v.x, 0.0f);
+                    cloudReturnActive = false;
+                }
+            } else {
+                body.setGravityScale(0.0f);
+            }
+        }
+
         avatar.applyForce();
         if (avatar.isJumping()) {
             SoundEffectManager sounds = SoundEffectManager.getInstance();
@@ -318,43 +357,7 @@ public class PlatformScene extends PhysicsScene implements ContactListener {
     }
 
     /**
-     * Adds a new bullet to the world and send it in the right direction.
-     */
-    private void createBullet() {
-        float units = height/bounds.height;
-
-        JsonValue bulletjv = constants.get("bullet");
-        Obstacle traci = avatar.getObstacle();
-
-        Texture texture = directory.getEntry("platform-bullet", Texture.class);
-        Bullet bullet = new Bullet(units, bulletjv, traci.getPosition(),avatar.isFacingRight());
-        bullet.setTexture(texture);
-        addQueuedObject(bullet);
-
-        SoundEffectManager sounds = SoundEffectManager.getInstance();
-        sounds.play("fire", fireSound, volume);
-    }
-
-    /**
-     * Removes a new bullet from the world.
-     *
-     * @param  bullet   the bullet to remove
-     */
-    public void removeBullet(ObstacleSprite bullet) {
-        bullet.getObstacle().markRemoved(true);
-        SoundEffectManager sounds = SoundEffectManager.getInstance();
-        sounds.play("plop", plopSound, volume);
-    }
-
-
-    /**
      * Callback method for the start of a collision
-     *
-     * This method is called when we first get a collision between two objects.
-     * We use this method to test if it is the "right" kind of collision. In
-     * particular, we use it to test if we made it to the win door.
-     *
-     * @param contact The two bodies that collided
      */
     public void beginContact(Contact contact) {
         Fixture fix1 = contact.getFixtureA();
@@ -374,21 +377,20 @@ public class PlatformScene extends PhysicsScene implements ContactListener {
             if (bd1.getName().equals("bullet") && bd2 != avatar && !bd2.getName().equals( "goal" )) {
                 removeBullet(bd1);
             }
-
             if (bd2.getName().equals("bullet") && bd1 != avatar && !bd1.getName().equals( "goal" )) {
                 removeBullet(bd2);
             }
 
             // See if we have landed on the ground.
             if ((avatar.getSensorName().equals(fd2) && avatar != bd1) ||
-                (avatar.getSensorName().equals(fd1) && avatar != bd2)) {
+                    (avatar.getSensorName().equals(fd1) && avatar != bd2)) {
                 avatar.setGrounded(true);
-                sensorFixtures.add(avatar == bd1 ? fix2 : fix1); // Could have more than one ground
+                sensorFixtures.add(avatar == bd1 ? fix2 : fix1);
             }
 
             // Check for win condition
             if ((bd1 == avatar && bd2.getName().equals( "goal" )) ||
-                (bd1.getName().equals("goal")  && bd2 == avatar)) {
+                    (bd1.getName().equals("goal")  && bd2 == avatar)) {
                 setComplete(true);
             }
         } catch (Exception e) {
@@ -397,11 +399,7 @@ public class PlatformScene extends PhysicsScene implements ContactListener {
     }
 
     /**
-     * Callback method for the start of a collision
-     *
-     * This method is called when two objects cease to touch. The main use of
-     * this method is to determine when the characer is NOT on the ground. This
-     * is how we prevent double jumping.
+     * Callback method for when two objects cease to touch.
      */
     public void endContact(Contact contact) {
         Fixture fix1 = contact.getFixtureA();
@@ -417,7 +415,7 @@ public class PlatformScene extends PhysicsScene implements ContactListener {
         Object bd2 = body2.getUserData();
 
         if ((avatar.getSensorName().equals(fd2) && avatar != bd1) ||
-            (avatar.getSensorName().equals(fd1) && avatar != bd2)) {
+                (avatar.getSensorName().equals(fd1) && avatar != bd2)) {
             sensorFixtures.remove(avatar == bd1 ? fix2 : fix1);
             if (sensorFixtures.size == 0) {
                 avatar.setGrounded(false);
@@ -430,12 +428,6 @@ public class PlatformScene extends PhysicsScene implements ContactListener {
     /** Unused ContactListener method */
     public void preSolve(Contact contact, Manifold oldManifold) {}
 
-    /**
-     * Called when the Screen is paused.
-     *
-     * We need this method to stop all sounds when we pause.
-     * Pausing happens when we switch game modes.
-     */
     public void pause() {
         SoundEffectManager sounds = SoundEffectManager.getInstance();
         sounds.stop("plop");
@@ -443,25 +435,23 @@ public class PlatformScene extends PhysicsScene implements ContactListener {
         sounds.stop("jump");
     }
 
+    /**
+     * Removes a bullet from the world.
+     */
+    public void removeBullet(ObstacleSprite bullet) {
+        bullet.getObstacle().markRemoved(true);
+        SoundEffectManager sounds = SoundEffectManager.getInstance();
+        sounds.play("plop", plopSound, volume);
+    }
 
     /**
      * Returns the GameObject under the mouse position, or null if there is none
-     *
-     * This method iterates through all sprites in the scene and checks if the mouse position falls within the bounds of each GameObject.
-     *
-     * @param mouseX the x-coordinate of the mouse
-     * @param mouseY the y-coordinate of the mouse
-     * @return the GameObject under the mouse or null if there is none
      */
     private GameObject findObjectUnderMouse(float mouseX, float mouseY) {
-
         for (ObstacleSprite sprite : sprites ) {
-            if (sprite == avatar) {
-                continue;
-            }
-            if (!(sprite instanceof GameObject)) {
-                continue;
-            }
+            if (sprite == avatar) continue;
+            if (!(sprite instanceof GameObject)) continue;
+
             GameObject go = (GameObject) sprite;
             Obstacle obj = go.getObstacle();
             float u = obj.getPhysicsUnits();
@@ -484,5 +474,4 @@ public class PlatformScene extends PhysicsScene implements ContactListener {
         }
         return null;
     }
-
 }

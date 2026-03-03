@@ -25,7 +25,8 @@ public class GameObject extends ObstacleSprite {
         temp = data.getFloat("temp");
     }
 
-    public GameObject(Obj object, JsonValue data, float units, float x, float y, float w, float h, BodyDef.BodyType bodyType, boolean sensor) {
+    public GameObject(Obj object, JsonValue data, float units, float x, float y, float w,
+                      float h, BodyDef.BodyType bodyType, boolean sensor) {
         this(object, data);
 
         BoxObstacle body = new BoxObstacle(x, y, w, h);
