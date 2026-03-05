@@ -66,6 +66,11 @@ public class PlatformScene extends PhysicsScene implements ContactListener {
     private GameObject cloud;
     private float rockLiftCeilingY;
     private boolean rockLiftActive;
+    private boolean cloudDropActive;
+    private boolean cloudRiseActive;
+    private float cloudSpawnY;
+    private float rockHalfSize;
+    private float cloudRiseSpeed;
     /** Mark set to handle more sophisticated collision callbacks */
     protected ObjectSet<Fixture> sensorFixtures;
 
@@ -124,6 +129,8 @@ public class PlatformScene extends PhysicsScene implements ContactListener {
             pictures.clear();
         }
         rockLiftActive = false;
+        cloudDropActive = false;
+        cloudRiseActive = false;
         populateLevel();
     }
 
@@ -182,6 +189,8 @@ public class PlatformScene extends PhysicsScene implements ContactListener {
         float cloudSize = 1.5f;
         float platformLeftX = 25.0f;
         float platformTopY = 10.0f;
+        rockHalfSize = rockSize / 2.0f;
+        cloudRiseSpeed = 3.5f;
 
         rock = new GameObject(Obj.ROCK, constants.get("rock"), units, platformLeftX - rockSize, 4.0f + rockSize / 2.0f, rockSize, rockSize, BodyDef.BodyType.DynamicBody, false);
         rock.getObstacle().setDensity(5.0f);
@@ -189,13 +198,23 @@ public class PlatformScene extends PhysicsScene implements ContactListener {
         rock.getObstacle().setRestitution(0.0f);
         rock.setTexture(earthTexture);
         addSprite(rock);
+        if (rock.getObstacle() != null && rock.getObstacle().getBody() != null) {
+            rock.getObstacle().getBody().setGravityScale(1.0f);
+        }
 
-        cloud = new GameObject(Obj.CLOUD, constants.get("cloud"), units, 20.0f, platformTopY + 2.0f, cloudSize, cloudSize, BodyDef.BodyType.StaticBody, true);
+        float cloudX = 20.0f;
+        cloudSpawnY = platformTopY + 2.0f;
+        cloud = new GameObject(Obj.CLOUD, constants.get("cloud"), units, cloudX, cloudSpawnY, cloudSize, cloudSize, BodyDef.BodyType.KinematicBody, false);
         cloud.getObstacle().setDensity(0.0f);
         cloud.getObstacle().setFriction(0.0f);
         cloud.getObstacle().setRestitution(0.0f);
         cloud.setTexture(earthTexture);
         addSprite(cloud);
+        if (cloud.getObstacle() != null && cloud.getObstacle().getBody() != null) {
+            cloud.getObstacle().getBody().setGravityScale(0.0f);
+            cloud.getObstacle().getBody().setLinearVelocity(0.0f, 0.0f);
+            cloud.getObstacle().getBody().setAngularVelocity(0.0f);
+        }
 
         rockLiftCeilingY = cloud.getObstacle().getY() - rockSize / 2.0f;
 
@@ -266,31 +285,46 @@ public class PlatformScene extends PhysicsScene implements ContactListener {
         GameObject target = findObjectUnderMouse(mouse.x, mouse.y);
         avatar.setCurrentTarget(target);
 
-        if (input.didLeftClick()) {
-            SoundEffectManager sounds = SoundEffectManager.getInstance();
-            float picVolume = Math.min(1.0f, volume * 1.75f);
+        SoundEffectManager sounds = SoundEffectManager.getInstance();
+        float picVolume = Math.min(1.0f, volume * 1.75f);
 
-            if (target != null && target.object == Obj.CLOUD) {
-                if (activePicture == null || activePicture.getSubject() != target) {
-                    if (avatar.canTakePicture()) {
-                        avatar.takePicture();
-                        Picture picture = new Picture(target);
-                        pictures.clear();
-                        pictures.add(picture);
-                        activePicture = picture;
-                    }
-                }
+        if (input.didRightClick()) {
+            if (target != null && avatar.canTakePicture()) {
+                avatar.takePicture();
+                Picture picture = new Picture(target);
+                pictures.clear();
+                pictures.add(picture);
+                activePicture = picture;
                 sounds.play("plop", plopSound, picVolume);
-            } else if (target != null && target.object == Obj.ROCK) {
-                if (activePicture != null && activePicture.getSubjectType() == Obj.CLOUD && rock != null && rock.getObstacle() != null && rock.getObstacle().getBody() != null) {
-                    rockLiftActive = !rockLiftActive;
-                    sounds.play("fire", fireSound, volume);
-                    if (rockLiftActive) {
-                        rock.putPicture(activePicture.getSubject());
-                    } else {
-                        rock.resetAttributes();
-                        rock.getObstacle().getBody().setGravityScale(1.0f);
+            }
+        } else if (input.didLeftClick()) {
+            if (activePicture != null && target != null && target.object == Obj.ROCK && activePicture.getSubjectType() == Obj.CLOUD && rock != null && rock.getObstacle() != null && rock.getObstacle().getBody() != null) {
+                rockLiftActive = !rockLiftActive;
+                sounds.play("fire", fireSound, volume);
+                if (rockLiftActive) {
+                    rock.putPicture(activePicture.getSubject());
+                    if (cloud != null && cloud.getObstacle() != null) {
+                        float ceilingY = Math.max(cloud.getObstacle().getY(), cloudSpawnY);
+                        rockLiftCeilingY = ceilingY - rockHalfSize;
                     }
+                } else {
+                    rock.resetAttributes();
+                    rock.getObstacle().getBody().setGravityScale(1.0f);
+                }
+            } else if (activePicture != null && target != null && target.object == Obj.CLOUD && activePicture.getSubjectType() == Obj.ROCK && cloud != null && cloud.getObstacle() != null && cloud.getObstacle().getBody() != null) {
+                cloudDropActive = !cloudDropActive;
+                sounds.play("fire", fireSound, volume);
+                Body body = cloud.getObstacle().getBody();
+                if (cloudDropActive) {
+                    cloudRiseActive = false;
+                    body.setType(BodyDef.BodyType.DynamicBody);
+                    float weight = activePicture.getSubject() == null ? 1.0f : Math.max(1.0f, activePicture.getSubject().getWeight());
+                    body.setGravityScale(weight);
+                } else {
+                    body.setGravityScale(0.0f);
+                    body.setType(BodyDef.BodyType.KinematicBody);
+                    body.setLinearVelocity(0.0f, cloudRiseSpeed);
+                    cloudRiseActive = true;
                 }
             }
         }
@@ -310,9 +344,23 @@ public class PlatformScene extends PhysicsScene implements ContactListener {
             }
         }
 
+        if (cloud != null && cloud.getObstacle() != null && cloud.getObstacle().getBody() != null) {
+            Body body = cloud.getObstacle().getBody();
+            if (cloudRiseActive && body.getType() == BodyDef.BodyType.KinematicBody) {
+                if (body.getPosition().y >= cloudSpawnY) {
+                    body.setTransform(body.getPosition().x, cloudSpawnY, 0.0f);
+                    body.setLinearVelocity(0.0f, 0.0f);
+                    body.setAngularVelocity(0.0f);
+                    cloudRiseActive = false;
+                }
+            } else if (!cloudDropActive && body.getType() == BodyDef.BodyType.KinematicBody) {
+                body.setLinearVelocity(0.0f, 0.0f);
+                body.setAngularVelocity(0.0f);
+            }
+        }
+
         avatar.applyForce();
         if (avatar.isJumping()) {
-            SoundEffectManager sounds = SoundEffectManager.getInstance();
             sounds.play("jump", jumpSound, volume);
         }
     }

@@ -87,6 +87,8 @@ public class InputController {
     /** Whether the camera but was pressed */
     private boolean leftClickPressed;
     private boolean leftClickPrevious;
+    private boolean rightClickPressed;
+    private boolean rightClickPrevious;
 
     /** Timer for double click detection */
     private float doubleClickTimer;
@@ -258,6 +260,7 @@ public class InputController {
         nextPrevious = nextPressed;
         prevPrevious = prevPressed;
         leftClickPrevious = leftClickPressed;
+        rightClickPrevious = rightClickPressed;
 
         // Check to see if a GamePad is connected
         if (xbox != null && xbox.isConnected()) {
@@ -285,6 +288,7 @@ public class InputController {
         prevPressed  = xbox.getLBumper();
         primePressed = xbox.getA();
         debugPressed  = xbox.getY();
+        rightClickPressed = false;
 
         // Increase animation frame, but only if trying to move
         horizontal = xbox.getLeftX();
@@ -345,6 +349,7 @@ public class InputController {
         // Mouse results
         tertiaryPressed = Gdx.input.isButtonPressed(Input.Buttons.LEFT);
         leftClickPressed = Gdx.input.isButtonPressed(Input.Buttons.LEFT);
+        rightClickPressed = Gdx.input.isButtonPressed(Input.Buttons.RIGHT);
         doubleClicked = false;
         if (leftClickPressed && !leftClickPrevious) {
             if (doubleClickTimer > 0) {
@@ -385,5 +390,9 @@ public class InputController {
 
     public boolean didLeftClick() {
         return leftClickPressed && !leftClickPrevious;
+    }
+
+    public boolean didRightClick() {
+        return rightClickPressed && !rightClickPrevious;
     }
 }
