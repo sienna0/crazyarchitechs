@@ -15,6 +15,7 @@ package edu.cornell.cis3152.physics.platform;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.*;
+import com.badlogic.gdx.physics.box2d.joints.WeldJointDef;
 import com.badlogic.gdx.utils.*;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.physics.box2d.*;
@@ -43,6 +44,9 @@ public class PlatformScene extends PhysicsScene implements ContactListener {
     private TextureRegion bulletTexture;
     /** Texture asset for the bridge plank */
     private TextureRegion bridgeTexture;
+
+    private Texture cloudTexture;
+    private Texture earthTexture;
 
     /** The jump sound. We only want to play once. */
     private SoundEffect jumpSound;
@@ -286,7 +290,7 @@ public class PlatformScene extends PhysicsScene implements ContactListener {
                         sounds.play("plop", plopSound, picVolume);
                     }
                 } else {
-                    if (activePicture.getSubject() != null && activePicture.getSubject() != target  && avatar.hasLineOfSight(target.getObstacle().getX(), target.getObstacle().getY(), STICK_PICTURE_DISTANCE)) {
+                    if (activePicture.getSubject() != null && activePicture.getSubject() != target && avatar.hasLineOfSight(target.getObstacle().getX(), target.getObstacle().getY(), STICK_PICTURE_DISTANCE)) {
                         Obj src = activePicture.getSubjectType();
                         Obj dst = target.object;
                         if (src == Obj.CLOUD && dst == Obj.ROCK && rock != null && rock.getObstacle() != null && rock.getObstacle().getBody() != null) {
@@ -295,7 +299,24 @@ public class PlatformScene extends PhysicsScene implements ContactListener {
 
                             if (rockLiftActive) {
                                 rock.putPicture(activePicture.getSubject());
+                                // Adding the picture
+                                float units = height/bounds.height;
+                                activePicture.setTarget(rock, units);
+                                addSprite(activePicture);
+                                // Joint for picture and rock
+                                WeldJointDef weldDef = new WeldJointDef();
+                                weldDef.initialize(
+                                        rock.getObstacle().getBody(),
+                                        activePicture.getObstacle().getBody(),
+                                        rock.getObstacle().getPosition()
+                                );
+                                activePicture.setJoint(world.createJoint(weldDef));
                             } else {
+                                if (activePicture != null && activePicture.getJoint() != null) {
+                                    world.destroyJoint(activePicture.getJoint());
+                                }
+                                sprites.remove(activePicture);
+                                activePicture = null;
                                 rock.resetAttributes();
                                 rock.getObstacle().getBody().setGravityScale(1.0f);
                             }
@@ -310,15 +331,29 @@ public class PlatformScene extends PhysicsScene implements ContactListener {
                                 cloud.getObstacle().setDensity(ROCK_DENSITY);
                                 cloud.getObstacle().setFriction(ROCK_FRICTION);
                                 cloud.getObstacle().getBody().resetMassData();
-
+                                // Adding the picture
+                                float units = height/bounds.height;
+                                activePicture.setTarget(cloud, units);
+                                addSprite(activePicture);
+                                // Joint for the cloud and picture
+                                WeldJointDef weldDef = new WeldJointDef();
+                                weldDef.initialize(
+                                        cloud.getObstacle().getBody(),
+                                        activePicture.getObstacle().getBody(),
+                                        cloud.getObstacle().getPosition()
+                                );
+                                activePicture.setJoint(world.createJoint(weldDef));
                                 cloudReturnActive = false;
                             } else {
+                                if (activePicture != null && activePicture.getJoint() != null) {
+                                    world.destroyJoint(activePicture.getJoint());
+                                }
+                                sprites.remove(activePicture);
+                                activePicture = null;
                                 cloud.resetAttributes();
-
                                 cloud.getObstacle().setDensity(CLOUD_BASE_DENSITY);
                                 cloud.getObstacle().setFriction(CLOUD_BASE_FRICTION);
                                 cloud.getObstacle().getBody().resetMassData();
-
                                 cloudReturnActive = true;
                             }
                         }
