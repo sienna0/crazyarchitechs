@@ -12,6 +12,7 @@
  */
 package edu.cornell.cis3152.physics.platform;
 
+import com.badlogic.gdx.Game;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.*;
 import com.badlogic.gdx.utils.*;
@@ -82,6 +83,12 @@ public class PlatformScene extends PhysicsScene implements ContactListener {
 
     private static final float CLOUD_LIFT_GRAVITY = -0.5f; // negative gravityScale to lift up smoothly
 
+    // Range Variables
+    private float STICK_PICTURE_DISTANCE = 5.0f; //I know you wanted it to be 3 times less than take picture but, if you mistakenly take a picture of the rock, you would not be able to reach the cloud unless it is 2 times less
+    private float TAKE_PICTURE_DISTANCE = 10.0f;
+    private Array<GameObject> highlighted = new Array<>();
+
+    private final Affine2 highlightTransform = new Affine2();
     /** Mark set to handle more sophisticated collision callbacks */
     protected ObjectSet<Fixture> sensorFixtures;
 
@@ -249,7 +256,7 @@ public class PlatformScene extends PhysicsScene implements ContactListener {
 
     public void update(float dt) {
         InputController input = InputController.getInstance();
-
+        findObjectNearZuko();
         if (input.didDropPhoto()) {
             activePicture = null;
             pictures.clear();
@@ -279,7 +286,7 @@ public class PlatformScene extends PhysicsScene implements ContactListener {
                         sounds.play("plop", plopSound, picVolume);
                     }
                 } else {
-                    if (activePicture.getSubject() != null && activePicture.getSubject() != target) {
+                    if (activePicture.getSubject() != null && activePicture.getSubject() != target  && avatar.hasLineOfSight(target.getObstacle().getX(), target.getObstacle().getY(), STICK_PICTURE_DISTANCE)) {
                         Obj src = activePicture.getSubjectType();
                         Obj dst = target.object;
                         if (src == Obj.CLOUD && dst == Obj.ROCK && rock != null && rock.getObstacle() != null && rock.getObstacle().getBody() != null) {
@@ -479,5 +486,44 @@ public class PlatformScene extends PhysicsScene implements ContactListener {
             }
         }
         return null;
+    }
+
+    private void findObjectNearZuko() {
+        highlighted.clear();
+        float range = (activePicture != null) ? STICK_PICTURE_DISTANCE : TAKE_PICTURE_DISTANCE;
+        for (ObstacleSprite sprite : sprites) {
+            if (sprite == avatar) continue;
+            if (!(sprite instanceof GameObject go)) continue;
+
+            float x = go.getObstacle().getX();
+            float y = go.getObstacle().getY();
+            if (avatar.hasLineOfSight(x, y, range)) {
+                highlighted.add(go);
+            }
+
+        }
+    }
+    @Override
+    public void draw(float dt) {
+        super.draw(dt);
+
+        batch.begin(camera);
+        Color highlighter = (activePicture != null) ? Color.LIME : Color.CORAL;
+        batch.setColor(highlighter);
+
+        for (GameObject go : highlighted) {
+            Obstacle obj = go.getObstacle();
+            float u = obj.getPhysicsUnits();
+            float a = obj.getAngle();
+            Vector2 p = obj.getPosition();
+
+            highlightTransform.idt();
+            highlightTransform.preRotate((float)(a * 180.0f/ Math.PI));
+            highlightTransform.preTranslate(p.x * u, p.y * u);
+
+            batch.outline(obj.getOutline(), highlightTransform);
+        }
+
+        batch.end();
     }
 }

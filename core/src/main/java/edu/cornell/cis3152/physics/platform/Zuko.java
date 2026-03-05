@@ -295,12 +295,12 @@ public class Zuko extends ObstacleSprite {
      *
      * @return true if Zuko has line of sight to the current target
      */
-    public boolean hasLineOfSight() {
-//        if (currentTarget == null) {
-//            return false;
-//        }
-//        float dx = currentTarget // For now I am not calculating the line of sight because I do not know how far we are making it since it is no longer tiles
-        return true;
+    public boolean hasLineOfSight(float x, float y, float maxDistance) {
+        float dx = x - obstacle.getX();
+        float dy = y - obstacle.getY();
+        float d = (dx*dx) + (dy*dy);
+
+        return d <= (maxDistance * maxDistance);
     }
 
     /**
@@ -311,7 +311,7 @@ public class Zuko extends ObstacleSprite {
      * @return true if Zuko can take a picture
      */
     public boolean canTakePicture() {
-        return filmCount > 0 && pictureCooldown <= 0 && currentTarget != null && hasLineOfSight();
+        return filmCount > 0 && pictureCooldown <= 0 && currentTarget != null && hasLineOfSight(currentTarget.getObstacle().getX(), currentTarget.getObstacle().getY(), maxSightDistance);
     }
 
     /**
@@ -423,6 +423,7 @@ public class Zuko extends ObstacleSprite {
         pictureCooldown = 0;
         pictureTaken = false;
         currentTarget = null;
+        maxSightDistance = 9.0f;
 
         // Create a rectangular mesh for Traci. This is the same as for door,
         // since Traci is a rectangular image. But note that the capsule is
