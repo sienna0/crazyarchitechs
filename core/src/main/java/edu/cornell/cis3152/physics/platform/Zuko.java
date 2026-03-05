@@ -223,6 +223,10 @@ public class Zuko extends ObstacleSprite {
         return damping;
     }
 
+    public void setDamping(float value) {
+        damping = value;
+    }
+
     /**
      * Returns the upper limit on Traci's left-right movement.
      *
