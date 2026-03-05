@@ -131,11 +131,10 @@ public class GDXRoot extends Game implements ScreenListener {
             loading.dispose();
             loading = null;
 
-            // Initialize the three game worlds
-            //controllers = new PhysicsScene[3];
-            controllers = new PhysicsScene[2];
+            controllers = new PhysicsScene[3];
             controllers[0] = new SandboxScene(directory);
             controllers[1] = new PlatformScene(directory);
+            controllers[2] = new PlaygroundScene(directory);
 
             for(int ii = 0; ii < controllers.length; ii++) {
                 controllers[ii].setScreenListener(this);
