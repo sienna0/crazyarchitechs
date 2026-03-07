@@ -7,7 +7,6 @@ content
 .settings
 /bin/
 *.class
-*.jar
 *.pdf
 *.DS_Store
 out
