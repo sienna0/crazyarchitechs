@@ -23,6 +23,7 @@ Left and Right Arrow Keys - Horizontal movement
 Up Arrow Key - Jump
 Left Click - Take photo
 Right Click - Stick photo
+Tab Key - See range
 
 Known Bugs
 - Zuko may be able to cling to the side of an object if it is rotated
