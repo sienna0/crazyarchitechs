@@ -300,6 +300,7 @@ public class Zuko extends ObstacleSprite {
      * @return true if Zuko has line of sight to the current target
      */
     public boolean hasLineOfSight(float x, float y, float maxDistance) {
+        float u = obstacle.getPhysicsUnits();
         float dx = x - obstacle.getX();
         float dy = y - obstacle.getY();
         float d = (dx*dx) + (dy*dy);

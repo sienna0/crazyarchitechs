@@ -25,6 +25,8 @@ import edu.cornell.gdiac.assets.AssetDirectory;
 import edu.cornell.cis3152.physics.PhysicsScene;
 import edu.cornell.gdiac.audio.SoundEffect;
 import edu.cornell.gdiac.audio.SoundEffectManager;
+import edu.cornell.gdiac.math.Path2;
+import edu.cornell.gdiac.math.PathFactory;
 import edu.cornell.gdiac.physics2.*;
 
 /**
@@ -104,8 +106,8 @@ public class PlatformScene extends PhysicsScene implements ContactListener {
     private float STICK_PICTURE_DISTANCE = 5.0f; //I know you wanted it to be 3 times less than take picture but, if you mistakenly take a picture of the rock, you would not be able to reach the cloud unless it is 2 times less
     private float TAKE_PICTURE_DISTANCE = 10.0f;
     private Array<GameObject> highlighted = new Array<>();
-
     private final Affine2 highlightTransform = new Affine2();
+   private boolean showRange = false;
     /** Mark set to handle more sophisticated collision callbacks */
     protected ObjectSet<Fixture> sensorFixtures;
 
@@ -298,6 +300,9 @@ public class PlatformScene extends PhysicsScene implements ContactListener {
         if (input.didDropPhoto()) {
             activePicture = null;
             pictures.clear();
+        }
+        if (input.didToggleRange()) {
+            showRange = !showRange;
         }
 
         // Process actions in object model
@@ -669,11 +674,10 @@ public class PlatformScene extends PhysicsScene implements ContactListener {
 
     private void findObjectNearZuko() {
         highlighted.clear();
-        float range = (activePicture != null) ? STICK_PICTURE_DISTANCE : TAKE_PICTURE_DISTANCE;
+        float range = (activePicture != null) ? STICK_PICTURE_DISTANCE: TAKE_PICTURE_DISTANCE;
         for (ObstacleSprite sprite : sprites) {
             if (sprite == avatar) continue;
             if (!(sprite instanceof GameObject go)) continue;
-
             float x = go.getObstacle().getX();
             float y = go.getObstacle().getY();
             if (avatar.hasLineOfSight(x, y, range)) {
@@ -701,6 +705,38 @@ public class PlatformScene extends PhysicsScene implements ContactListener {
             highlightTransform.preTranslate(p.x * u, p.y * u);
 
             batch.outline(obj.getOutline(), highlightTransform);
+        }
+        if (showRange) {
+            Obstacle obj = avatar.getObstacle();
+            Vector2 p = obj.getPosition();
+            float u = obj.getPhysicsUnits();
+            float cx = p.x * u;
+            float cy = p.y * u;
+            float dashSize = 20f;
+            float gapSize = 10f;
+            float total = dashSize + gapSize;
+            PathFactory factory = new PathFactory();
+
+            highlightTransform.idt();
+            batch.setColor(Color.LIME);
+            for (float angle = 0; angle < 360; angle += total) {
+                Path2 stickArc = factory.makeArc(cx,cy, (STICK_PICTURE_DISTANCE * u * 2) - 1, angle, dashSize, false);
+                batch.outline(stickArc, highlightTransform);
+                Path2 stickArc2 = factory.makeArc(cx,cy, (STICK_PICTURE_DISTANCE * u * 2) , angle, dashSize, false);
+                batch.outline(stickArc2, highlightTransform);
+                Path2 stickArc3 = factory.makeArc(cx,cy, (STICK_PICTURE_DISTANCE * u * 2) -2, angle, dashSize, false);
+                batch.outline(stickArc3, highlightTransform);
+            }
+            batch.setColor(Color.CORAL);
+            for (float angle = 0; angle < 360; angle += total) {
+                Path2 takeArc = factory.makeArc(cx,cy, (TAKE_PICTURE_DISTANCE * u * 2) - 1, angle, dashSize, false);
+                batch.outline(takeArc, highlightTransform);
+                Path2 takeArc2 = factory.makeArc(cx,cy, (TAKE_PICTURE_DISTANCE * u  * 2), angle, dashSize, false);
+                batch.outline(takeArc2, highlightTransform);
+                Path2 takeArc3 = factory.makeArc(cx,cy, (TAKE_PICTURE_DISTANCE * u * 2) - 2, angle, dashSize, false);
+                batch.outline(takeArc3, highlightTransform);
+
+            }
         }
 
         batch.end();

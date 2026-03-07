@@ -87,9 +87,13 @@ public class InputController {
     /** For the gamepad crosshair control */
     private float momentum;
 
-    /** Whether the camera but was pressed */
+    /** Whether the camera button was pressed */
     private boolean leftClickPressed;
     private boolean leftClickPrevious;
+
+    /** Whether the range key button was pressed */
+    private boolean rangePressed;
+    private boolean rangePrevious;
 
     /** Timer for double click detection */
     private float doubleClickTimer;
@@ -266,6 +270,7 @@ public class InputController {
         nextPrevious = nextPressed;
         prevPrevious = prevPressed;
         leftClickPrevious = leftClickPressed;
+        rangePrevious = rangePressed;
 
         // Check to see if a GamePad is connected
         if (xbox != null && xbox.isConnected()) {
@@ -351,6 +356,9 @@ public class InputController {
             vertical -= 1.0f;
         }
 
+        //Range Control
+        rangePressed = (secondary && rangePressed) || (Gdx.input.isKeyPressed(Input.Keys.TAB));
+
         // Mouse results
         tertiaryPressed = Gdx.input.isButtonPressed(Input.Buttons.LEFT);
         leftClickPressed = Gdx.input.isButtonPressed(Input.Buttons.LEFT);
@@ -384,15 +392,20 @@ public class InputController {
     }
 
     /**
-     * Returns true if a double click was detected.
+     * Returns true if a left click was detected.
      *
-     * @return true if a double click was detected.
+     * @return true if a left click was detected.
      */
-    public boolean isDoubleClicked() {
-        return doubleClicked;
-    }
-
     public boolean didLeftClick() {
         return leftClickPressed && !leftClickPrevious;
+    }
+
+    /**
+     * Returns true if range toggle was detected.
+     *
+     * @return true if range toggle was detected (on and off button).
+     */
+    public boolean didToggleRange() {
+        return rangePressed && ! rangePrevious;
     }
 }
