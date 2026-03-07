@@ -1,3 +1,4 @@
+META-INF/MANIFEST.MF
 assets.json
 loading/boot.json
 loading/play.png
@@ -5,6 +6,7 @@ loading/progress.png
 loading/splash.png
 platform/barrier.png
 platform/bullet.png
+platform/cameraflash.png
 platform/constants.json
 platform/jump.wav
 platform/pew.wav
