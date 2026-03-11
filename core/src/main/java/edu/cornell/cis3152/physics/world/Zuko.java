@@ -120,6 +120,9 @@ public class Zuko extends ObstacleSprite {
     /** Whether I just took a photo - used for Sound */
     private boolean pictureTaken;
 
+    /** Inventory of pictures that Zuko may use */
+    private Inventory pictureInventory;
+
 
     /**
      * Returns the left/right movement of this character.
@@ -429,6 +432,9 @@ public class Zuko extends ObstacleSprite {
         pictureTaken = false;
         currentTarget = null;
         maxSightDistance = 9.0f;
+
+        // Inventory
+        pictureInventory = new Inventory(data);
 
         // Create a rectangular mesh for Traci. This is the same as for door,
         // since Traci is a rectangular image. But note that the capsule is

@@ -14,24 +14,60 @@ public class Picture extends ObstacleSprite {
     /** The Obj enum type of this picture's subject */
     Obj subjectType;
 
+    /** The CameraType enum type of Camera that took this picture */
+    CameraType cameraType;
+
+    /** Whether this picture has been given a subject */
+    boolean hasSubject;
+
+    /** The id of this picture. Also serves as its index position in the inventory. */
+    private int id;
+
     private Joint pictureJoint;
 
-
+    /**
+     * Constructor for a blank Picture instance with no subject yet
+     */
+    public Picture(int id){
+        hasSubject = false;
+        this.id = id;
+    }
 
     /**
-     * Constructor for a Picture instance.
+     * Constructor for a Picture instance when initialized with a subject.
      *
      * @param subject is the GameObject which is the subject of the picture
      */
     public Picture(GameObject subject) {
         this.subject = subject;
         this.subjectType = subject.object;
+        hasSubject = true;
         // steal the draw data at reduced size
         // Picture itself would need to be a GameObject for this
         mesh = new SpriteMesh(subject.getMesh());
         mesh.scl(0.5f);
         setTexture(subject.getSpriteSheet().getTexture());
+        id = -1;
     }
+
+    /** Returns the ID of this picture */
+    public int getId(){return id;}
+
+    /** Sets the pointer for the joint attaching this picture */
+    public void setJoint(Joint joint) {
+        this.pictureJoint = joint;
+    }
+
+    /** Returns the pointer for the joint attaching this picture */
+    public Joint getJoint() {
+        return pictureJoint;
+    }
+
+    /** Returns the enum type of this picture's subject */
+    public Obj getSubjectType(){return subjectType;}
+
+    /** Returns the enum type of the Camera that took this picture */
+    public CameraType getCameraType(){return cameraType;}
 
     /**
      * Sets a new GameObject subject for this picture instance.
@@ -44,17 +80,6 @@ public class Picture extends ObstacleSprite {
         subject = newGameObject;
         subjectType = newGameObject.object;
     }
-
-    public void setJoint(Joint joint) {
-        this.pictureJoint = joint;
-    }
-
-    public Joint getJoint() {
-        return pictureJoint;
-    }
-
-    /** Returns the enum type of this picture's subject */
-    public Obj getSubjectType(){return subjectType;}
 
     /** Returns the subject of this picture */
     public GameObject getSubject(){return subject;}
