@@ -4,10 +4,12 @@ package edu.cornell.cis3152.physics.world;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.JsonValue;
 
-public class Inventory {
+public class Inventory{
 
-    /** The primary array backing of the inventory */
-    Array<Picture> pictureInventory;
+    /** The primary array backing of the inventory. Requires that pictures are not moved around. */
+    //FIXME Because this will always be small, it may be worth making this private and then only
+    // passing copies
+    private Array<Picture> pictureInventory;
 
     /** The size of this level's inventory */
     int size;
@@ -61,9 +63,4 @@ public class Inventory {
             pictureInventory.add(new Picture(i));
         }
     }
-
-
-
-
-
 }

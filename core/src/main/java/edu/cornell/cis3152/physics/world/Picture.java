@@ -1,5 +1,6 @@
 package edu.cornell.cis3152.physics.world;
 
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Joint;
 import edu.cornell.gdiac.graphics.SpriteMesh;
 import edu.cornell.gdiac.physics2.BoxObstacle;
@@ -8,6 +9,7 @@ import edu.cornell.gdiac.physics2.ObstacleSprite;
 public class Picture extends ObstacleSprite {
     /** The GameObject subject of this picture */
     GameObject subject;
+
     /** The GameObject the picture is stuck to */
     GameObject target;
 
@@ -21,9 +23,13 @@ public class Picture extends ObstacleSprite {
     boolean hasSubject;
 
     /** The id of this picture. Also serves as its index position in the inventory. */
-    private int id;
+    private final int id;
 
+    // FIXME remove joints
     private Joint pictureJoint;
+
+    /** Cache offset for pictures on objects */
+    private final Vector2 offset = new Vector2();
 
     /**
      * Constructor for a blank Picture instance with no subject yet
@@ -53,11 +59,14 @@ public class Picture extends ObstacleSprite {
     /** Returns the ID of this picture */
     public int getId(){return id;}
 
+
+    // FIXME remove joints
     /** Sets the pointer for the joint attaching this picture */
     public void setJoint(Joint joint) {
         this.pictureJoint = joint;
     }
 
+    // FIXME remove joints
     /** Returns the pointer for the joint attaching this picture */
     public Joint getJoint() {
         return pictureJoint;
@@ -72,7 +81,8 @@ public class Picture extends ObstacleSprite {
     /**
      * Sets a new GameObject subject for this picture instance.
      *
-     * This should not be used unless the pictures are pre-allocated.
+     * This should be used by the inventory to re-use pictures if that is desired
+     * functionality for the game.
      *
      * @param newGameObject overrides the pictures current object
      */
@@ -84,6 +94,15 @@ public class Picture extends ObstacleSprite {
     /** Returns the subject of this picture */
     public GameObject getSubject(){return subject;}
 
+    /**
+     * Sets the target the picture will be placed on. Must be called before adding the picture
+     * to the World.
+     *
+     * @param target is the GameObject the picture is placed on
+     * @param units are the physics units for the World
+     */
+    // FIXME remove the units call, unneeded
+    //  and add the camera type as a parameter
     public void setTarget(GameObject target, float units) {
         this.target = target;
         BoxObstacle original = (BoxObstacle) target.getObstacle();
@@ -92,11 +111,32 @@ public class Picture extends ObstacleSprite {
                 original.getWidth(), original.getHeight()
         );
         copy.setBodyType(original.getBodyType());
-        copy.setPhysicsUnits(units);
+        copy.setPhysicsUnits(original.getPhysicsUnits());
         copy.setSensor(true);
         copy.setUserData(this);
         copy.setGravityScale(0.0f);
         obstacle = copy;
+    }
+
+    /**
+     * Overrides the update method to add extra functionality. In particular, this allows the
+     * picture to update its location, angle, and velocity in relation to its target without
+     * affecting the target's physics at all.
+     *
+     * @param dt is the delta time for game loop
+     */
+    @Override
+    public void update(float dt) {
+        super.update(dt);
+
+        float targetAngle = target.getObstacle().getBody().getAngle();
+
+        obstacle.getBody().setTransform(
+                target.getObstacle().getBody().getPosition().cpy().add(offset),
+                targetAngle
+        );
+        obstacle.getBody().setLinearVelocity(target.getObstacle().getBody().getLinearVelocity().cpy());
+        obstacle.getBody().setAngularVelocity(0);  // zero this out, setTransform handles rotation
     }
 
 
