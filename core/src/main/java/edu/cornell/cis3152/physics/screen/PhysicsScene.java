@@ -35,6 +35,7 @@ import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.utils.ScreenUtils;
 import edu.cornell.cis3152.physics.InputController;
+import edu.cornell.cis3152.physics.GameCanvas;
 import edu.cornell.cis3152.physics.world.ObstacleGroup;
 import edu.cornell.gdiac.assets.AssetDirectory;
 import edu.cornell.gdiac.util.*;
@@ -68,8 +69,8 @@ public abstract class PhysicsScene implements Screen {
     protected AssetDirectory directory;
     /** The drawing camera for this scene */
     protected OrthographicCamera camera;
-    /** Reference to the sprite batch */
-    protected SpriteBatch batch;
+    /** Reference to the game canvas */
+    protected GameCanvas canvas;
 
     protected float width;
     protected float height;
@@ -196,25 +197,25 @@ public abstract class PhysicsScene implements Screen {
     }
 
     /**
-     * Returns the sprite batch associated with this scene
+     * Returns the game canvas associated with this scene
      *
      * The canvas is shared across all scenes.
      *
-     * @return the sprite batch associated with this scene
+     * @return the game canvas associated with this scene
      */
-    public SpriteBatch getSpriteBatch() {
-        return batch;
+    public GameCanvas getCanvas() {
+        return canvas;
     }
 
     /**
-     * Sets the sprite batch associated with this scene
+     * Sets the game canvas associated with this scene
      *
-     * The sprite batch is shared across all scenes.
+     * The game canvas is shared across all scenes.
      *
-     * @param batch the sprite batch associated with this scene
+     * @param canvas the game canvas associated with this scene
      */
-    public void setSpriteBatch(SpriteBatch batch) {
-        this.batch = batch;
+    public void setCanvas(GameCanvas canvas) {
+        this.canvas = canvas;
     }
 
     /**
@@ -279,7 +280,7 @@ public abstract class PhysicsScene implements Screen {
         bounds = null;
         scale = null;
         world = null;
-        batch = null;
+        canvas = null;
     }
 
     /**
@@ -463,29 +464,33 @@ public abstract class PhysicsScene implements Screen {
         // Clear the screen (color is homage to the XNA years)
         ScreenUtils.clear(0.39f, 0.58f, 0.93f, 1.0f);
 
-        // This shows off how powerful our new SpriteBatch is
-        batch.begin(camera);
+        if (camera != null) {
+            camera.update();
+        }
+
+        // This shows off how powerful our new GameCanvas is
+        canvas.begin(camera);
 
         // Draw the meshes (images)
         for(ObstacleSprite obj : sprites) {
-            obj.draw(batch);
+            canvas.draw(obj);
         }
 
         if (debug) {
             // Draw the outlines
             for (ObstacleSprite obj : sprites) {
-                obj.drawDebug( batch );
+                canvas.drawDebug( obj );
             }
         }
 
         // Draw a final message
         if (complete && !failed) {
-            batch.drawText(goodMessage, width/2, height/2);
+            canvas.drawText(goodMessage, width/2, height/2);
         } else if (failed) {
-            batch.drawText(badMessage, width/2, height/2);
+            canvas.drawText(badMessage, width/2, height/2);
         }
 
-        batch.end();
+        canvas.end();
     }
 
     /**

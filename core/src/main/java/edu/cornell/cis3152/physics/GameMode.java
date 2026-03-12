@@ -9,6 +9,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.utils.ScreenUtils;
 
 import edu.cornell.cis3152.physics.InputController;
+import edu.cornell.cis3152.physics.screen.PhysicsScene;
 import edu.cornell.cis3152.physics.screen.levels.LevelController;
 import edu.cornell.gdiac.assets.AssetDirectory;
 import edu.cornell.gdiac.graphics.SpriteBatch;
@@ -23,10 +24,10 @@ import edu.cornell.gdiac.util.ScreenListener;
  * - update game state
  * - draw game state
  */
-public class GameMode implements Screen {
+public class GameMode implements Screen, ScreenListener {
 
     private AssetDirectory assets;
-    private SpriteBatch batch;
+    private GameCanvas canvas;
     private OrthographicCamera camera;
     private ScreenListener listener;
     private LevelController levelController;
@@ -48,12 +49,12 @@ public class GameMode implements Screen {
      * Creates the game mode with loaded assets.
      *
      * @param assets the asset directory from LoadingScene
-     * @param batch the shared sprite batch
+     * @param canvas the shared game canvas
      */
-    public GameMode(AssetDirectory assets, SpriteBatch batch) {
+    public GameMode(AssetDirectory assets, GameCanvas canvas) {
         this.assets = assets;
-        this.batch = batch;
-        // this.levelController = new LevelController();
+        this.canvas = canvas;
+        this.levelController = new LevelController(assets, canvas);
 
         camera = new OrthographicCamera();
         resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -62,10 +63,6 @@ public class GameMode implements Screen {
         // These keys must match your json asset file
         background = assets.getEntry("background", Texture.class);
         zukoTexture = assets.getEntry("zuko", Texture.class);
-
-//        playerX = 100;
-//        playerY = 100;
-//        playerSpeed = 250.0f;
 
         active = true;
     }
@@ -77,6 +74,27 @@ public class GameMode implements Screen {
      */
     public void setScreenListener(ScreenListener listener) {
         this.listener = listener;
+        if (levelController != null) {
+            levelController.setScreenListener(this);
+        }
+    }
+
+    /**
+     * Responds to a request from a child scene.
+     *
+     * @param screen   The screen requesting to exit
+     * @param exitCode The state of the screen upon exit
+     */
+    public void exitScreen(Screen screen, int exitCode) {
+        if (exitCode == PhysicsScene.EXIT_NEXT) {
+            levelController.nextLevel();
+            levelController.setScreenListener(this);
+        } else if (exitCode == PhysicsScene.EXIT_PREV) {
+            levelController.loadLevel(Math.max(1, levelController.getCurrentLevel()-1));
+            levelController.setScreenListener(this);
+        } else if (exitCode == PhysicsScene.EXIT_QUIT) {
+            listener.exitScreen(this, 0);
+        }
     }
 
     /**
@@ -87,27 +105,20 @@ public class GameMode implements Screen {
     private void update(float delta) {
         InputController input = InputController.getInstance();
 
-        // step the physics world
-        // process collisions
-        // update animations
+        if (input.didExit()) {
+            listener.exitScreen(this, 0);
+        }
     }
 
     /**
      * Draws the game world.
      */
     private void draw() {
-        ScreenUtils.clear(0.1f, 0.1f, 0.15f, 1.0f);
-
-        batch.begin(camera);
-        batch.setColor(Color.WHITE);
-
-        // Draw background full-screen
-        batch.draw(background, 0, 0, width, height);
-
-        // Draw player
-        // batch.draw(playerTexture, playerX, playerY);
-
-        batch.end();
+        // Delegate draw (and update) to current level
+        PhysicsScene currentScene = levelController.getCurrentScene();
+        if (currentScene != null) {
+            currentScene.render(Gdx.graphics.getDeltaTime());
+        }
     }
 
     /**
@@ -135,16 +146,25 @@ public class GameMode implements Screen {
         this.height = height;
 
         camera.setToOrtho(false, width, height);
+        if (levelController != null && levelController.getCurrentScene() != null) {
+            levelController.getCurrentScene().resize(width, height);
+        }
     }
 
     @Override
     public void show() {
         active = true;
+        if (levelController != null && levelController.getCurrentScene() != null) {
+            levelController.getCurrentScene().show();
+        }
     }
 
     @Override
     public void hide() {
         active = false;
+        if (levelController != null && levelController.getCurrentScene() != null) {
+            levelController.getCurrentScene().hide();
+        }
     }
 
     @Override

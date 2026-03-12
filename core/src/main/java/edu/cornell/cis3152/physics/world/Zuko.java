@@ -23,6 +23,7 @@ import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.utils.JsonValue;
 import edu.cornell.gdiac.assets.ParserUtils;
 import edu.cornell.gdiac.graphics.SpriteBatch;
+import edu.cornell.cis3152.physics.GameCanvas;
 import edu.cornell.gdiac.graphics.Texture2D;
 import edu.cornell.gdiac.math.Path2;
 import edu.cornell.gdiac.math.PathFactory;
@@ -553,16 +554,15 @@ public class Zuko extends ObstacleSprite {
      * texture back-and-forth depending on her facing. We do that by creating
      * a reflection affine transform.
      *
-     * @param batch The sprite batch to draw to
+     * @param canvas The game canvas to draw to
      */
-    @Override
-    public void draw(SpriteBatch batch) {
+    public void draw(GameCanvas canvas) {
         if (faceRight) {
             flipCache.setToScaling( 1,1 );
         } else {
             flipCache.setToScaling( -1,1 );
         }
-        super.draw(batch,flipCache);
+        super.draw(canvas.getSpriteBatch(),flipCache);
     }
 
     /**
@@ -573,15 +573,14 @@ public class Zuko extends ObstacleSprite {
      * draw the outline of the sensor, and in a different color. Since it
      * is not an obstacle, we have to draw that by hand.
      *
-     * @param batch The sprite batch to draw to
+     * @param canvas The game canvas to draw to
      */
-    @Override
-    public void drawDebug(SpriteBatch batch) {
-        super.drawDebug( batch );
+    public void drawDebug(GameCanvas canvas) {
+         super.drawDebug( canvas.getSpriteBatch() );
 
-        if (sensorOutline != null) {
-            batch.setTexture( Texture2D.getBlank() );
-            batch.setColor( sensorColor );
+         if (sensorOutline != null) {
+             canvas.setTexture( Texture2D.getBlank() );
+             canvas.setColor( sensorColor );
 
             Vector2 p = obstacle.getPosition();
             float a = obstacle.getAngle();
@@ -593,7 +592,7 @@ public class Zuko extends ObstacleSprite {
             transform.preTranslate( p.x * u, p.y * u );
 
             //
-            batch.outline( sensorOutline, transform );
+            canvas.outline( sensorOutline, transform );
         }
     }
 }

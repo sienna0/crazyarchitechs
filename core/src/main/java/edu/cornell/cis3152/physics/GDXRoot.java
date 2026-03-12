@@ -36,14 +36,12 @@ import edu.cornell.gdiac.graphics.*;
 public class GDXRoot extends Game implements ScreenListener {
     /** AssetManager to load game assets (textures, sounds, etc.) */
     AssetDirectory directory;
-    /** The spritebatch to draw the screen (VIEW CLASS) */
-    private SpriteBatch batch;
+    /** The game canvas to draw the screen (VIEW CLASS) */
+    private GameCanvas canvas;
     /** Scene for the asset loading screen (CONTROLLER CLASS) */
     private LoadingScene loading;
     /** Player mode for the the game proper (CONTROLLER CLASS) */
-    private int current;
-    /** List of all WorldControllers */
-    private PhysicsScene[] controllers;
+    private GameMode gameMode;
 
     /**
      * Creates a new game from the configuration settings.
@@ -60,10 +58,10 @@ public class GDXRoot extends Game implements ScreenListener {
      * prepares the asynchronous loader for all other assets.
      */
     public void create() {
-        batch  = new SpriteBatch();
+        canvas  = new GameCanvas();
 
         // Create the loading scene
-        loading = new LoadingScene("assets.json",batch,1);
+        loading = new LoadingScene("assets.json",canvas,1);
         loading.setScreenListener(this);
         setScreen(loading);
     }
@@ -80,15 +78,13 @@ public class GDXRoot extends Game implements ScreenListener {
             loading.dispose();
             loading = null;
         }
-        if (controllers != null) {
-            for(int ii = 0; ii < controllers.length; ii++) {
-                controllers[ii].dispose();
-            }
-            controllers = null;
+        if (gameMode != null) {
+            gameMode.dispose();
+            gameMode = null;
         }
 
-        batch.dispose();
-        batch = null;
+        canvas.dispose();
+        canvas = null;
 
         // Unload all of the resources
         if (directory != null) {
@@ -112,10 +108,8 @@ public class GDXRoot extends Game implements ScreenListener {
         if (loading != null) {
             loading.resize(width,height);
         }
-        if (controllers != null) {
-            for(int ii = 0; ii < controllers.length; ii++) {
-                controllers[ii].resize(width,height);
-            }
+        if (gameMode != null) {
+            gameMode.resize(width,height);
         }
     }
 
@@ -134,26 +128,9 @@ public class GDXRoot extends Game implements ScreenListener {
             loading.dispose();
             loading = null;
 
-            controllers = new PhysicsScene[2];
-            controllers[0] = new Level1Scene(directory);
-            controllers[1] = new Level2Scene(directory);
-
-            for(int ii = 0; ii < controllers.length; ii++) {
-                controllers[ii].setScreenListener(this);
-                controllers[ii].setSpriteBatch(batch);
-            }
-
-            current = 0;
-            controllers[current].reset();
-            setScreen(controllers[current]);
-        } else if (exitCode == PhysicsScene.EXIT_NEXT) {
-            current = (current+1) % controllers.length;
-            controllers[current].reset();
-            setScreen(controllers[current]);
-        } else if (exitCode == PhysicsScene.EXIT_PREV) {
-            current = (current+controllers.length-1) % controllers.length;
-            controllers[current].reset();
-            setScreen(controllers[current]);
+            gameMode = new GameMode(directory, canvas);
+            gameMode.setScreenListener(this);
+            setScreen(gameMode);
         } else if (exitCode == PhysicsScene.EXIT_QUIT) {
             // We quit the main application
             Gdx.app.exit();

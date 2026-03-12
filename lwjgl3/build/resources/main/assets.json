@@ -18,7 +18,7 @@
     "soundfx" : {
         "platform-jump"     : "platform/jump.wav",
         "platform-pew"      : "platform/pew.wav",
-        "platform-plop"     : "platform/plop.wav",
+        "platform-plop"     : "platform/plop.wav"
     },
     "fonts": {
         "shared-retro": {

@@ -690,9 +690,9 @@ public class Level1Scene extends PhysicsScene implements ContactListener {
     public void draw(float dt) {
         super.draw(dt);
 
-        batch.begin(camera);
+        canvas.begin(camera);
         Color highlighter = (activePicture != null) ? Color.LIME : Color.CORAL;
-        batch.setColor(highlighter);
+        canvas.setColor(highlighter);
 
         for (GameObject go : highlighted) {
             Obstacle obj = go.getObstacle();
@@ -704,7 +704,7 @@ public class Level1Scene extends PhysicsScene implements ContactListener {
             highlightTransform.preRotate((float)(a * 180.0f/ Math.PI));
             highlightTransform.preTranslate(p.x * u, p.y * u);
 
-            batch.outline(obj.getOutline(), highlightTransform);
+            canvas.outline(obj.getOutline(), highlightTransform);
         }
         if (showRange) {
             Obstacle obj = avatar.getObstacle();
@@ -718,27 +718,27 @@ public class Level1Scene extends PhysicsScene implements ContactListener {
             PathFactory factory = new PathFactory();
 
             highlightTransform.idt();
-            batch.setColor(Color.LIME);
+            canvas.setColor(Color.LIME);
             for (float angle = 0; angle < 360; angle += total) {
                 Path2 stickArc = factory.makeArc(cx,cy, (STICK_PICTURE_DISTANCE * u * 2) - 1, angle, dashSize, false);
-                batch.outline(stickArc, highlightTransform);
+                canvas.outline(stickArc, highlightTransform);
                 Path2 stickArc2 = factory.makeArc(cx,cy, (STICK_PICTURE_DISTANCE * u * 2) , angle, dashSize, false);
-                batch.outline(stickArc2, highlightTransform);
+                canvas.outline(stickArc2, highlightTransform);
                 Path2 stickArc3 = factory.makeArc(cx,cy, (STICK_PICTURE_DISTANCE * u * 2) -2, angle, dashSize, false);
-                batch.outline(stickArc3, highlightTransform);
+                canvas.outline(stickArc3, highlightTransform);
             }
-            batch.setColor(Color.CORAL);
+            canvas.setColor(Color.CORAL);
             for (float angle = 0; angle < 360; angle += total) {
                 Path2 takeArc = factory.makeArc(cx,cy, (TAKE_PICTURE_DISTANCE * u * 2) - 1, angle, dashSize, false);
-                batch.outline(takeArc, highlightTransform);
-                Path2 takeArc2 = factory.makeArc(cx,cy, (TAKE_PICTURE_DISTANCE * u  * 2), angle, dashSize, false);
-                batch.outline(takeArc2, highlightTransform);
+                canvas.outline(takeArc, highlightTransform);
+                Path2 takeArc2 = factory.makeArc(cx,cy, (TAKE_PICTURE_DISTANCE * u * 2), angle, dashSize, false);
+                canvas.outline(takeArc2, highlightTransform);
                 Path2 takeArc3 = factory.makeArc(cx,cy, (TAKE_PICTURE_DISTANCE * u * 2) - 2, angle, dashSize, false);
-                batch.outline(takeArc3, highlightTransform);
+                canvas.outline(takeArc3, highlightTransform);
 
             }
         }
 
-        batch.end();
+        canvas.end();
     }
 }

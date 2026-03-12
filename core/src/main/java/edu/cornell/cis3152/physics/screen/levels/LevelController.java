@@ -1,7 +1,7 @@
 package edu.cornell.cis3152.physics.screen.levels;
+import edu.cornell.cis3152.physics.GameCanvas;
 import edu.cornell.cis3152.physics.screen.PhysicsScene;
 import edu.cornell.gdiac.assets.AssetDirectory;
-import edu.cornell.gdiac.graphics.SpriteBatch;
 import com.badlogic.gdx.Screen;
 
 /**
@@ -18,20 +18,18 @@ public class LevelController {
     /** Loaded assets */
     private AssetDirectory assets;
 
-    /** Shared batch */
-    private SpriteBatch batch;
+    /** Shared game canvas */
+    private GameCanvas canvas;
 
     /** Current level screen */
-    private Screen currentScene;
-
-    private PhysicsScene currentPhysics;
+    private PhysicsScene currentScene;
 
     /**
      * Constructor
      */
-    public LevelController(AssetDirectory assets, SpriteBatch batch) {
+    public LevelController(AssetDirectory assets, GameCanvas canvas) {
         this.assets = assets;
-        this.batch = batch;
+        this.canvas = canvas;
 
         currentLevel = 1;
         totalLevels = 2;
@@ -46,26 +44,31 @@ public class LevelController {
 
         switch(level) {
             case 1:
-                currentScene = new Level1Scene(assets); // add batch
+                currentScene = new Level1Scene(assets);
                 break;
 
             case 2:
-                currentScene = new Level2Scene(assets); // add batch
-
-//                controllers[1] = new Level2Scene(directory);
-//
-//                for(int ii = 0; ii < controllers.length; ii++) {
-//                    controllers[ii].setScreenListener(this);
-//                    controllers[ii].setSpriteBatch(batch);
-//                }
-//
+                currentScene = new Level2Scene(assets);
                 break;
 
             default:
                 System.out.println("no level");
+                return;
         }
 
+        currentScene.setCanvas(canvas);
+        currentScene.show();
+        currentScene.resize(com.badlogic.gdx.Gdx.graphics.getWidth(), com.badlogic.gdx.Gdx.graphics.getHeight());
         currentLevel = level;
+    }
+
+    /**
+     * Sets the screen listener for the current scene
+     */
+    public void setScreenListener(edu.cornell.gdiac.util.ScreenListener listener) {
+        if (currentScene != null) {
+            currentScene.setScreenListener(listener);
+        }
     }
 
     /**
@@ -87,7 +90,7 @@ public class LevelController {
     /**
      * Get current scene
      */
-    public Screen getCurrentScene() {
+    public PhysicsScene getCurrentScene() {
         return currentScene;
     }
 
