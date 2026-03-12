@@ -403,6 +403,7 @@ public class LoadingScene implements Screen, InputProcessor {
         screenY = height-screenY;
 
         // Play button is a circle.
+        // TODO replace with png of start/resume here
         float cx = width/2;
         float cy = (int)(constants.getFloat( "bar.height" )*height);
         float s = constants.getFloat( "button.scale" )*scale;

@@ -8,6 +8,7 @@ content
 /bin/
 *.class
 *.pdf
+*.jar
 *.DS_Store
 out
 .idea
