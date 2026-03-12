@@ -8,6 +8,7 @@ platform/barrier.png
 platform/bullet.png
 platform/cameraflash.png
 platform/constants.json
+platform/constants1.json
 platform/jump.wav
 platform/pew.wav
 platform/plop.wav
