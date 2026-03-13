@@ -12,8 +12,10 @@ public class GameObject extends ObstacleSprite {
     public Obj object;
     /** This object's weight (heavy/light) */
     float weight;
-    /** This object's texture (rough/slippery) */
-    float texture;
+    /** This object's elasticity (rigid/bouncy) */
+    float elasticity;
+    /** This object's friction (rough/slippery)*/
+    float friction;
     /** This object's temperature (hot/cold) */
     float temp;
 
@@ -21,7 +23,8 @@ public class GameObject extends ObstacleSprite {
         this.data = data;
         this.object = object;
         weight = data.getFloat("weight");
-        texture = data.getFloat("texture");
+        elasticity = data.getFloat("elasticity");
+        friction = data.getFloat("friction");
         temp = data.getFloat("temp");
     }
 
@@ -42,10 +45,19 @@ public class GameObject extends ObstacleSprite {
         mesh.set(-drawW / 2.0f, -drawH / 2.0f, drawW, drawH);
     }
 
-    public void putPicture(GameObject other) {
-        this.weight = other.getWeight();
-        this.texture = other.getTexture();
-        this.temp = other.getTemp();
+    public void putPicture(GameObject other, CameraType cameraType) {
+        switch (cameraType) {
+            case THERMAL:
+                this.temp = other.getTemp();
+                break;
+            case REGULAR:
+                this.weight = other.getWeight();
+                break;
+            case TEXTURE:
+                this.elasticity = other.getElasticity();
+                this.friction = other.getFriction();
+                break;
+        }
     }
 
     public float getWeight() {
@@ -56,13 +68,18 @@ public class GameObject extends ObstacleSprite {
         return temp;
     }
 
-    public float getTexture() {
-        return texture;
+    public float getElasticity() {
+        return elasticity;
+    }
+
+    public float getFriction() {
+        return friction;
     }
 
     public void resetAttributes() {
         this.weight = data.getFloat("weight");
-        this.texture = data.getFloat("texture");
+        this.elasticity = data.getFloat("elasticity");
+        this.friction = data.getFloat("friction");
         this.temp = data.getFloat("temp");
     }
     // TODO: add anything else that you're thinking of and write an explanation in discord/text
