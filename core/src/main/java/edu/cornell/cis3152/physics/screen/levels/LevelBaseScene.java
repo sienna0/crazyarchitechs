@@ -33,6 +33,7 @@ import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.utils.ObjectSet;
 import edu.cornell.cis3152.physics.InputController;
 import edu.cornell.cis3152.physics.screen.PhysicsScene;
+import edu.cornell.cis3152.physics.world.CameraType;
 import edu.cornell.cis3152.physics.world.Door;
 import edu.cornell.cis3152.physics.world.GameObject;
 import edu.cornell.cis3152.physics.world.Obj;
@@ -335,6 +336,8 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         GameObject target = findObjectUnderMouse(mouse.x, mouse.y);
         avatar.setCurrentTarget(target);
 
+
+
         if (input.didLeftClick()) {
             SoundEffectManager sounds = SoundEffectManager.getInstance();
             float picVolume = Math.min(1.0f, volume * 1.75f);
@@ -358,7 +361,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
                             sounds.play("fire", fireSound, volume);
 
                             if (rockLiftActive) {
-                                rock.putPicture(activePicture.getSubject());
+                                rock.putPicture(activePicture.getSubject(), CameraType.REGULAR);
                                 // Adding the picture
                                 float units = height/bounds.height;
                                 activePicture.setTarget(rock, units);
@@ -379,7 +382,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
                             sounds.play("fire", fireSound, volume);
 
                             if (cloudDropActive) {
-                                cloud.putPicture(activePicture.getSubject());
+                                cloud.putPicture(activePicture.getSubject(),CameraType.REGULAR);
                                 cloud.getObstacle().setDensity(ROCK_DENSITY);
                                 cloud.getObstacle().setFriction(ROCK_FRICTION);
                                 cloud.getObstacle().getBody().resetMassData();
@@ -405,7 +408,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
                             sounds.play("fire", fireSound, volume);
 
                             if (iceOnCloudActive) {
-                                cloud.putPicture(activePicture.getSubject());
+                                cloud.putPicture(activePicture.getSubject(),CameraType.REGULAR);
                                 Body cb = cloud.getObstacle().getBody();
                                 cb.setLinearVelocity(0, 0);
                                 cb.setAngularVelocity(0);
@@ -434,7 +437,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
                             sounds.play("fire", fireSound, volume);
 
                             if (iceOnRockActive) {
-                                rock.putPicture(activePicture.getSubject());
+                                rock.putPicture(activePicture.getSubject(),CameraType.REGULAR);
                                 rock.getObstacle().setFriction(0.0f);
                                 rock.getObstacle().setDensity(ICE_SLIDE_DENSITY);
                                 rock.getObstacle().getBody().resetMassData();
@@ -457,7 +460,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
                             sounds.play("fire", fireSound, volume);
 
                             if (rockOnIceActive) {
-                                ice.putPicture(activePicture.getSubject());
+                                ice.putPicture(activePicture.getSubject(),CameraType.REGULAR);
                                 ice.getObstacle().setFriction(ROCK_FRICTION);
                                 float units = height/bounds.height;
                                 activePicture.setTarget(ice, units);
@@ -475,7 +478,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
                             sounds.play("fire", fireSound, volume);
 
                             if (cloudOnIceActive) {
-                                ice.putPicture(activePicture.getSubject());
+                                ice.putPicture(activePicture.getSubject(),CameraType.REGULAR);
                                 ice.getObstacle().setRestitution(ICE_BOUNCE_RESTITUTION);
                                 float units = height/bounds.height;
                                 activePicture.setTarget(ice, units);

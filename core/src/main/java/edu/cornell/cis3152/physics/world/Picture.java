@@ -1,7 +1,6 @@
 package edu.cornell.cis3152.physics.world;
 
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.physics.box2d.Joint;
 import edu.cornell.gdiac.graphics.SpriteMesh;
 import edu.cornell.gdiac.physics2.BoxObstacle;
 import edu.cornell.gdiac.physics2.ObstacleSprite;
@@ -25,8 +24,6 @@ public class Picture extends ObstacleSprite {
     /** The id of this picture. Also serves as its index position in the inventory. */
     private final int id;
 
-    // FIXME remove joints
-    private Joint pictureJoint;
 
     /** Cache offset for pictures on objects */
     private final Vector2 offset = new Vector2();
@@ -59,18 +56,6 @@ public class Picture extends ObstacleSprite {
     /** Returns the ID of this picture */
     public int getId(){return id;}
 
-
-    // FIXME remove joints
-    /** Sets the pointer for the joint attaching this picture */
-    public void setJoint(Joint joint) {
-        this.pictureJoint = joint;
-    }
-
-    // FIXME remove joints
-    /** Returns the pointer for the joint attaching this picture */
-    public Joint getJoint() {
-        return pictureJoint;
-    }
 
     /** Returns the enum type of this picture's subject */
     public Obj getSubjectType(){return subjectType;}
