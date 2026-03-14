@@ -241,7 +241,7 @@ public class LoadingScene implements Screen, InputProcessor {
 
         // Height lock the logo
         Texture texture = internal.getEntry( "splash", Texture.class );
-        canvas.draw(texture,(width-height)/2, 0, height, height);
+        canvas.draw(texture,0, 0, width, height);
 
         if (progress < 1.0f) {
             drawProgress();

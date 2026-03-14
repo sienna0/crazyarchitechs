@@ -380,23 +380,13 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
                             sounds.play("fire", fireSound, volume);
 
                             if (rockLiftActive) {
-                                rock.putPicture(activePicture.getSubject());
+                                rock.putPicture(activePicture.getSubject(),CameraType.REGULAR);
                                 // Adding the picture
                                 float units = height/bounds.height;
                                 activePicture.setTarget(rock, units);
                                 addSprite(activePicture);
-                                // Joint for picture and rock
-                                WeldJointDef weldDef = new WeldJointDef();
-                                weldDef.initialize(
-                                        rock.getObstacle().getBody(),
-                                        activePicture.getObstacle().getBody(),
-                                        rock.getObstacle().getPosition()
-                                );
-                                activePicture.setJoint(world.createJoint(weldDef));
+
                             } else {
-                                if (activePicture != null && activePicture.getJoint() != null) {
-                                    world.destroyJoint(activePicture.getJoint());
-                                }
                                 sprites.remove(activePicture);
                                 activePicture = null;
                                 rock.resetAttributes();
@@ -409,25 +399,16 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
                             sounds.play("fire", fireSound, volume);
 
                             if (cloudDropActive) {
-                                cloud.putPicture(activePicture.getSubject());
+                                cloud.putPicture(activePicture.getSubject(),CameraType.REGULAR);
                                 cloud.getObstacle().setDensity(ROCK_DENSITY);
                                 cloud.getObstacle().setFriction(ROCK_FRICTION);
                                 cloud.getObstacle().getBody().resetMassData();
                                 float units = height/bounds.height;
                                 activePicture.setTarget(cloud, units);
                                 addSprite(activePicture);
-                                WeldJointDef weldDef = new WeldJointDef();
-                                weldDef.initialize(
-                                        cloud.getObstacle().getBody(),
-                                        activePicture.getObstacle().getBody(),
-                                        cloud.getObstacle().getPosition()
-                                );
-                                activePicture.setJoint(world.createJoint(weldDef));
+
                                 cloudReturnActive = false;
                             } else {
-                                if (activePicture != null && activePicture.getJoint() != null) {
-                                    world.destroyJoint(activePicture.getJoint());
-                                }
                                 sprites.remove(activePicture);
                                 activePicture = null;
                                 cloud.resetAttributes();
@@ -443,7 +424,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
                             sounds.play("fire", fireSound, volume);
 
                             if (iceOnCloudActive) {
-                                cloud.putPicture(activePicture.getSubject());
+                                cloud.putPicture(activePicture.getSubject(),CameraType.REGULAR);
                                 Body cb = cloud.getObstacle().getBody();
                                 cb.setLinearVelocity(0, 0);
                                 cb.setAngularVelocity(0);
@@ -452,13 +433,9 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
                                 float units = height/bounds.height;
                                 activePicture.setTarget(cloud, units);
                                 addSprite(activePicture);
-                                WeldJointDef weldDef = new WeldJointDef();
-                                weldDef.initialize(cloud.getObstacle().getBody(), activePicture.getObstacle().getBody(), cloud.getObstacle().getPosition());
-                                activePicture.setJoint(world.createJoint(weldDef));
+
                             } else {
-                                if (activePicture != null && activePicture.getJoint() != null) {
-                                    world.destroyJoint(activePicture.getJoint());
-                                }
+
                                 sprites.remove(activePicture);
                                 activePicture = null;
                                 cloud.resetAttributes();
@@ -477,20 +454,16 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
                             sounds.play("fire", fireSound, volume);
 
                             if (iceOnRockActive) {
-                                rock.putPicture(activePicture.getSubject());
+                                rock.putPicture(activePicture.getSubject(),CameraType.REGULAR);
                                 rock.getObstacle().setFriction(0.0f);
                                 rock.getObstacle().setDensity(ICE_SLIDE_DENSITY);
                                 rock.getObstacle().getBody().resetMassData();
                                 float units = height/bounds.height;
                                 activePicture.setTarget(rock, units);
                                 addSprite(activePicture);
-                                WeldJointDef weldDef = new WeldJointDef();
-                                weldDef.initialize(rock.getObstacle().getBody(), activePicture.getObstacle().getBody(), rock.getObstacle().getPosition());
-                                activePicture.setJoint(world.createJoint(weldDef));
+
                             } else {
-                                if (activePicture != null && activePicture.getJoint() != null) {
-                                    world.destroyJoint(activePicture.getJoint());
-                                }
+
                                 sprites.remove(activePicture);
                                 activePicture = null;
                                 rock.resetAttributes();
@@ -505,18 +478,14 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
                             sounds.play("fire", fireSound, volume);
 
                             if (rockOnIceActive) {
-                                ice.putPicture(activePicture.getSubject());
+                                ice.putPicture(activePicture.getSubject(),CameraType.REGULAR);
                                 ice.getObstacle().setFriction(ROCK_FRICTION);
                                 float units = height/bounds.height;
                                 activePicture.setTarget(ice, units);
                                 addSprite(activePicture);
-                                WeldJointDef weldDef = new WeldJointDef();
-                                weldDef.initialize(ice.getObstacle().getBody(), activePicture.getObstacle().getBody(), ice.getObstacle().getPosition());
-                                activePicture.setJoint(world.createJoint(weldDef));
+
                             } else {
-                                if (activePicture != null && activePicture.getJoint() != null) {
-                                    world.destroyJoint(activePicture.getJoint());
-                                }
+
                                 sprites.remove(activePicture);
                                 activePicture = null;
                                 ice.resetAttributes();
@@ -529,18 +498,13 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
                             sounds.play("fire", fireSound, volume);
 
                             if (cloudOnIceActive) {
-                                ice.putPicture(activePicture.getSubject());
+                                ice.putPicture(activePicture.getSubject(),CameraType.REGULAR);
                                 ice.getObstacle().setRestitution(ICE_BOUNCE_RESTITUTION);
                                 float units = height/bounds.height;
                                 activePicture.setTarget(ice, units);
                                 addSprite(activePicture);
-                                WeldJointDef weldDef = new WeldJointDef();
-                                weldDef.initialize(ice.getObstacle().getBody(), activePicture.getObstacle().getBody(), ice.getObstacle().getPosition());
-                                activePicture.setJoint(world.createJoint(weldDef));
+
                             } else {
-                                if (activePicture != null && activePicture.getJoint() != null) {
-                                    world.destroyJoint(activePicture.getJoint());
-                                }
                                 sprites.remove(activePicture);
                                 activePicture = null;
                                 ice.resetAttributes();
