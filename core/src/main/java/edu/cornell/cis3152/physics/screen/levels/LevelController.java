@@ -24,6 +24,9 @@ public class LevelController {
     /** Current level screen */
     private PhysicsScene currentScene;
 
+    /** Base level screen */
+    private LevelBaseScene baseScene;
+
     /**
      * Constructor
      */
@@ -32,7 +35,9 @@ public class LevelController {
         this.canvas = canvas;
 
         currentLevel = 1;
-        totalLevels = 2;
+        totalLevels = 3;
+
+        baseScene = new LevelBaseScene(assets);
 
         loadLevel(currentLevel);
     }
@@ -42,24 +47,47 @@ public class LevelController {
      */
     public void loadLevel(int level) {
 
-        switch(level) {
-            case 1:
-                currentScene = new Level1Scene(assets);
-                break;
+//        switch(level) {
+//            case 1:
+//                currentScene = new Level1Scene(assets);
+//                break;
+//
+//            case 2:
+//                currentScene = new Level2Scene(assets);
+//                break;
+//
+//            default:
+//                System.out.println("no level");
+//                return;
+//        }
+//        if (level <= totalLevels)
+//        {
+//            baseScene.setLevel(level);
+//        }
+//        else
+//        {
+//            System.out.println("no level");
+//            return;
+//        }
 
-            case 2:
-                currentScene = new Level2Scene(assets);
-                break;
-
-            default:
-                System.out.println("no level");
-                return;
+        if (level <= totalLevels)
+        {
+            currentScene = new LevelBaseScene(assets);
+        }
+        else
+        {
+            System.out.println("no level");
+            return;
         }
 
         currentScene.setCanvas(canvas);
         currentScene.show();
         currentScene.resize(com.badlogic.gdx.Gdx.graphics.getWidth(), com.badlogic.gdx.Gdx.graphics.getHeight());
+//        baseScene.setCanvas(canvas);
+//        baseScene.show();
+//        baseScene.resize(com.badlogic.gdx.Gdx.graphics.getWidth(), com.badlogic.gdx.Gdx.graphics.getHeight());
         currentLevel = level;
+        ((LevelBaseScene)currentScene).setLevel(level);
     }
 
     /**
@@ -77,6 +105,10 @@ public class LevelController {
     public void nextLevel() {
         if (currentLevel < totalLevels) {
             loadLevel(currentLevel + 1);
+        }
+        else
+        {
+            loadLevel(1);
         }
     }
 

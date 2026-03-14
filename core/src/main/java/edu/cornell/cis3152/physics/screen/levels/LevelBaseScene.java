@@ -12,6 +12,7 @@
  */
 package edu.cornell.cis3152.physics.screen.levels;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Pixmap;
@@ -149,6 +150,9 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         plopSound = directory.getEntry( "platform-plop", SoundEffect.class );
         volume = constants.getFloat("volume", 1.0f);
 
+        textCamera = new OrthographicCamera();
+        textCamera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+
         font = new BitmapFont();
         cameraLabel = new TextLayout();
         cameraLabel.setFont( font );
@@ -207,10 +211,28 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
      * Lays out the game geography.
      */
     private void populateLevel() {
+
         float units = height/bounds.height;
 
         // Add level goal
         Texture texture = directory.getEntry( "shared-goal", Texture.class );
+
+        if (constants.get("level" + currentLevel) == null)
+        {
+            currentLevel = 1;
+        }
+
+        JsonValue level = constants.get("level" + currentLevel);
+        System.out.println(currentLevel);
+        System.out.println("bing");
+//        System.out.println("Level: " + level);
+//
+//        JsonValue objects = level.get("objectLocations");
+//        System.out.println("Objects: " + objects);
+//
+//        JsonValue goal1 = objects.get("goal");
+//        System.out.println("Goal: " + goal1);
+
         JsonValue goal = constants.get("level" + currentLevel).get("objectLocations").get("goal");
         goalDoor = new Door(units, goal);
         goalDoor.setTexture( texture );
@@ -309,6 +331,23 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         cloudLiftCeilingY = cloud.getObstacle().getY();
         cloudDropActive = false;
         cloudReturnActive = false;
+
+    }
+
+    /**
+     * Switches level geometry from one level to the next
+     */
+    public void setLevel(int level)
+    {
+        if (constants.get("level" + level) != null)
+        {
+            currentLevel = level;
+        }
+        else
+        {
+            currentLevel = 1;
+        }
+        reset();
     }
 
     public boolean preUpdate(float dt) {
@@ -757,7 +796,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             case TEXTURE -> "Texture";
         };
 
-        canvas.end();
+
 
         cameraLabel.setText(label);
 
