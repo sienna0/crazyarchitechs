@@ -14,7 +14,6 @@ package edu.cornell.cis3152.physics.screen.levels;
 
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.*;
-import com.badlogic.gdx.physics.box2d.joints.WeldJointDef;
 import com.badlogic.gdx.utils.*;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.physics.box2d.*;
@@ -343,17 +342,8 @@ public class Level1Scene extends PhysicsScene implements ContactListener {
                                 activePicture.setTarget(rock, units);
                                 addSprite(activePicture);
                                 // Joint for picture and rock
-                                WeldJointDef weldDef = new WeldJointDef();
-                                weldDef.initialize(
-                                        rock.getObstacle().getBody(),
-                                        activePicture.getObstacle().getBody(),
-                                        rock.getObstacle().getPosition()
-                                );
-                                activePicture.setJoint(world.createJoint(weldDef));
+
                             } else {
-                                if (activePicture != null && activePicture.getJoint() != null) {
-                                    world.destroyJoint(activePicture.getJoint());
-                                }
                                 sprites.remove(activePicture);
                                 activePicture = null;
                                 rock.resetAttributes();
@@ -373,18 +363,9 @@ public class Level1Scene extends PhysicsScene implements ContactListener {
                                 float units = height/bounds.height;
                                 activePicture.setTarget(cloud, units);
                                 addSprite(activePicture);
-                                WeldJointDef weldDef = new WeldJointDef();
-                                weldDef.initialize(
-                                        cloud.getObstacle().getBody(),
-                                        activePicture.getObstacle().getBody(),
-                                        cloud.getObstacle().getPosition()
-                                );
-                                activePicture.setJoint(world.createJoint(weldDef));
+
                                 cloudReturnActive = false;
                             } else {
-                                if (activePicture != null && activePicture.getJoint() != null) {
-                                    world.destroyJoint(activePicture.getJoint());
-                                }
                                 sprites.remove(activePicture);
                                 activePicture = null;
                                 cloud.resetAttributes();
@@ -409,13 +390,9 @@ public class Level1Scene extends PhysicsScene implements ContactListener {
                                 float units = height/bounds.height;
                                 activePicture.setTarget(cloud, units);
                                 addSprite(activePicture);
-                                WeldJointDef weldDef = new WeldJointDef();
-                                weldDef.initialize(cloud.getObstacle().getBody(), activePicture.getObstacle().getBody(), cloud.getObstacle().getPosition());
-                                activePicture.setJoint(world.createJoint(weldDef));
+
                             } else {
-                                if (activePicture != null && activePicture.getJoint() != null) {
-                                    world.destroyJoint(activePicture.getJoint());
-                                }
+
                                 sprites.remove(activePicture);
                                 activePicture = null;
                                 cloud.resetAttributes();
@@ -441,13 +418,9 @@ public class Level1Scene extends PhysicsScene implements ContactListener {
                                 float units = height/bounds.height;
                                 activePicture.setTarget(rock, units);
                                 addSprite(activePicture);
-                                WeldJointDef weldDef = new WeldJointDef();
-                                weldDef.initialize(rock.getObstacle().getBody(), activePicture.getObstacle().getBody(), rock.getObstacle().getPosition());
-                                activePicture.setJoint(world.createJoint(weldDef));
+
                             } else {
-                                if (activePicture != null && activePicture.getJoint() != null) {
-                                    world.destroyJoint(activePicture.getJoint());
-                                }
+
                                 sprites.remove(activePicture);
                                 activePicture = null;
                                 rock.resetAttributes();
@@ -467,13 +440,9 @@ public class Level1Scene extends PhysicsScene implements ContactListener {
                                 float units = height/bounds.height;
                                 activePicture.setTarget(ice, units);
                                 addSprite(activePicture);
-                                WeldJointDef weldDef = new WeldJointDef();
-                                weldDef.initialize(ice.getObstacle().getBody(), activePicture.getObstacle().getBody(), ice.getObstacle().getPosition());
-                                activePicture.setJoint(world.createJoint(weldDef));
+
                             } else {
-                                if (activePicture != null && activePicture.getJoint() != null) {
-                                    world.destroyJoint(activePicture.getJoint());
-                                }
+
                                 sprites.remove(activePicture);
                                 activePicture = null;
                                 ice.resetAttributes();
@@ -491,13 +460,9 @@ public class Level1Scene extends PhysicsScene implements ContactListener {
                                 float units = height/bounds.height;
                                 activePicture.setTarget(ice, units);
                                 addSprite(activePicture);
-                                WeldJointDef weldDef = new WeldJointDef();
-                                weldDef.initialize(ice.getObstacle().getBody(), activePicture.getObstacle().getBody(), ice.getObstacle().getPosition());
-                                activePicture.setJoint(world.createJoint(weldDef));
+
                             } else {
-                                if (activePicture != null && activePicture.getJoint() != null) {
-                                    world.destroyJoint(activePicture.getJoint());
-                                }
+
                                 sprites.remove(activePicture);
                                 activePicture = null;
                                 ice.resetAttributes();

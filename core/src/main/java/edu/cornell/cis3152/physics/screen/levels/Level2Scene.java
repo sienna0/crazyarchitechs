@@ -14,7 +14,6 @@ import com.badlogic.gdx.physics.box2d.ContactListener;
 import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.Manifold;
 import com.badlogic.gdx.physics.box2d.World;
-import com.badlogic.gdx.physics.box2d.joints.WeldJointDef;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.utils.ObjectSet;
@@ -289,13 +288,7 @@ public class Level2Scene extends PhysicsScene implements ContactListener {
                                 float units = height/bounds.height;
                                 activePicture.setTarget(rock, units);
                                 addSprite(activePicture);
-                                WeldJointDef weldDef = new WeldJointDef();
-                                weldDef.initialize(rock.getObstacle().getBody(), activePicture.getObstacle().getBody(), rock.getObstacle().getPosition());
-                                activePicture.setJoint(world.createJoint(weldDef));
                             } else {
-                                if (activePicture != null && activePicture.getJoint() != null) {
-                                    world.destroyJoint(activePicture.getJoint());
-                                }
                                 sprites.remove(activePicture);
                                 activePicture = null;
                                 rock.resetAttributes();
@@ -314,14 +307,9 @@ public class Level2Scene extends PhysicsScene implements ContactListener {
                                 float units = height/bounds.height;
                                 activePicture.setTarget(cloud, units);
                                 addSprite(activePicture);
-                                WeldJointDef weldDef = new WeldJointDef();
-                                weldDef.initialize(cloud.getObstacle().getBody(), activePicture.getObstacle().getBody(), cloud.getObstacle().getPosition());
-                                activePicture.setJoint(world.createJoint(weldDef));
                                 cloudReturnActive = false;
                             } else {
-                                if (activePicture != null && activePicture.getJoint() != null) {
-                                    world.destroyJoint(activePicture.getJoint());
-                                }
+
                                 sprites.remove(activePicture);
                                 activePicture = null;
                                 cloud.resetAttributes();
@@ -345,13 +333,9 @@ public class Level2Scene extends PhysicsScene implements ContactListener {
                                 float units = height/bounds.height;
                                 activePicture.setTarget(cloud, units);
                                 addSprite(activePicture);
-                                WeldJointDef weldDef = new WeldJointDef();
-                                weldDef.initialize(cloud.getObstacle().getBody(), activePicture.getObstacle().getBody(), cloud.getObstacle().getPosition());
-                                activePicture.setJoint(world.createJoint(weldDef));
+
                             } else {
-                                if (activePicture != null && activePicture.getJoint() != null) {
-                                    world.destroyJoint(activePicture.getJoint());
-                                }
+
                                 sprites.remove(activePicture);
                                 activePicture = null;
                                 cloud.resetAttributes();
@@ -376,13 +360,9 @@ public class Level2Scene extends PhysicsScene implements ContactListener {
                                 float units = height/bounds.height;
                                 activePicture.setTarget(rock, units);
                                 addSprite(activePicture);
-                                WeldJointDef weldDef = new WeldJointDef();
-                                weldDef.initialize(rock.getObstacle().getBody(), activePicture.getObstacle().getBody(), rock.getObstacle().getPosition());
-                                activePicture.setJoint(world.createJoint(weldDef));
+
                             } else {
-                                if (activePicture != null && activePicture.getJoint() != null) {
-                                    world.destroyJoint(activePicture.getJoint());
-                                }
+
                                 sprites.remove(activePicture);
                                 activePicture = null;
                                 rock.resetAttributes();
@@ -401,13 +381,7 @@ public class Level2Scene extends PhysicsScene implements ContactListener {
                                 float units = height/bounds.height;
                                 activePicture.setTarget(ice, units);
                                 addSprite(activePicture);
-                                WeldJointDef weldDef = new WeldJointDef();
-                                weldDef.initialize(ice.getObstacle().getBody(), activePicture.getObstacle().getBody(), ice.getObstacle().getPosition());
-                                activePicture.setJoint(world.createJoint(weldDef));
                             } else {
-                                if (activePicture != null && activePicture.getJoint() != null) {
-                                    world.destroyJoint(activePicture.getJoint());
-                                }
                                 sprites.remove(activePicture);
                                 activePicture = null;
                                 ice.resetAttributes();
@@ -424,13 +398,7 @@ public class Level2Scene extends PhysicsScene implements ContactListener {
                                 float units = height/bounds.height;
                                 activePicture.setTarget(ice, units);
                                 addSprite(activePicture);
-                                WeldJointDef weldDef = new WeldJointDef();
-                                weldDef.initialize(ice.getObstacle().getBody(), activePicture.getObstacle().getBody(), ice.getObstacle().getPosition());
-                                activePicture.setJoint(world.createJoint(weldDef));
                             } else {
-                                if (activePicture != null && activePicture.getJoint() != null) {
-                                    world.destroyJoint(activePicture.getJoint());
-                                }
                                 sprites.remove(activePicture);
                                 activePicture = null;
                                 ice.resetAttributes();
