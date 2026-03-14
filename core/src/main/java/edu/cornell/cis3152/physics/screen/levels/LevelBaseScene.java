@@ -662,11 +662,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
 
         canvas.end();
 
-        String label = switch (avatar.getCamera().getCameraType()) {
-            case REGULAR -> "Normal";
-            case THERMAL -> "Thermal";
-            case TEXTURE -> "Texture";
-        };
+        String label = avatar.getCamera().getCameraType().getLabel();
 
 
 

@@ -111,7 +111,7 @@ public class LevelScene2 extends PhysicsScene implements ContactListener {
 
     // Tuning constants
     private static final float ROCK_DENSITY = 5.0f;
-    private static final float ROCK_FRICTION = 0.8f;
+    private static final float ROCK_FRICTION = 5.0f;
 
     private static final float CLOUD_BASE_DENSITY = 2.0f;
     private static final float CLOUD_BASE_FRICTION = 0.0f;
@@ -599,11 +599,7 @@ public class LevelScene2 extends PhysicsScene implements ContactListener {
 
         canvas.end();
 
-        String label = switch (avatar.getCamera().getCameraType()) {
-            case REGULAR -> "Normal";
-            case THERMAL -> "Thermal";
-            case TEXTURE -> "Texture";
-        };
+        String label = avatar.getCamera().getCameraType().getLabel();
 
         canvas.end();
 
