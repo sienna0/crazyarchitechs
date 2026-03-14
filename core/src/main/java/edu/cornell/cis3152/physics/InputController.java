@@ -92,6 +92,10 @@ public class InputController {
     private boolean camCyclePressed;
     private boolean camCyclePrevious;
 
+    /** Whether the flic stick toggle button was pressed. */
+    private boolean flicStickPressed;
+    private boolean flicStickPrevious;
+
     /** How much did we move horizontally? */
     private float horizontal;
     /** How much did we move vertically? */
@@ -291,6 +295,7 @@ public class InputController {
         therPrevious = therPressed;
         texPrevious = texPressed;
         camCyclePrevious = camCyclePressed;
+        flicStickPrevious = flicStickPressed;
 
 
         // Check to see if a GamePad is connected
@@ -363,6 +368,7 @@ public class InputController {
         therPressed  = (secondary && therPressed) || (Gdx.input.isKeyPressed(Input.Keys.NUM_2));
         texPressed  = (secondary && texPressed) || (Gdx.input.isKeyPressed(Input.Keys.NUM_3));
         camCyclePressed  = (secondary && camCyclePressed) || (Gdx.input.isKeyPressed(Input.Keys.C));
+        flicStickPressed  = (secondary && flicStickPrevious) || (Gdx.input.isKeyPressed(Input.Keys.I));
 
         // Directional controls
         horizontal = (secondary ? horizontal : 0.0f);
@@ -448,5 +454,9 @@ public class InputController {
 
     public boolean didCycleCamera() {
         return camCyclePressed && !camCyclePrevious;
+    }
+
+    public boolean didFlicStickToggle() {
+        return flicStickPressed && !flicStickPrevious;
     }
 }

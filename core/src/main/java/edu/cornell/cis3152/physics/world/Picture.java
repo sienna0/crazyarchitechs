@@ -58,6 +58,10 @@ public class Picture extends ObstacleSprite {
     public int getId(){return id;}
 
 
+    /** Returns whether this picture has a subject */
+    public boolean hasSubject(){return hasSubject;}
+
+
     /** Returns the enum type of this picture's subject */
     public Obj getSubjectType(){return subjectType;}
 
@@ -65,20 +69,25 @@ public class Picture extends ObstacleSprite {
     public CameraType getCameraType(){return cameraType;}
 
     /**
-     * Sets a new GameObject subject for this picture instance.
+     * Sets a GameObject subject for this picture instance.
      *
-     * This should be used by the inventory to re-use pictures if that is desired
-     * functionality for the game.
-     *
-     * @param newGameObject overrides the pictures current object
+     * @param go overrides/sets the pictures current object
      */
-    public void setSubject(GameObject newGameObject) {
-        subject = newGameObject;
-        subjectType = newGameObject.object;
+    public void setSubject(GameObject go, CameraType camType) {
+        subject = go;
+        subjectType = go.object;
+        hasSubject = true;
+        mesh = new SpriteMesh(subject.getMesh());
+        mesh.scl(0.5f);
+        setTexture(subject.getSpriteSheet().getTexture());
+        cameraType = camType;
     }
 
     /** Returns the subject of this picture */
     public GameObject getSubject(){return subject;}
+
+    /** Returns the target of this picture */
+    public GameObject getTarget(){return subject;}
 
     /**
      * Sets the target the picture will be placed on. Must be called before adding the picture
@@ -102,6 +111,10 @@ public class Picture extends ObstacleSprite {
         copy.setUserData(this);
         copy.setGravityScale(0.0f);
         obstacle = copy;
+
+
+        target.putPicture(subject,cameraType);
+
     }
 
     /**

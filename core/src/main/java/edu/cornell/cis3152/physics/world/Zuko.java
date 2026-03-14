@@ -254,6 +254,10 @@ public class Zuko extends ObstacleSprite {
     public Camera getCamera() {
         return camera;
     }
+
+    public Inventory getPictureInventory() {
+        return pictureInventory;
+    }
     /**
      * Sets the object currently under the mouse
      *
