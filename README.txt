@@ -24,6 +24,10 @@ Up Arrow Key - Jump
 Left Click - Take photo
 Right Click - Stick photo
 Tab Key - See range
+C key - Cycle through camera mode
+1 - Normal mode
+2 - Thermal mode
+3 - Texture mode
 
 Known Bugs
 - Zuko may be able to cling to the side of an object if it is rotated
