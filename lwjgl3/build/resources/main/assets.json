@@ -8,6 +8,7 @@
         },
         "shared-goal":   "shared/goaldoor.png",
         "platform-traci"    : "platform/traci.png",
+        "platform-camera"   : "platform/cameraflash.png",
         "platform-rope"     : "platform/ropebridge.png",
         "platform-barrier"  : "platform/barrier.png",
         "platform-bullet"   : "platform/bullet.png"

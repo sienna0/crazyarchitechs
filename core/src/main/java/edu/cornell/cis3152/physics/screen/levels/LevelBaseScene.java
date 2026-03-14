@@ -234,8 +234,11 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         texture = directory.getEntry( "platform-traci", Texture.class );
         avatar = new Zuko(units, constants.get("level" + currentLevel).get("objectLocations").get("zuko"));
         avatar.setTexture(texture);
+        avatar.setBaseTexture(texture);
         addSprite(avatar);
         avatar.createSensor();
+        Texture photoSheet = directory.getEntry( "platform-camera", Texture.class );
+        avatar.setPhotoAnimation(photoSheet, 4, 5, 17);
 
         float rockSize = 1.5f;
         float cloudSize = 1.5f;
@@ -404,6 +407,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         }
 
         avatar.getCamera().takePicture();
+        avatar.startPhotoAnimation();
         Picture picture = new Picture(target, avatar.getCamera().getCameraType());
         pictures.clear();
         pictures.add(picture);

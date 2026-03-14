@@ -23,6 +23,7 @@ import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.utils.JsonValue;
 import edu.cornell.gdiac.assets.ParserUtils;
 import edu.cornell.gdiac.graphics.SpriteBatch;
+import edu.cornell.gdiac.graphics.SpriteSheet;
 import edu.cornell.cis3152.physics.GameCanvas;
 import edu.cornell.gdiac.graphics.Texture2D;
 import edu.cornell.gdiac.math.Path2;
@@ -102,6 +103,19 @@ public class Zuko extends ObstacleSprite {
     private Inventory pictureInventory;
 
     private Camera camera;
+
+    /** The SpriteSheet for Zuko's phototaking animation */
+    private SpriteSheet photoSheet;
+    /** The duration of the animation */
+    private float animationTime = 0f;
+    /** The duration of each frame */
+    private float frameDuration = 0.07f;
+    /** Whether the animation is playing or not */
+    private boolean playingPhoto = false;
+
+    private Texture baseTexture;
+
+
     /**
      * Returns the left/right movement of this character.
      *
@@ -267,6 +281,31 @@ public class Zuko extends ObstacleSprite {
         this.currentTarget = target;
     }
 
+    public void setBaseTexture(Texture texture) {
+        baseTexture = texture;
+        setTexture(texture);
+    }
+
+
+    /**
+     * Takes a picture of the current target.
+     * Decrements the film count, sets the picture cooldown
+     * Flags that a picture was taken for sound purposes - It seems we might not be adding this for now
+     */
+    public void startPhotoAnimation() {
+        playingPhoto = true;
+        animationTime = 0f;
+    }
+
+    /**
+     * Sets the photo animation SpriteSheet for Zuko
+     * @param sheet
+     * @param rows
+     * @param cols
+     */
+    public void setPhotoAnimation(Texture sheet, int rows, int cols, int size) {
+        photoSheet = new SpriteSheet(sheet, rows, cols, size);
+    }
 
     /**
      * Creates a new Traci avatar with the given physics data
@@ -413,6 +452,8 @@ public class Zuko extends ObstacleSprite {
         }
     }
 
+
+
     /**
      * Updates the object's physics state (NOT GAME LOGIC).
      *
@@ -434,6 +475,19 @@ public class Zuko extends ObstacleSprite {
         } else {
             shootCooldown = Math.max(0, shootCooldown - 1);
         }
+        if (playingPhoto && photoSheet != null) {
+            animationTime += dt;
+            int frame = (int)(animationTime / frameDuration);
+            if (frame >= photoSheet.getSize()) {
+                playingPhoto = false;
+                photoSheet.setFrame(0);
+                if (baseTexture != null) {
+                    setTexture(baseTexture);
+                }
+            } else {
+                photoSheet.setFrame(frame);
+            }
+        }
 
         camera.update(dt);
 
@@ -447,15 +501,21 @@ public class Zuko extends ObstacleSprite {
      * texture back-and-forth depending on her facing. We do that by creating
      * a reflection affine transform.
      *
-     * @param canvas The game canvas to draw to
+     * @param batch The game canvas to draw to
      */
-    public void draw(GameCanvas canvas) {
+    @Override
+    public void draw(SpriteBatch batch) {
         if (faceRight) {
             flipCache.setToScaling( 1,1 );
         } else {
             flipCache.setToScaling( -1,1 );
         }
-        super.draw(canvas.getSpriteBatch(),flipCache);
+        if (playingPhoto && photoSheet != null) {
+            setSpriteSheet(photoSheet);
+        } else if (baseTexture != null) {
+            setTexture(baseTexture);
+        }
+        super.draw(batch,flipCache);
     }
 
     /**
