@@ -211,7 +211,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
 
         // Add level goal
         Texture texture = directory.getEntry( "shared-goal", Texture.class );
-        JsonValue goal = constants.get("goal");
+        JsonValue goal = constants.get("level" + currentLevel).get("objectLocations").get("goal");
         goalDoor = new Door(units, goal);
         goalDoor.setTexture( texture );
         goalDoor.getObstacle().setName("goal");
@@ -243,22 +243,23 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             addSprite(platform);
         }
 
-        // Create Traci
+        // Create Zuko
         texture = directory.getEntry( "platform-traci", Texture.class );
-        avatar = new Zuko(units, constants.get("traci"));
+        avatar = new Zuko(units, constants.get("level" + currentLevel).get("objectLocations").get("zuko"));
         avatar.setTexture(texture);
         addSprite(avatar);
         avatar.createSensor();
 
         float rockSize = 1.5f;
         float cloudSize = 1.5f;
-        float platformLeftX = 25.0f;
-        float platformTopY = 10.0f;
+//        float platformLeftX = 25.0f;
+//        float platformTopY = 10.0f;
 
         // Rock
+        float[] rockPositions = constants.get("level" + currentLevel).get("objectLocations").get("rock").asFloatArray();
         rock = new GameObject(
                 Obj.ROCK, constants.get("rock"), units,
-                platformLeftX - rockSize, 4.0f + rockSize / 2.0f,
+                rockPositions[0], rockPositions[1],
                 rockSize, rockSize,
                 BodyDef.BodyType.DynamicBody,
                 false
@@ -271,8 +272,9 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
 
         Texture cloudTexture = directory.getEntry( "cloud", Texture.class );
         // Cloud (normal mode = "floaty platform marker": gravity off, collides)
+        float[] cloudPositions = constants.get("level" + currentLevel).get("objectLocations").get("cloud").asFloatArray();
         cloud = new GameObject(
-                Obj.CLOUD, constants.get("cloud"), units, 20.0f, platformTopY + 2.0f, cloudSize,
+                Obj.CLOUD, constants.get("cloud"), units, cloudPositions[0], cloudPositions[1], cloudSize,
                 cloudSize, BodyDef.BodyType.DynamicBody, false
         );
         cloud.getObstacle().setDensity(CLOUD_BASE_DENSITY);
@@ -289,9 +291,10 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         Texture iceTexture = new Texture(icePixmap);
         icePixmap.dispose();
 
+        float[] icePositions = constants.get("level" + currentLevel).get("objectLocations").get("ice").asFloatArray();
         ice = new GameObject(
                 Obj.ICE, constants.get("ice"), units,
-                15.0f, 4.0f + iceSize / 2.0f,
+                icePositions[0], icePositions[1],
                 iceSize, iceSize,
                 BodyDef.BodyType.StaticBody, false
         );
