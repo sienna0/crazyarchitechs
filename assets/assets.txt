@@ -4,6 +4,7 @@ loading/boot.json
 loading/play.png
 loading/progress.png
 loading/splash.png
+loading/splash1.png
 platform/barrier.png
 platform/bullet.png
 platform/cameraflash.png

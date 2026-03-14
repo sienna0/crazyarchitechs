@@ -15,8 +15,6 @@
 
 import com.badlogic.gdx.*;
 import edu.cornell.cis3152.physics.screen.LoadingScene;
-import edu.cornell.cis3152.physics.screen.levels.Level1Scene;
-import edu.cornell.cis3152.physics.screen.levels.Level2Scene;
 import edu.cornell.cis3152.physics.screen.PhysicsScene;
 import edu.cornell.gdiac.util.*;
 import edu.cornell.gdiac.assets.*;

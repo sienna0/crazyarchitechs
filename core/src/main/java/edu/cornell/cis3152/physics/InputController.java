@@ -111,6 +111,9 @@ public class InputController {
     private boolean leftClickPressed;
     private boolean leftClickPrevious;
 
+    private boolean rightClickPressed;
+    private boolean rightClickPrevious;
+
     /** Whether the range key button was pressed */
     private boolean rangePressed;
     private boolean rangePrevious;
@@ -290,6 +293,7 @@ public class InputController {
         nextPrevious = nextPressed;
         prevPrevious = prevPressed;
         leftClickPrevious = leftClickPressed;
+        rightClickPrevious = rightClickPressed;
         rangePrevious = rangePressed;
         regPrevious = regPressed;
         therPrevious = therPressed;
@@ -393,8 +397,17 @@ public class InputController {
         // Mouse results
         tertiaryPressed = Gdx.input.isButtonPressed(Input.Buttons.LEFT);
         leftClickPressed = Gdx.input.isButtonPressed(Input.Buttons.LEFT);
+        rightClickPressed = Gdx.input.isButtonPressed(Input.Buttons.RIGHT);
         doubleClicked = false;
         if (leftClickPressed && !leftClickPrevious) {
+            if (doubleClickTimer > 0) {
+                doubleClicked = true;
+                doubleClickTimer = 0;
+            } else {
+                doubleClickTimer = doubleClickTime;
+            }
+        }
+        if (rightClickPressed && !rightClickPrevious) {
             if (doubleClickTimer > 0) {
                 doubleClicked = true;
                 doubleClickTimer = 0;
@@ -431,7 +444,11 @@ public class InputController {
         return leftClickPressed && !leftClickPrevious;
     }
 
-    /**
+    public boolean didRightClick() {
+        return rightClickPressed && !rightClickPrevious;
+    }
+
+     /**
      * Returns true if range toggle was detected.
      *
      * @return true if range toggle was detected (on and off button).

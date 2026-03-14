@@ -88,46 +88,18 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     private GameObject rock;
     private GameObject cloud;
     private GameObject ice;
-
-    // Rock lift behavior (cloud photo on rock)
-    private float rockLiftCeilingY;
-    private boolean rockLiftActive;
-
-    // Cloud behavior (rock photo on cloud)
-    private boolean cloudDropActive;
-    private boolean cloudReturnActive;
-    private float cloudLiftCeilingY;
-
-    // Ice interaction state
-    private boolean iceOnCloudActive;
-    private boolean iceOnRockActive;
-    private boolean rockOnIceActive;
-    private boolean cloudOnIceActive;
+    private float cloudHomeY;
 
     // Levels
     private int currentLevel = 1;
-
-    // Tuning constants
-    private static final float ROCK_DENSITY = 5.0f;
-    private static final float ROCK_FRICTION = 0.8f;
-
-    private static final float CLOUD_BASE_DENSITY = 2.0f;
-    private static final float CLOUD_BASE_FRICTION = 0.0f;
-
-    private static final float CLOUD_LIFT_GRAVITY = -0.5f;
-
-    private static final float ICE_DENSITY = 1.0f;
-    private static final float ICE_FRICTION = 0.0f;
-    private static final float ICE_RESTITUTION = 0.3f;
-    private static final float ICE_SLIDE_DENSITY = 0.3f;
-    private static final float ICE_BOUNCE_RESTITUTION = 2.5f;
-
     // Range Variables
     private float STICK_PICTURE_DISTANCE = 5.0f; //I know you wanted it to be 3 times less than take picture but, if you mistakenly take a picture of the rock, you would not be able to reach the cloud unless it is 2 times less
     private float TAKE_PICTURE_DISTANCE = 10.0f;
     private Array<GameObject> highlighted = new Array<>();
     private final Affine2 highlightTransform = new Affine2();
     private boolean showRange = false;
+    private static final float LIFT_SPRING_STIFFNESS = 6.0f;
+    private static final float LIFT_SPRING_DAMPING = 3.5f;
     /** Mark set to handle more sophisticated collision callbacks */
     protected ObjectSet<Fixture> sensorFixtures;
 
@@ -196,14 +168,6 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             pictures.clear();
         }
 
-        rockLiftActive = false;
-        cloudDropActive = false;
-        cloudReturnActive = false;
-        iceOnCloudActive = false;
-        iceOnRockActive = false;
-        rockOnIceActive = false;
-        cloudOnIceActive = false;
-
         populateLevel();
     }
 
@@ -233,6 +197,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
 //        JsonValue goal1 = objects.get("goal");
 //        System.out.println("Goal: " + goal1);
 
+        System.out.println("Level:" + constants.get("level" + currentLevel) + "; Constants: " + constants);
         JsonValue goal = constants.get("level" + currentLevel).get("objectLocations").get("goal");
         goalDoor = new Door(units, goal);
         goalDoor.setTexture( texture );
@@ -286,9 +251,6 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
                 BodyDef.BodyType.DynamicBody,
                 false
         );
-        rock.getObstacle().setDensity(ROCK_DENSITY);
-        rock.getObstacle().setFriction(ROCK_FRICTION);
-        rock.getObstacle().setRestitution(0.0f);
         rock.setTexture(earthTexture);
         addSprite(rock);
 
@@ -299,12 +261,9 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
                 Obj.CLOUD, constants.get("cloud"), units, cloudPositions[0], cloudPositions[1], cloudSize,
                 cloudSize, BodyDef.BodyType.DynamicBody, false
         );
-        cloud.getObstacle().setDensity(CLOUD_BASE_DENSITY);
-        cloud.getObstacle().setFriction(CLOUD_BASE_FRICTION);
-        cloud.getObstacle().setRestitution(0.0f);
-        cloud.getObstacle().setGravityScale(0.0f);
         cloud.setTexture(cloudTexture);
         addSprite(cloud);
+        cloudHomeY = cloud.getObstacle().getY();
 
         float iceSize = 1.5f;
         Pixmap icePixmap = new Pixmap(64, 64, Pixmap.Format.RGBA8888);
@@ -320,17 +279,8 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
                 iceSize, iceSize,
                 BodyDef.BodyType.StaticBody, false
         );
-        ice.getObstacle().setDensity(ICE_DENSITY);
-        ice.getObstacle().setFriction(ICE_FRICTION);
-        ice.getObstacle().setRestitution(ICE_RESTITUTION);
         ice.setTexture(iceTexture);
         addSprite(ice);
-
-        rockLiftCeilingY = bounds.height - rockSize / 2.0f;
-
-        cloudLiftCeilingY = cloud.getObstacle().getY();
-        cloudDropActive = false;
-        cloudReturnActive = false;
 
     }
 
@@ -365,6 +315,26 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     public void update(float dt) {
         InputController input = InputController.getInstance();
         findObjectNearZuko();
+        handlePictureShortcuts(input);
+        updateCameraSelection(input);
+        updateAvatarMovement(input);
+
+        GameObject target = resolveCurrentTarget(input);
+        handlePictureAction(input, target);
+
+        if (avatar.getCamera().isPictureTaken()) {
+            avatar.getCamera().clearPictureTaken();
+        }
+
+        applyLiftSprings();
+        avatar.applyForce();
+        if (avatar.isJumping()) {
+            SoundEffectManager sounds = SoundEffectManager.getInstance();
+            sounds.play("jump", jumpSound, volume);
+        }
+    }
+
+    private void handlePictureShortcuts(InputController input) {
         if (input.didDropPhoto()) {
             activePicture = null;
             pictures.clear();
@@ -372,11 +342,9 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         if (input.didToggleRange()) {
             showRange = !showRange;
         }
+    }
 
-        if (input.didToggleRange()) {
-            showRange = !showRange;
-        }
-
+    private void updateCameraSelection(InputController input) {
         if (input.didRegCamera()) {
             avatar.getCamera().setCameraType(CameraType.REGULAR);
         }
@@ -389,216 +357,133 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         if (input.didCycleCamera()) {
             avatar.getCamera().cycleCameraType();
         }
+    }
 
-        // Process actions in object model
+    private void updateAvatarMovement(InputController input) {
         avatar.setMovement(input.getHorizontal() * avatar.getForce());
         avatar.setJumping(input.didPrimary());
         avatar.setShooting(input.didSecondary());
+    }
 
+    private GameObject resolveCurrentTarget(InputController input) {
         Vector2 mouse = input.getCrossHair();
         GameObject target = findObjectUnderMouse(mouse.x, mouse.y);
         avatar.setCurrentTarget(target);
+        return target;
+    }
 
-        if (input.didLeftClick()) {
-            SoundEffectManager sounds = SoundEffectManager.getInstance();
-            float picVolume = Math.min(1.0f, volume * 1.75f);
+    private void handlePictureAction(InputController input, GameObject target) {
+        if (target == null) {
+            return;
+        }
 
-            if (target != null) {
-                if (activePicture == null) {
-                    if (avatar.getCamera().canTakePicture(target.getObstacle().getX(), target.getObstacle().getY(), avatar.getObstacle().getX(), avatar.getObstacle().getY())) {
-                        avatar.getCamera().takePicture();
-                        Picture picture = new Picture(target, avatar.getCamera().getCameraType());
-                        pictures.clear();
-                        pictures.add(picture);
-                        activePicture = picture;
-                        sounds.play("plop", plopSound, picVolume);
-                    }
-                } else {
-                    if (activePicture.getSubject() != null && activePicture.getSubject() != target && avatar.getCamera().hasLineOfSight(target.getObstacle().getX(), target.getObstacle().getY(), avatar.getObstacle().getX(), avatar.getObstacle().getY(), STICK_PICTURE_DISTANCE)) {
-                        Obj src = activePicture.getSubjectType();
-                        Obj dst = target.object;
-                        if (src == Obj.CLOUD && dst == Obj.ROCK && rock != null && rock.getObstacle() != null && rock.getObstacle().getBody() != null) {
-                            rockLiftActive = !rockLiftActive;
-                            sounds.play("fire", fireSound, volume);
+        if (input.didRightClick()) {
+            removePictureFromTarget(target);
+            return;
+        }
 
-                            if (rockLiftActive) {
-                                rock.putPicture(activePicture.getSubject(),CameraType.REGULAR);
-                                // Adding the picture
-                                float units = height/bounds.height;
-                                activePicture.setTarget(rock, units);
-                                addSprite(activePicture);
+        if (!input.didLeftClick()) {
+            return;
+        }
 
-                            } else {
-                                sprites.remove(activePicture);
-                                activePicture = null;
-                                rock.resetAttributes();
-                                rock.getObstacle().getBody().setGravityScale(1.0f);
-                            }
-                        }
+        if (activePicture == null) {
+            takePictureOfTarget(target);
+            return;
+        }
 
-                        if (src == Obj.ROCK && dst == Obj.CLOUD && cloud != null && cloud.getObstacle() != null && cloud.getObstacle().getBody() != null) {
-                            cloudDropActive = !cloudDropActive;
-                            sounds.play("fire", fireSound, volume);
+        applyPictureToTarget(target);
+    }
 
-                            if (cloudDropActive) {
-                                cloud.putPicture(activePicture.getSubject(),CameraType.REGULAR);
-                                cloud.getObstacle().setDensity(ROCK_DENSITY);
-                                cloud.getObstacle().setFriction(ROCK_FRICTION);
-                                cloud.getObstacle().getBody().resetMassData();
-                                float units = height/bounds.height;
-                                activePicture.setTarget(cloud, units);
-                                addSprite(activePicture);
+    private void takePictureOfTarget(GameObject target) {
+        if (!avatar.getCamera().canTakePicture(
+                target.getObstacle().getX(),
+                target.getObstacle().getY(),
+                avatar.getObstacle().getX(),
+                avatar.getObstacle().getY())) {
+            return;
+        }
 
-                                cloudReturnActive = false;
-                            } else {
-                                sprites.remove(activePicture);
-                                activePicture = null;
-                                cloud.resetAttributes();
-                                cloud.getObstacle().setDensity(CLOUD_BASE_DENSITY);
-                                cloud.getObstacle().setFriction(CLOUD_BASE_FRICTION);
-                                cloud.getObstacle().getBody().resetMassData();
-                                cloudReturnActive = true;
-                            }
-                        }
+        avatar.getCamera().takePicture();
+        Picture picture = new Picture(target, avatar.getCamera().getCameraType());
+        pictures.clear();
+        pictures.add(picture);
+        activePicture = picture;
 
-                        if (src == Obj.ICE && dst == Obj.CLOUD && cloud != null && cloud.getObstacle() != null && cloud.getObstacle().getBody() != null) {
-                            iceOnCloudActive = !iceOnCloudActive;
-                            sounds.play("fire", fireSound, volume);
+        SoundEffectManager sounds = SoundEffectManager.getInstance();
+        float picVolume = Math.min(1.0f, volume * 1.75f);
+        sounds.play("plop", plopSound, picVolume);
+    }
 
-                            if (iceOnCloudActive) {
-                                cloud.putPicture(activePicture.getSubject(),CameraType.REGULAR);
-                                Body cb = cloud.getObstacle().getBody();
-                                cb.setLinearVelocity(0, 0);
-                                cb.setAngularVelocity(0);
-                                cb.setGravityScale(0.0f);
-                                cb.setType(BodyDef.BodyType.StaticBody);
-                                float units = height/bounds.height;
-                                activePicture.setTarget(cloud, units);
-                                addSprite(activePicture);
+    private void applyPictureToTarget(GameObject target) {
+        if (activePicture.getSubject() == null) {
+            activePicture = null;
+            return;
+        }
+        if (activePicture.getSubject() == target) {
+            return;
+        }
+        if (!avatar.getCamera().hasLineOfSight(
+                target.getObstacle().getX(),
+                target.getObstacle().getY(),
+                avatar.getObstacle().getX(),
+                avatar.getObstacle().getY(),
+                STICK_PICTURE_DISTANCE)) {
+            return;
+        }
 
-                            } else {
+        if (activePicture.getTarget() != null) {
+            activePicture.getTarget().resetAttributes();
+        }
 
-                                sprites.remove(activePicture);
-                                activePicture = null;
-                                cloud.resetAttributes();
-                                Body cb = cloud.getObstacle().getBody();
-                                cb.setType(BodyDef.BodyType.DynamicBody);
-                                cb.setGravityScale(0.0f);
-                                cb.setLinearVelocity(0, 0);
-                                cloud.getObstacle().setDensity(CLOUD_BASE_DENSITY);
-                                cloud.getObstacle().setFriction(CLOUD_BASE_FRICTION);
-                                cb.resetMassData();
-                            }
-                        }
+        activePicture.setTarget(target, height / bounds.height);
+        SoundEffectManager sounds = SoundEffectManager.getInstance();
+        sounds.play("fire", fireSound, volume);
+    }
 
-                        if (src == Obj.ICE && dst == Obj.ROCK && rock != null && rock.getObstacle() != null && rock.getObstacle().getBody() != null) {
-                            iceOnRockActive = !iceOnRockActive;
-                            sounds.play("fire", fireSound, volume);
+    private void removePictureFromTarget(GameObject target) {
+        Picture attachedPicture = findPictureOnTarget(target);
+        if (attachedPicture == null) {
+            return;
+        }
 
-                            if (iceOnRockActive) {
-                                rock.putPicture(activePicture.getSubject(),CameraType.REGULAR);
-                                rock.getObstacle().setFriction(0.0f);
-                                rock.getObstacle().setDensity(ICE_SLIDE_DENSITY);
-                                rock.getObstacle().getBody().resetMassData();
-                                float units = height/bounds.height;
-                                activePicture.setTarget(rock, units);
-                                addSprite(activePicture);
+        target.resetAttributes();
+        attachedPicture.clearTarget();
+        if (activePicture == attachedPicture) {
+            activePicture = attachedPicture;
+        }
 
-                            } else {
+        SoundEffectManager sounds = SoundEffectManager.getInstance();
+        sounds.play("plop", plopSound, volume);
+    }
 
-                                sprites.remove(activePicture);
-                                activePicture = null;
-                                rock.resetAttributes();
-                                rock.getObstacle().setFriction(ROCK_FRICTION);
-                                rock.getObstacle().setDensity(ROCK_DENSITY);
-                                rock.getObstacle().getBody().resetMassData();
-                            }
-                        }
-
-                        if (src == Obj.ROCK && dst == Obj.ICE && ice != null && ice.getObstacle() != null && ice.getObstacle().getBody() != null) {
-                            rockOnIceActive = !rockOnIceActive;
-                            sounds.play("fire", fireSound, volume);
-
-                            if (rockOnIceActive) {
-                                ice.putPicture(activePicture.getSubject(),CameraType.REGULAR);
-                                ice.getObstacle().setFriction(ROCK_FRICTION);
-                                float units = height/bounds.height;
-                                activePicture.setTarget(ice, units);
-                                addSprite(activePicture);
-
-                            } else {
-
-                                sprites.remove(activePicture);
-                                activePicture = null;
-                                ice.resetAttributes();
-                                ice.getObstacle().setFriction(ICE_FRICTION);
-                            }
-                        }
-
-                        if (src == Obj.CLOUD && dst == Obj.ICE && ice != null && ice.getObstacle() != null && ice.getObstacle().getBody() != null) {
-                            cloudOnIceActive = !cloudOnIceActive;
-                            sounds.play("fire", fireSound, volume);
-
-                            if (cloudOnIceActive) {
-                                ice.putPicture(activePicture.getSubject(),CameraType.REGULAR);
-                                ice.getObstacle().setRestitution(ICE_BOUNCE_RESTITUTION);
-                                float units = height/bounds.height;
-                                activePicture.setTarget(ice, units);
-                                addSprite(activePicture);
-
-                            } else {
-                                sprites.remove(activePicture);
-                                activePicture = null;
-                                ice.resetAttributes();
-                                ice.getObstacle().setRestitution(ICE_RESTITUTION);
-                            }
-                        }
-
-                    }
-                }
+    private Picture findPictureOnTarget(GameObject target) {
+        for (Picture picture : pictures) {
+            if (picture.getTarget() == target) {
+                return picture;
             }
         }
+        return null;
+    }
 
-        if (avatar.getCamera().isPictureTaken()) {
-            avatar.getCamera().clearPictureTaken();
-        }
-
-        if (rockLiftActive && rock != null && rock.getObstacle() != null && rock.getObstacle().getBody() != null) {
-            Body body = rock.getObstacle().getBody();
-            if (body.getPosition().y < rockLiftCeilingY) {
-                body.setGravityScale(-0.35f);
-            } else {
-                body.setGravityScale(0.0f);
-                Vector2 v = body.getLinearVelocity();
-                body.setLinearVelocity(v.x, 0.0f);
+    private void applyLiftSprings() {
+        for (ObstacleSprite sprite : sprites) {
+            if (!(sprite instanceof GameObject gameObject)) {
+                continue;
             }
-        }
-
-        if (cloud != null && cloud.getObstacle() != null && cloud.getObstacle().getBody() != null) {
-            Body body = cloud.getObstacle().getBody();
-
-            if (iceOnCloudActive) {
-                // frozen in place -- nothing to do
-            } else if (cloudDropActive) {
-                body.setGravityScale(1.0f);
-            } else if (cloudReturnActive) {
-                if (body.getPosition().y < cloudLiftCeilingY) {
-                    body.setGravityScale(CLOUD_LIFT_GRAVITY);
-                } else {
-                    body.setGravityScale(0.0f);
-                    Vector2 v = body.getLinearVelocity();
-                    body.setLinearVelocity(v.x, 0.0f);
-                    cloudReturnActive = false;
-                }
-            } else {
-                body.setGravityScale(0.0f);
+            if (gameObject != cloud && !gameObject.hasLiftPicture()) {
+                continue;
             }
-        }
 
-        avatar.applyForce();
-        if (avatar.isJumping()) {
-            SoundEffectManager sounds = SoundEffectManager.getInstance();
-            sounds.play("jump", jumpSound, volume);
+            Body body = gameObject.getObstacle().getBody();
+            if (body == null) {
+                continue;
+            }
+
+            float displacement = cloudHomeY - body.getPosition().y;
+            float damping = -LIFT_SPRING_DAMPING * body.getLinearVelocity().y;
+            float springForce = (LIFT_SPRING_STIFFNESS * displacement) + damping;
+            body.applyForceToCenter(0.0f, body.getMass() * springForce, true);
+            body.setAngularVelocity(0.0f);
         }
     }
 
@@ -618,14 +503,6 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         try {
             ObstacleSprite bd1 = (ObstacleSprite)body1.getUserData();
             ObstacleSprite bd2 = (ObstacleSprite)body2.getUserData();
-
-            // Test bullet collision with world
-            if (bd1.getName().equals("bullet") && bd2 != avatar && !bd2.getName().equals( "goal" )) {
-                removeBullet(bd1);
-            }
-            if (bd2.getName().equals("bullet") && bd1 != avatar && !bd1.getName().equals( "goal" )) {
-                removeBullet(bd2);
-            }
 
             // See if we have landed on the ground.
             if ((avatar.getSensorName().equals(fd2) && avatar != bd1) ||
@@ -679,15 +556,6 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         sounds.stop("plop");
         sounds.stop("fire");
         sounds.stop("jump");
-    }
-
-    /**
-     * Removes a bullet from the world.
-     */
-    public void removeBullet(ObstacleSprite bullet) {
-        bullet.getObstacle().markRemoved(true);
-        SoundEffectManager sounds = SoundEffectManager.getInstance();
-        sounds.play("plop", plopSound, volume);
     }
 
     /**

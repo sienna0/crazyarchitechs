@@ -87,7 +87,7 @@ public class Picture extends ObstacleSprite {
     public GameObject getSubject(){return subject;}
 
     /** Returns the target of this picture */
-    public GameObject getTarget(){return subject;}
+    public GameObject getTarget(){return target;}
 
     /**
      * Sets the target the picture will be placed on. Must be called before adding the picture
@@ -115,6 +115,11 @@ public class Picture extends ObstacleSprite {
 
         target.putPicture(subject,cameraType);
 
+    }
+
+    /** Clears the object this picture is currently attached to. */
+    public void clearTarget() {
+        target = null;
     }
 
     /**
