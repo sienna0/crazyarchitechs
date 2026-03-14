@@ -41,7 +41,7 @@ public class Picture extends ObstacleSprite {
      *
      * @param subject is the GameObject which is the subject of the picture
      */
-    public Picture(GameObject subject) {
+    public Picture(GameObject subject, CameraType camera) {
         this.subject = subject;
         this.subjectType = subject.object;
         hasSubject = true;
@@ -51,6 +51,7 @@ public class Picture extends ObstacleSprite {
         mesh.scl(0.5f);
         setTexture(subject.getSpriteSheet().getTexture());
         id = -1;
+        cameraType = camera;
     }
 
     /** Returns the ID of this picture */

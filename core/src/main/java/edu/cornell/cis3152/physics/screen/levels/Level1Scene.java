@@ -12,6 +12,8 @@
  */
 package edu.cornell.cis3152.physics.screen.levels;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.*;
 import com.badlogic.gdx.utils.*;
@@ -27,6 +29,7 @@ import edu.cornell.gdiac.audio.SoundEffectManager;
 import edu.cornell.gdiac.math.Path2;
 import edu.cornell.gdiac.math.PathFactory;
 import edu.cornell.gdiac.physics2.*;
+import edu.cornell.gdiac.graphics.TextLayout;
 
 /**
  * The game scene for the platformer game.
@@ -106,9 +109,13 @@ public class Level1Scene extends PhysicsScene implements ContactListener {
     private float TAKE_PICTURE_DISTANCE = 10.0f;
     private Array<GameObject> highlighted = new Array<>();
     private final Affine2 highlightTransform = new Affine2();
-   private boolean showRange = false;
-    /** Mark set to handle more sophisticated collision callbacks */
+    private boolean showRange = false;
+    private TextLayout cameraLabel;
+    private OrthographicCamera textCamera;
+    private BitmapFont font;
+   /** Mark set to handle more sophisticated collision callbacks */
     protected ObjectSet<Fixture> sensorFixtures;
+
 
     /**
      * Creates and initialize a new instance of the platformer game
@@ -125,6 +132,13 @@ public class Level1Scene extends PhysicsScene implements ContactListener {
         fireSound = directory.getEntry( "platform-pew", SoundEffect.class );
         plopSound = directory.getEntry( "platform-plop", SoundEffect.class );
         volume = constants.getFloat("volume", 1.0f);
+
+        textCamera = new OrthographicCamera();
+        textCamera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+
+        font = new BitmapFont();
+        cameraLabel = new TextLayout();
+        cameraLabel.setFont( font );
     }
 
     /**
@@ -304,6 +318,19 @@ public class Level1Scene extends PhysicsScene implements ContactListener {
             showRange = !showRange;
         }
 
+        if (input.didRegCamera()) {
+            avatar.getCamera().setCameraType(CameraType.REGULAR);
+        }
+        if (input.didTherCamera()) {
+            avatar.getCamera().setCameraType(CameraType.THERMAL);
+        }
+        if (input.didTexCamera()) {
+            avatar.getCamera().setCameraType(CameraType.TEXTURE);
+        }
+        if (input.didCycleCamera()) {
+            avatar.getCamera().cycleCameraType();
+        }
+
         // Process actions in object model
         avatar.setMovement(input.getHorizontal() * avatar.getForce());
         avatar.setJumping(input.didPrimary());
@@ -319,16 +346,16 @@ public class Level1Scene extends PhysicsScene implements ContactListener {
 
             if (target != null) {
                 if (activePicture == null) {
-                    if (avatar.canTakePicture()) {
-                        avatar.takePicture();
-                        Picture picture = new Picture(target);
+                    if (avatar.getCamera().canTakePicture(target.getObstacle().getX(), target.getObstacle().getY(), avatar.getObstacle().getX(), avatar.getObstacle().getY())) {
+                        avatar.getCamera().takePicture();
+                        Picture picture = new Picture(target, avatar.getCamera().getCameraType());
                         pictures.clear();
                         pictures.add(picture);
                         activePicture = picture;
                         sounds.play("plop", plopSound, picVolume);
                     }
                 } else {
-                    if (activePicture.getSubject() != null && activePicture.getSubject() != target && avatar.hasLineOfSight(target.getObstacle().getX(), target.getObstacle().getY(), STICK_PICTURE_DISTANCE)) {
+                    if (activePicture.getSubject() != null && activePicture.getSubject() != target && avatar.getCamera().hasLineOfSight(target.getObstacle().getX(), target.getObstacle().getY(), avatar.getObstacle().getX(), avatar.getObstacle().getY(), STICK_PICTURE_DISTANCE)) {
                         Obj src = activePicture.getSubjectType();
                         Obj dst = target.object;
                         if (src == Obj.CLOUD && dst == Obj.ROCK && rock != null && rock.getObstacle() != null && rock.getObstacle().getBody() != null) {
@@ -475,8 +502,8 @@ public class Level1Scene extends PhysicsScene implements ContactListener {
             }
         }
 
-        if (avatar.isPictureTaken()) {
-            avatar.clearPictureTaken();
+        if (avatar.getCamera().isPictureTaken()) {
+            avatar.getCamera().clearPictureTaken();
         }
 
         if (rockLiftActive && rock != null && rock.getObstacle() != null && rock.getObstacle().getBody() != null) {
@@ -645,7 +672,7 @@ public class Level1Scene extends PhysicsScene implements ContactListener {
             if (!(sprite instanceof GameObject go)) continue;
             float x = go.getObstacle().getX();
             float y = go.getObstacle().getY();
-            if (avatar.hasLineOfSight(x, y, range)) {
+            if (avatar.getCamera().hasLineOfSight(x, y, avatar.getObstacle().getX(), avatar.getObstacle().getY(), range)) {
                 highlighted.add(go);
             }
 
@@ -704,6 +731,19 @@ public class Level1Scene extends PhysicsScene implements ContactListener {
             }
         }
 
+        String label = switch (avatar.getCamera().getCameraType()) {
+            case REGULAR -> "Normal";
+            case THERMAL -> "Thermal";
+            case TEXTURE -> "Texture";
+        };
+
+        canvas.end();
+
+        cameraLabel.setText(label);
+
+        canvas.begin(textCamera);
+        canvas.setColor(Color.WHITE);
+        canvas.drawText(cameraLabel, 50, canvas.getHeight()-20);
         canvas.end();
     }
 }

@@ -95,36 +95,13 @@ public class Zuko extends ObstacleSprite {
     /** Cache for the affine flip */
     private final Affine2 flipCache = new Affine2();
 
-//    Camera Variables
-    /**Current number of photos Zuko can take */
-    private int filmCount;
-
-    /**Frames remaining until next photo can be taken */
-    private int pictureCooldown;
-
-    /**Max cooldown frames until next picture can be taken */
-    private int pictureLimit;
-
-    /**Maximum range for photos */
-    private float maxSightDistance;
-
-
     /** The object currently under mouse/being aimed at */
     private GameObject currentTarget;
-
-    /** Last known horizontal mouse position */
-    private float mouseX;
-
-    /** Last known vertical mouse position */
-    private float mouseY;
-
-    /** Whether I just took a photo - used for Sound */
-    private boolean pictureTaken;
 
     /** Inventory of pictures that Zuko may use */
     private Inventory pictureInventory;
 
-
+    private Camera camera;
     /**
      * Returns the left/right movement of this character.
      *
@@ -266,18 +243,6 @@ public class Zuko extends ObstacleSprite {
     // TODO: add takePicture class and call functions as necessary
 
     /**
-     * Sets the last known mouse position.
-     * This is going to be used for line of sight calculation
-     *
-     * @param x the x-coordinate of the mouse
-     * @param y the y-coordinate of the mouse
-     */
-    public void setMousePosition(float x, float y) {
-        mouseX = x;
-        mouseY = y;
-    }
-
-    /**
      * returns the object currently under the mouse
      *
      * @return the object currently under the mouse
@@ -286,6 +251,9 @@ public class Zuko extends ObstacleSprite {
         return currentTarget;
     }
 
+    public Camera getCamera() {
+        return camera;
+    }
     /**
      * Sets the object currently under the mouse
      *
@@ -295,82 +263,6 @@ public class Zuko extends ObstacleSprite {
         this.currentTarget = target;
     }
 
-    /**
-     * Returns true if Zuko has line of sight to the current target.
-     * Line of sight is determined by the Euclidean distance between Zuko and target.
-     * If the target is within maxSightDistance, Zuko has line of sight
-     * No use for current's target x and y position, will be using mouse position
-     *
-     * @return true if Zuko has line of sight to the current target
-     */
-    public boolean hasLineOfSight(float x, float y, float maxDistance) {
-        float u = obstacle.getPhysicsUnits();
-        float dx = x - obstacle.getX();
-        float dy = y - obstacle.getY();
-        float d = (dx*dx) + (dy*dy);
-
-        return d <= (maxDistance * maxDistance);
-    }
-
-    /**
-     * Returns true if Zuko can take a picture.
-     * Zuko can take a picture if he has film remaining, picture cooldown has expired, there is a current target,
-     * and he has a line of sight to the target
-     *
-     * @return true if Zuko can take a picture
-     */
-    public boolean canTakePicture() {
-        return filmCount > 0 && pictureCooldown <= 0 && currentTarget != null && hasLineOfSight(currentTarget.getObstacle().getX(), currentTarget.getObstacle().getY(), maxSightDistance);
-    }
-
-    /**
-     * Takes a picture of the current target.
-     * Decrements the film count, sets the picture cooldown
-     * Flags that a picture was taken for sound purposes - It seems we might not be adding this for now
-     */
-    public void takePicture() {
-        filmCount--;
-        pictureCooldown = pictureLimit;
-        pictureTaken = true;
-    }
-
-    /**
-     * Returns tre if a picture was just taken this frame.
-     * This is used to trigger the camera shutter sound.
-     *
-     * @return true if a picture was just taken
-     */
-    public boolean isPictureTaken() {
-        return pictureTaken;
-    }
-
-    /**
-     * Clears the picture taken flag.
-     * This should be called after the picture taken flag has been handled.
-     *
-     */
-    public void clearPictureTaken() {
-        pictureTaken = false;
-    }
-
-    /**
-     * Returns the current number of photos Zuko can take.
-     *
-     * @return the current film count
-     */
-    public int getFilmCount() {
-        return filmCount;
-    }
-
-    /**
-     * Sets the current number of photos Zuko can take
-     * Added this just in case each level has a different limit
-     *
-     * @param value the new film count
-     */
-    public void setFilmCount(int value) {
-        filmCount = value;
-    }
 
     /**
      * Creates a new Traci avatar with the given physics data
@@ -427,12 +319,8 @@ public class Zuko extends ObstacleSprite {
         jumpCooldown = 0;
 
         //Camera attributes - you can put all of this in constants.json but I am scared of a merge conflict so O put it directly for now
-        filmCount = 10;
-        pictureLimit = 30;
-        pictureCooldown = 0;
-        pictureTaken = false;
+
         currentTarget = null;
-        maxSightDistance = 9.0f;
 
         // Inventory
         pictureInventory = new Inventory(data);
@@ -442,6 +330,8 @@ public class Zuko extends ObstacleSprite {
         // actually smaller than the image, making a tighter hitbox. You can
         // see this when you enable debug mode.
         mesh.set(-size/2.0f,-size/2.0f,size,size);
+
+        camera = new Camera();
     }
 
     /**
@@ -541,9 +431,8 @@ public class Zuko extends ObstacleSprite {
             shootCooldown = Math.max(0, shootCooldown - 1);
         }
 
-        if (pictureCooldown > 0) {
-            pictureCooldown--;
-        }
+        camera.update(dt);
+
         super.update(dt);
     }
 

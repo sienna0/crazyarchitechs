@@ -76,6 +76,22 @@ public class InputController {
     private boolean dropPressed;
     private boolean dropPrevious;
 
+    /** Whether the regular camera button was pressed. */
+    private boolean regPressed;
+    private boolean regPrevious;
+
+    /** Whether the thermal camera button was pressed. */
+    private boolean therPressed;
+    private boolean therPrevious;
+
+    /** Whether the texture camera button was pressed. */
+    private boolean texPressed;
+    private boolean texPrevious;
+
+    /** Whether the cycle camera button was pressed. */
+    private boolean camCyclePressed;
+    private boolean camCyclePrevious;
+
     /** How much did we move horizontally? */
     private float horizontal;
     /** How much did we move vertically? */
@@ -271,6 +287,11 @@ public class InputController {
         prevPrevious = prevPressed;
         leftClickPrevious = leftClickPressed;
         rangePrevious = rangePressed;
+        regPrevious = regPressed;
+        therPrevious = therPressed;
+        texPrevious = texPressed;
+        camCyclePrevious = camCyclePressed;
+
 
         // Check to see if a GamePad is connected
         if (xbox != null && xbox.isConnected()) {
@@ -338,6 +359,10 @@ public class InputController {
         prevPressed = (secondary && prevPressed) || (Gdx.input.isKeyPressed(Input.Keys.P));
         nextPressed = (secondary && nextPressed) || (Gdx.input.isKeyPressed(Input.Keys.N));
         exitPressed  = (secondary && exitPressed) || (Gdx.input.isKeyPressed(Input.Keys.ESCAPE));
+        regPressed  = (secondary && regPressed) || (Gdx.input.isKeyPressed(Input.Keys.NUM_1));
+        therPressed  = (secondary && therPressed) || (Gdx.input.isKeyPressed(Input.Keys.NUM_2));
+        texPressed  = (secondary && texPressed) || (Gdx.input.isKeyPressed(Input.Keys.NUM_3));
+        camCyclePressed  = (secondary && camCyclePressed) || (Gdx.input.isKeyPressed(Input.Keys.C));
 
         // Directional controls
         horizontal = (secondary ? horizontal : 0.0f);
@@ -407,5 +432,21 @@ public class InputController {
      */
     public boolean didToggleRange() {
         return rangePressed && ! rangePrevious;
+    }
+
+    public boolean didRegCamera() {
+        return regPressed && !regPrevious;
+    }
+
+    public boolean didTherCamera() {
+        return therPressed && !therPrevious;
+    }
+
+    public boolean didTexCamera() {
+        return texPressed && !texPrevious;
+    }
+
+    public boolean didCycleCamera() {
+        return camCyclePressed && !camCyclePrevious;
     }
 }
