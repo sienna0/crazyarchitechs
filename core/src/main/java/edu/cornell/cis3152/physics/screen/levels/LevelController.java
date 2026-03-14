@@ -24,9 +24,6 @@ public class LevelController {
     /** Current level screen */
     private PhysicsScene currentScene;
 
-    /** Base level screen */
-    private LevelBaseScene baseScene;
-
     /**
      * Constructor
      */
@@ -37,8 +34,6 @@ public class LevelController {
         currentLevel = 1;
         totalLevels = 3;
 
-        baseScene = new LevelBaseScene(assets);
-
         loadLevel(currentLevel);
     }
 
@@ -46,36 +41,9 @@ public class LevelController {
      * Loads a level by number
      */
     public void loadLevel(int level) {
-
-//        switch(level) {
-//            case 1:
-//                currentScene = new Level1Scene(assets);
-//                break;
-//
-//            case 2:
-//                currentScene = new Level2Scene(assets);
-//                break;
-//
-//            default:
-//                System.out.println("no level");
-//                return;
-//        }
-//        if (level <= totalLevels)
-//        {
-//            baseScene.setLevel(level);
-//        }
-//        else
-//        {
-//            System.out.println("no level");
-//            return;
-//        }
-
-        if (level <= totalLevels)
-        {
+        if (level >= 1 && level <= totalLevels) {
             currentScene = new LevelBaseScene(assets);
-        }
-        else
-        {
+        } else {
             System.out.println("no level");
             return;
         }
@@ -83,9 +51,6 @@ public class LevelController {
         currentScene.setCanvas(canvas);
         currentScene.show();
         currentScene.resize(com.badlogic.gdx.Gdx.graphics.getWidth(), com.badlogic.gdx.Gdx.graphics.getHeight());
-//        baseScene.setCanvas(canvas);
-//        baseScene.show();
-//        baseScene.resize(com.badlogic.gdx.Gdx.graphics.getWidth(), com.badlogic.gdx.Gdx.graphics.getHeight());
         currentLevel = level;
         ((LevelBaseScene)currentScene).setLevel(level);
     }
@@ -131,5 +96,12 @@ public class LevelController {
      */
     public int getCurrentLevel() {
         return currentLevel;
+    }
+
+    /**
+     * Get total number of levels.
+     */
+    public int getTotalLevels() {
+        return totalLevels;
     }
 }

@@ -2,17 +2,11 @@ package edu.cornell.cis3152.physics;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.Input;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.utils.ScreenUtils;
-
-import edu.cornell.cis3152.physics.InputController;
 import edu.cornell.cis3152.physics.screen.PhysicsScene;
+import edu.cornell.cis3152.physics.screen.LevelSelectScene;
 import edu.cornell.cis3152.physics.screen.levels.LevelController;
 import edu.cornell.gdiac.assets.AssetDirectory;
-import edu.cornell.gdiac.graphics.SpriteBatch;
 import edu.cornell.gdiac.util.ScreenListener;
 
 /**
@@ -31,15 +25,14 @@ public class GameMode implements Screen, ScreenListener {
     private OrthographicCamera camera;
     private ScreenListener listener;
     private LevelController levelController;
+    private LevelSelectScene levelSelectScene;
 
 
     private int width;
     private int height;
 
     private boolean active;
-
-    private final Texture background;
-    private Texture zukoTexture;
+    private boolean showingLevelSelect;
 
 //    private float playerX;
 ////    private float playerY;
@@ -55,16 +48,13 @@ public class GameMode implements Screen, ScreenListener {
         this.assets = assets;
         this.canvas = canvas;
         this.levelController = new LevelController(assets, canvas);
+        this.levelSelectScene = new LevelSelectScene(assets, canvas, levelController.getTotalLevels());
 
         camera = new OrthographicCamera();
         resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
-        // Pull textures from the asset directory
-        // These keys must match your json asset file
-        background = assets.getEntry("background", Texture.class);
-        zukoTexture = assets.getEntry("zuko", Texture.class);
-
         active = true;
+        showingLevelSelect = true;
     }
 
     /**
@@ -89,11 +79,14 @@ public class GameMode implements Screen, ScreenListener {
         if (exitCode == PhysicsScene.EXIT_NEXT) {
             levelController.nextLevel();
             levelController.setScreenListener(this);
+            showingLevelSelect = false;
         } else if (exitCode == PhysicsScene.EXIT_PREV) {
             levelController.loadLevel(Math.max(1, levelController.getCurrentLevel()-1));
             levelController.setScreenListener(this);
+            showingLevelSelect = false;
         } else if (exitCode == PhysicsScene.EXIT_QUIT) {
-            listener.exitScreen(this, 0);
+            showingLevelSelect = true;
+            levelSelectScene.show();
         }
     }
 
@@ -103,10 +96,18 @@ public class GameMode implements Screen, ScreenListener {
      * @param delta time since last frame
      */
     private void update(float delta) {
-        InputController input = InputController.getInstance();
-
-        if (input.didExit()) {
-            listener.exitScreen(this, 0);
+        if (showingLevelSelect) {
+            int selectedLevel = levelSelectScene.consumeChosenLevel();
+            if (selectedLevel > 0) {
+                levelController.loadLevel(selectedLevel);
+                levelController.setScreenListener(this);
+                showingLevelSelect = false;
+                if (levelController.getCurrentScene() != null) {
+                    levelController.getCurrentScene().show();
+                }
+            } else if (levelSelectScene.consumeExitRequested() && listener != null) {
+                listener.exitScreen(this, 0);
+            }
         }
     }
 
@@ -114,10 +115,13 @@ public class GameMode implements Screen, ScreenListener {
      * Draws the game world.
      */
     private void draw() {
-        // Delegate draw (and update) to current level
-        PhysicsScene currentScene = levelController.getCurrentScene();
-        if (currentScene != null) {
-            currentScene.render(Gdx.graphics.getDeltaTime());
+        if (showingLevelSelect) {
+            levelSelectScene.render(Gdx.graphics.getDeltaTime());
+        } else {
+            PhysicsScene currentScene = levelController.getCurrentScene();
+            if (currentScene != null) {
+                currentScene.render(Gdx.graphics.getDeltaTime());
+            }
         }
     }
 
@@ -146,6 +150,9 @@ public class GameMode implements Screen, ScreenListener {
         this.height = height;
 
         camera.setToOrtho(false, width, height);
+        if (levelSelectScene != null) {
+            levelSelectScene.resize(width, height);
+        }
         if (levelController != null && levelController.getCurrentScene() != null) {
             levelController.getCurrentScene().resize(width, height);
         }
@@ -154,7 +161,9 @@ public class GameMode implements Screen, ScreenListener {
     @Override
     public void show() {
         active = true;
-        if (levelController != null && levelController.getCurrentScene() != null) {
+        if (showingLevelSelect && levelSelectScene != null) {
+            levelSelectScene.show();
+        } else if (levelController != null && levelController.getCurrentScene() != null) {
             levelController.getCurrentScene().show();
         }
     }
@@ -162,6 +171,9 @@ public class GameMode implements Screen, ScreenListener {
     @Override
     public void hide() {
         active = false;
+        if (levelSelectScene != null) {
+            levelSelectScene.hide();
+        }
         if (levelController != null && levelController.getCurrentScene() != null) {
             levelController.getCurrentScene().hide();
         }
@@ -179,6 +191,9 @@ public class GameMode implements Screen, ScreenListener {
 
     @Override
     public void dispose() {
-        // Usually do not dispose shared assets here if AssetDirectory owns them
+        if (levelSelectScene != null) {
+            levelSelectScene.dispose();
+            levelSelectScene = null;
+        }
     }
 }
