@@ -15,6 +15,7 @@ platform/pew.wav
 platform/plop.wav
 platform/ropebridge.png
 platform/traci.png
+platform/zukojump.png
 shared/RetroGame.ttf
 shared/cloud.png
 shared/earthtile.png

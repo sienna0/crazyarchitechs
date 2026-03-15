@@ -106,12 +106,21 @@ public class Zuko extends ObstacleSprite {
 
     /** The SpriteSheet for Zuko's phototaking animation */
     private SpriteSheet photoSheet;
-    /** The duration of the animation */
-    private float animationTime = 0f;
+    /** The duration of the photo animation */
+    private float photoAnimationTime = 0f;
     /** The duration of each frame */
-    private float frameDuration = 0.07f;
+    private float photoFrameDuration = 0.07f;
     /** Whether the animation is playing or not */
     private boolean playingPhoto = false;
+
+    /** The SpriteSheet for Zuko's jumping animation */
+    private SpriteSheet jumpSheet;
+    /** The duration of the animation */
+    private float jumpAnimationTime = 0f;
+    /** The duration of each frame */
+    private float jumpFrameDuration = 0.14f;
+    /** Whether the animation is playing or not */
+    private boolean playingJump = false;
 
     private Texture baseTexture;
 
@@ -288,13 +297,11 @@ public class Zuko extends ObstacleSprite {
 
 
     /**
-     * Takes a picture of the current target.
-     * Decrements the film count, sets the picture cooldown
-     * Flags that a picture was taken for sound purposes - It seems we might not be adding this for now
+     * Starts the photo-taking animation
      */
     public void startPhotoAnimation() {
         playingPhoto = true;
-        animationTime = 0f;
+        photoAnimationTime = 0f;
     }
 
     /**
@@ -306,6 +313,25 @@ public class Zuko extends ObstacleSprite {
     public void setPhotoAnimation(Texture sheet, int rows, int cols, int size) {
         photoSheet = new SpriteSheet(sheet, rows, cols, size);
     }
+
+    /**
+     * Starts Zuko's jump animation
+     */
+    public void startJumpAnimation() {
+        playingJump = true;
+        jumpAnimationTime = 0f;
+    }
+
+    /**
+     * Sets the jump animation SpriteSheet for Zuko
+     * @param sheet
+     * @param rows
+     * @param cols
+     */
+    public void setJumpAnimation(Texture sheet, int rows, int cols, int size) {
+        jumpSheet = new SpriteSheet(sheet, rows, cols, size);
+    }
+
 
     /**
      * Creates a new Traci avatar with the given physics data
@@ -476,8 +502,8 @@ public class Zuko extends ObstacleSprite {
             shootCooldown = Math.max(0, shootCooldown - 1);
         }
         if (playingPhoto && photoSheet != null) {
-            animationTime += dt;
-            int frame = (int)(animationTime / frameDuration);
+            photoAnimationTime += dt;
+            int frame = (int)(photoAnimationTime / photoFrameDuration);
             if (frame >= photoSheet.getSize()) {
                 playingPhoto = false;
                 photoSheet.setFrame(0);
@@ -486,6 +512,18 @@ public class Zuko extends ObstacleSprite {
                 }
             } else {
                 photoSheet.setFrame(frame);
+            }
+        } else if (playingJump && jumpSheet != null) {
+            jumpAnimationTime += dt;
+            int frame = (int)(jumpAnimationTime / jumpFrameDuration);
+            if (frame >= jumpSheet.getSize()) {
+                playingJump = false;
+                jumpSheet.setFrame(0);
+                if (baseTexture != null) {
+                    setTexture(baseTexture);
+                }
+            } else {
+                jumpSheet.setFrame(frame);
             }
         }
 
@@ -512,9 +550,12 @@ public class Zuko extends ObstacleSprite {
         }
         if (playingPhoto && photoSheet != null) {
             setSpriteSheet(photoSheet);
+        } else if (playingJump && jumpSheet != null) {
+            setSpriteSheet(jumpSheet);
         } else if (baseTexture != null) {
             setTexture(baseTexture);
         }
+
         super.draw(batch,flipCache);
     }
 

@@ -238,7 +238,9 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         addSprite(avatar);
         avatar.createSensor();
         Texture photoSheet = directory.getEntry( "platform-camera", Texture.class );
-        avatar.setPhotoAnimation(photoSheet, 4, 5, 17);
+        avatar.setPhotoAnimation(photoSheet, 1, 17, 17);
+        Texture jumpSheet = directory.getEntry( "platform-jump", Texture.class );
+        avatar.setJumpAnimation(jumpSheet, 1, 7, 7);
 
         float rockSize = 1.5f;
         float cloudSize = 1.5f;
@@ -334,6 +336,8 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         if (avatar.isJumping()) {
             SoundEffectManager sounds = SoundEffectManager.getInstance();
             sounds.play("jump", jumpSound, volume);
+            avatar.startJumpAnimation();
+
         }
     }
 
