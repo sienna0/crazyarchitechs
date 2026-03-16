@@ -146,10 +146,10 @@ public class GameMode implements Screen, ScreenListener {
      */
     @Override
     public void resize(int width, int height) {
-        this.width = width;
-        this.height = height;
+        this.width = (int)canvas.getWidth();
+        this.height = (int)canvas.getHeight();
 
-        camera.setToOrtho(false, width, height);
+        camera.setToOrtho(false, this.width, this.height);
         if (levelSelectScene != null) {
             levelSelectScene.resize(width, height);
         }

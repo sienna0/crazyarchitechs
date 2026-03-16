@@ -9,6 +9,7 @@ import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.ScreenUtils;
 import edu.cornell.cis3152.physics.GameCanvas;
 import edu.cornell.gdiac.assets.AssetDirectory;
@@ -57,6 +58,8 @@ public class LevelSelectScene implements Screen {
     private boolean confirmPrevious;
     private boolean exitPrevious;
     private boolean clickPrevious;
+    /** Reusable coordinate buffer */
+    private final Vector2 pointer;
 
     public LevelSelectScene(AssetDirectory assets, GameCanvas canvas, int totalLevels) {
         this.canvas = canvas;
@@ -65,6 +68,7 @@ public class LevelSelectScene implements Screen {
         this.camera = new OrthographicCamera();
         this.selectedIndex = 0;
         this.chosenLevel = -1;
+        this.pointer = new Vector2();
 
         Pixmap pixmap = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
         pixmap.setColor(Color.WHITE);
@@ -200,8 +204,9 @@ public class LevelSelectScene implements Screen {
     }
 
     private int getHoveredIndex() {
-        float x = Gdx.input.getX();
-        float y = height - Gdx.input.getY();
+        canvas.screenToCanvas(Gdx.input.getX(), Gdx.input.getY(), pointer);
+        float x = pointer.x;
+        float y = pointer.y;
         for (int ii = 0; ii < totalLevels; ii++) {
             if (getButtonBounds(ii).contains(x, y)) {
                 return ii;
@@ -212,9 +217,9 @@ public class LevelSelectScene implements Screen {
 
     @Override
     public void resize(int width, int height) {
-        this.width = width;
-        this.height = height;
-        camera.setToOrtho(false, width, height);
+        this.width = (int)canvas.getWidth();
+        this.height = (int)canvas.getHeight();
+        camera.setToOrtho(false, this.width, this.height);
     }
 
     @Override
