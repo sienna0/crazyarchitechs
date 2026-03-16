@@ -247,28 +247,62 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
 //        float platformLeftX = 25.0f;
 //        float platformTopY = 10.0f;
 
-        // Rock
-        float[] rockPositions = constants.get("level" + currentLevel).get("objectLocations").get("rock").asFloatArray();
-        rock = new GameObject(
-                Obj.ROCK, constants.get("rock"), units,
-                rockPositions[0], rockPositions[1],
-                rockSize, rockSize,
-                BodyDef.BodyType.DynamicBody,
-                false
-        );
-        rock.setTexture(earthTexture);
-        addSprite(rock);
 
-        Texture cloudTexture = directory.getEntry( "cloud", Texture.class );
-        // Cloud (normal mode = "floaty platform marker": gravity off, collides)
-        float[] cloudPositions = constants.get("level" + currentLevel).get("objectLocations").get("cloud").asFloatArray();
-        cloud = new GameObject(
-                Obj.CLOUD, constants.get("cloud"), units, cloudPositions[0], cloudPositions[1], cloudSize,
-                cloudSize, BodyDef.BodyType.DynamicBody, false
-        );
-        cloud.setTexture(cloudTexture);
-        addSprite(cloud);
-        cloudHomeY = cloud.getObstacle().getY();
+
+        JsonValue rocks = constants.get("level"+currentLevel).get("objectLocations");
+        JsonValue rockjv = rocks.get("rock");
+        for (int ii = 0;  ii < rockjv.size; ii++){
+            float [] rockPositions = rockjv.get(ii).asFloatArray();
+            rock = new GameObject(
+                    Obj.ROCK, constants.get("rock"), units,
+                    rockPositions[0], rockPositions[1],
+                    rockSize, rockSize,
+                    BodyDef.BodyType.DynamicBody,
+                    false
+            );
+            rock.setTexture(earthTexture);
+            addSprite(rock);
+        }
+
+        JsonValue clouds = constants.get("level"+currentLevel).get("objectLocations");
+        JsonValue cloudjv = clouds.get("cloud");
+        for (int ii = 0;  ii < cloudjv.size; ii++){
+            float [] cloudPositions = cloudjv.get(ii).asFloatArray();
+            cloud = new GameObject(
+                    Obj.CLOUD, constants.get("cloud"), units,
+                    cloudPositions[0], cloudPositions[1],
+                    cloudSize, cloudSize,
+                    BodyDef.BodyType.DynamicBody,
+                    false
+            );
+            cloud.setTexture(cloudTexture);
+            addSprite(cloud);
+            // FIXME I'm assuming setting cloudHomeY over and over will break this
+            cloudHomeY = cloud.getObstacle().getY();
+        }
+
+        // Rock
+//        float[] rockPositions = constants.get("level" + currentLevel).get("objectLocations").get("rock").asFloatArray();
+//        rock = new GameObject(
+//                Obj.ROCK, constants.get("rock"), units,
+//                rockPositions[0], rockPositions[1],
+//                rockSize, rockSize,
+//                BodyDef.BodyType.DynamicBody,
+//                false
+//        );
+//        rock.setTexture(earthTexture);
+//        addSprite(rock);
+
+//        Texture cloudTexture = directory.getEntry( "cloud", Texture.class );
+//        // Cloud (normal mode = "floaty platform marker": gravity off, collides)
+//        float[] cloudPositions = constants.get("level" + currentLevel).get("objectLocations").get("cloud").asFloatArray();
+//        cloud = new GameObject(
+//                Obj.CLOUD, constants.get("cloud"), units, cloudPositions[0], cloudPositions[1], cloudSize,
+//                cloudSize, BodyDef.BodyType.DynamicBody, false
+//        );
+//        cloud.setTexture(cloudTexture);
+//        addSprite(cloud);
+//        cloudHomeY = cloud.getObstacle().getY();
 
         float iceSize = 1.5f;
         Pixmap icePixmap = new Pixmap(64, 64, Pixmap.Format.RGBA8888);
@@ -277,15 +311,30 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         Texture iceTexture = new Texture(icePixmap);
         icePixmap.dispose();
 
-        float[] icePositions = constants.get("level" + currentLevel).get("objectLocations").get("ice").asFloatArray();
-        ice = new GameObject(
-                Obj.ICE, constants.get("ice"), units,
-                icePositions[0], icePositions[1],
-                iceSize, iceSize,
-                BodyDef.BodyType.StaticBody, false
-        );
-        ice.setTexture(iceTexture);
-        addSprite(ice);
+//        float[] icePositions = constants.get("level" + currentLevel).get("objectLocations").get("ice").asFloatArray();
+//        ice = new GameObject(
+//                Obj.ICE, constants.get("ice"), units,
+//                icePositions[0], icePositions[1],
+//                iceSize, iceSize,
+//                BodyDef.BodyType.StaticBody, false
+//        );
+//        ice.setTexture(iceTexture);
+//        addSprite(ice);
+
+        JsonValue ices = constants.get("level"+currentLevel).get("objectLocations");
+        JsonValue icejv = ices.get("ice");
+        for (int ii = 0;  ii < icejv.size; ii++){
+            float [] icePosition = icejv.get(ii).asFloatArray();
+            ice = new GameObject(
+                    Obj.ICE, constants.get("ice"), units,
+                    icePosition[0], icePosition[1],
+                    iceSize, iceSize,
+                    BodyDef.BodyType.DynamicBody,
+                    false
+            );
+            ice.setTexture(iceTexture);
+            addSprite(ice);
+        }
 
     }
 
