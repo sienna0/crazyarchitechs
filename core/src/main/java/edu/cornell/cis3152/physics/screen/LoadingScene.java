@@ -250,13 +250,13 @@ public class LoadingScene implements Screen, InputProcessor {
             float cy = (int)(constants.getFloat( "bar.height" )*height);
             float s = constants.getFloat("button.scale")*scale;
             Color tint = (pressState == 1 ? Color.GRAY : Color.WHITE);
-            texture = internal.getEntry("play",Texture.class);
-
-            GameCanvas.computeTransform( affine, texture.getWidth() / 2, texture.getHeight() / 2,
-                                          cx, cy, 0, s, s );
-
-            canvas.setColor( tint );
-            canvas.draw( texture, affine );
+//            texture = internal.getEntry("play",Texture.class);
+//
+//            GameCanvas.computeTransform( affine, texture.getWidth() / 2, texture.getHeight() / 2,
+//                                          cx, cy, 0, s, s );
+//
+//            canvas.setColor( tint );
+//            canvas.draw( texture, affine );
         }
         canvas.end();
     }
@@ -422,12 +422,25 @@ public class LoadingScene implements Screen, InputProcessor {
 
         // Play button is a circle.
         // TODO replace with png of start/resume here
-        float cx = width/2;
-        float cy = (int)(constants.getFloat( "bar.height" )*height);
-        float s = constants.getFloat( "button.scale" )*scale;
-        float radius = s*internal.getEntry("play",Texture.class).getWidth()/2.0f;
-        float dist = (screenX-cx)*(screenX-cx)+(screenY-cy)*(screenY-cy);
-        if (dist < radius*radius) {
+//        float cx = width/2;
+//        float cy = (int)(constants.getFloat( "bar.height" )*height);
+//        float s = constants.getFloat( "button.scale" )*scale;
+//        float radius = s*internal.getEntry("play",Texture.class).getWidth()/2.0f;
+//        float dist = (screenX-cx)*(screenX-cx)+(screenY-cy)*(screenY-cy);
+//        if (dist < radius*radius) {
+//            pressState = 1;
+//        }
+        float regionWidth = width / 7f;
+        float regionHeight = height / 11f;
+        float cx = width / 2f;
+        float cy = height * 0.45f;
+
+        float minX = cx - regionWidth / 2f;
+        float maxX = cx + regionWidth / 2f;
+        float minY = cy - regionHeight / 2f;
+        float maxY = cy + regionHeight / 2f;
+
+        if (screenX >= minX && screenX <= maxX && screenY >= minY && screenY <= maxY) {
             pressState = 1;
         }
         return false;
