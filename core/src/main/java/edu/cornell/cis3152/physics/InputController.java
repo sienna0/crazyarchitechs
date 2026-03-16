@@ -281,7 +281,7 @@ public class InputController {
      * @param bounds The input bounds for the crosshair.
      * @param scale  The drawing scale
      */
-    public void sync(Rectangle bounds, Vector2 scale) {
+    public void sync(Rectangle bounds, Vector2 scale, GameCanvas canvas) {
         // Copy state from last animation frame
         // Helps us ignore buttons that are held down
         dropPrevious = dropPressed;
@@ -305,9 +305,9 @@ public class InputController {
         // Check to see if a GamePad is connected
         if (xbox != null && xbox.isConnected()) {
             readGamepad(bounds, scale);
-            readKeyboard(bounds, scale, true); // Read as a back-up
+            readKeyboard(bounds, scale, canvas, true); // Read as a back-up
         } else {
-            readKeyboard(bounds, scale, false);
+            readKeyboard(bounds, scale, canvas, false);
         }
     }
 
@@ -358,7 +358,7 @@ public class InputController {
      *
      * @param secondary true if the keyboard should give priority to a gamepad
      */
-    private void readKeyboard(Rectangle bounds, Vector2 scale, boolean secondary) {
+    private void readKeyboard(Rectangle bounds, Vector2 scale, GameCanvas canvas, boolean secondary) {
         // Give priority to gamepad results
         dropPressed = (secondary && dropPressed) || (Gdx.input.isKeyPressed(Input.Keys.Q));
         resetPressed = (secondary && resetPressed) || (Gdx.input.isKeyPressed(Input.Keys.R));
@@ -418,9 +418,8 @@ public class InputController {
         if (doubleClickTimer > 0) {
             doubleClickTimer -= Gdx.graphics.getDeltaTime();
         }
-        crosshair.set(Gdx.input.getX(), Gdx.input.getY());
-        crosshair.scl(1/scale.x,-1/scale.y);
-        crosshair.y += bounds.height;
+        canvas.screenToCanvas(Gdx.input.getX(), Gdx.input.getY(), crosshair);
+        crosshair.scl(1/scale.x,1/scale.y);
         clampPosition(bounds);
     }
 

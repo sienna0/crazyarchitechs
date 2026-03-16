@@ -93,8 +93,8 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     // Levels
     private int currentLevel = 1;
     // Range Variables
-    private float STICK_PICTURE_DISTANCE = 5.0f; //I know you wanted it to be 3 times less than take picture but, if you mistakenly take a picture of the rock, you would not be able to reach the cloud unless it is 2 times less
-    private float TAKE_PICTURE_DISTANCE = 10.0f;
+    private float STICK_PICTURE_DISTANCE = 9.0f; //I know you wanted it to be 3 times less than take picture but, if you mistakenly take a picture of the rock, you would not be able to reach the cloud unless it is 2 times less
+    private float TAKE_PICTURE_DISTANCE = 9.0f;
     private Array<GameObject> highlighted = new Array<>();
     private final Affine2 highlightTransform = new Affine2();
     private boolean showRange = false;
@@ -478,7 +478,10 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             if (!(sprite instanceof GameObject gameObject)) {
                 continue;
             }
-            if (gameObject != cloud && !gameObject.hasLiftPicture()) {
+            boolean springActive = gameObject == cloud
+                    ? gameObject.getGravityScale() <= 0.0f
+                    : gameObject.hasLiftPicture();
+            if (!springActive) {
                 continue;
             }
 

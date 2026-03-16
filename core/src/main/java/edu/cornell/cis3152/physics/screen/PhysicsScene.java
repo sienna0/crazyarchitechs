@@ -356,7 +356,7 @@ public abstract class PhysicsScene implements Screen {
      */
     public boolean preUpdate(float dt) {
         InputController input = InputController.getInstance();
-        input.sync(bounds, scale);
+        input.sync(bounds, scale, canvas);
         if (listener == null) {
             return true;
         }
@@ -503,14 +503,14 @@ public abstract class PhysicsScene implements Screen {
      * @param height The new height in pixels
      */
     public void resize(int width, int height) {
-        this.width  = width;
-        this.height = height;
+        this.width  = canvas == null ? width : canvas.getWidth();
+        this.height = canvas == null ? height : canvas.getHeight();
         if (camera == null) {
             camera = new OrthographicCamera();
         }
-        camera.setToOrtho( false, width, height );
-        scale.x = width/bounds.width;
-        scale.y = height/bounds.height;
+        camera.setToOrtho( false, this.width, this.height );
+        scale.x = this.width/bounds.width;
+        scale.y = this.height/bounds.height;
         reset();
     }
 

@@ -28,6 +28,7 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Affine2;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.utils.ScreenUtils;
 import edu.cornell.cis3152.physics.AssetHead;
@@ -81,6 +82,8 @@ public class LoadingScene implements Screen, InputProcessor {
 
     /** Whether or not this player mode is still active */
     private boolean active;
+    /** Reusable pointer buffer */
+    private final Vector2 pointer = new Vector2();
 
     /** AssetHead for loading specific level assets */
     private AssetHead assetHead;
@@ -250,13 +253,13 @@ public class LoadingScene implements Screen, InputProcessor {
             float cy = (int)(constants.getFloat( "bar.height" )*height);
             float s = constants.getFloat("button.scale")*scale;
             Color tint = (pressState == 1 ? Color.GRAY : Color.WHITE);
-            texture = internal.getEntry("play",Texture.class);
-
-            GameCanvas.computeTransform( affine, texture.getWidth() / 2, texture.getHeight() / 2,
-                                          cx, cy, 0, s, s );
-
-            canvas.setColor( tint );
-            canvas.draw( texture, affine );
+//            texture = internal.getEntry("play",Texture.class);
+//
+//            GameCanvas.computeTransform( affine, texture.getWidth() / 2, texture.getHeight() / 2,
+//                                          cx, cy, 0, s, s );
+//
+//            canvas.setColor( tint );
+//            canvas.draw( texture, affine );
         }
         canvas.end();
     }
@@ -342,14 +345,15 @@ public class LoadingScene implements Screen, InputProcessor {
      */
     public void resize(int width, int height) {
         // Compute the drawing scale
-        scale = ((float)height)/constants.getFloat( "height" );
+        float canvasHeight = canvas.getHeight();
+        scale = canvasHeight/constants.getFloat( "height" );
 
-        this.width  = width;
-        this.height = height;
+        this.width  = (int)canvas.getWidth();
+        this.height = (int)canvas.getHeight();
         if (camera == null) {
-            camera = new OrthographicCamera(width,height);
+            camera = new OrthographicCamera(this.width,this.height);
          } else {
-            camera.setToOrtho( false, width, height  );
+            camera.setToOrtho( false, this.width, this.height  );
         }
     }
 
@@ -417,17 +421,31 @@ public class LoadingScene implements Screen, InputProcessor {
             return true;
         }
 
-        // Flip to match graphics coordinates
-        screenY = height-screenY;
+        canvas.screenToCanvas(screenX, screenY, this.pointer);
+        float canvasX = this.pointer.x;
+        float canvasY = this.pointer.y;
 
         // Play button is a circle.
         // TODO replace with png of start/resume here
-        float cx = width/2;
-        float cy = (int)(constants.getFloat( "bar.height" )*height);
-        float s = constants.getFloat( "button.scale" )*scale;
-        float radius = s*internal.getEntry("play",Texture.class).getWidth()/2.0f;
-        float dist = (screenX-cx)*(screenX-cx)+(screenY-cy)*(screenY-cy);
-        if (dist < radius*radius) {
+//        float cx = width/2;
+//        float cy = (int)(constants.getFloat( "bar.height" )*height);
+//        float s = constants.getFloat( "button.scale" )*scale;
+//        float radius = s*internal.getEntry("play",Texture.class).getWidth()/2.0f;
+//        float dist = (screenX-cx)*(screenX-cx)+(screenY-cy)*(screenY-cy);
+//        if (dist < radius*radius) {
+//            pressState = 1;
+//        }
+        float regionWidth = width / 7f;
+        float regionHeight = height / 11f;
+        float cx = width / 2f;
+        float cy = height * 0.45f;
+
+        float minX = cx - regionWidth / 2f;
+        float maxX = cx + regionWidth / 2f;
+        float minY = cy - regionHeight / 2f;
+        float maxY = cy + regionHeight / 2f;
+
+        if (canvasX >= minX && canvasX <= maxX && canvasY >= minY && canvasY <= maxY) {
             pressState = 1;
         }
         return false;
