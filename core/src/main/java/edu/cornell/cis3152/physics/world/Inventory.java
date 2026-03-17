@@ -63,10 +63,8 @@ public class Inventory{
      * @return Picture instance if found, null otherwise
      */
     public Picture getPicture(int id){
-        for (Picture pic : pictureInventory){
-            if (pic.getId() == id) {return pic;}
-        }
-        return null;
+        if (id < 0 || id >= pictureInventory.size){return null;}
+        return pictureInventory.get(id);
     }
 
     /**
@@ -121,5 +119,19 @@ public class Inventory{
 
     public int getSize(){
         return size;
+    }
+
+    public void addPicture(Picture picture){
+        for (int i = 0; i < pictureInventory.size; i++) {
+            if (!pictureInventory.get(i).hasSubject) {
+                pictureInventory.set(i,  picture);
+                return;
+            }
+        }
+    }
+
+    public void reset() {
+        pictureInventory.clear();
+        populateInventory();
     }
 }

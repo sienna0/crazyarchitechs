@@ -71,6 +71,8 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
 
     private Texture slotTexture;
 
+    private int selectedSlotIndex = -1;
+
     /** The jump sound. We only want to play once. */
     private SoundEffect jumpSound;
     /** The weapon fire sound. We only want to play once. */
@@ -425,7 +427,9 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     private void handlePictureShortcuts(InputController input) {
         if (input.didDropPhoto()) {
             activePicture = null;
+            selectedSlotIndex = -1;
             pictures.clear();
+            avatar.getPictureInventory().reset();
 
             for (int i = 0; i < avatar.getPictureInventory().getSize(); i++) {
                 Picture p = avatar.getPictureInventory().getPicture(i);
@@ -468,6 +472,21 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     }
 
     private void handlePictureAction(InputController input, GameObject target) {
+        if (input.didLeftClick()) {
+            Vector2 mouse = input.getCrossHair();
+            float u = avatar.getObstacle().getPhysicsUnits();
+            int clickedSlot = getClickedSlot(mouse.x * u, mouse.y * u);
+
+            if (clickedSlot >= 0) {
+                Picture slotPicture = avatar.getPictureInventory().getPicture(clickedSlot);
+                if (slotPicture != null && slotPicture.hasSubject()) {
+                    selectedSlotIndex = clickedSlot;
+                    activePicture = slotPicture;
+                }
+                return;
+            }
+        }
+
         if (target == null) {
             return;
         }
@@ -481,7 +500,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             return;
         }
 
-        if (activePicture == null) {
+        if (activePicture == null || selectedSlotIndex == -1) {
             takePictureOfTarget(target);
             return;
         }
@@ -507,12 +526,8 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         Picture picture = new Picture(target, avatar.getCamera().getCameraType());
 //        pictures.clear();
         pictures.add(picture);
-        activePicture = picture;
-
-        Picture slot = avatar.getPictureInventory().getUnusedPicture();
-        if (slot != null) {
-            slot.setSubject(target, avatar.getCamera().getCameraType());
-        }
+//        activePicture = picture;
+        avatar.getPictureInventory().addPicture(picture);
 
         SoundEffectManager sounds = SoundEffectManager.getInstance();
         float picVolume = Math.min(1.0f, volume * 1.75f);
@@ -542,12 +557,12 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
 
         activePicture.setTarget(target, height / bounds.height);
 
-        Picture slot = avatar.getPictureInventory().getUnusedPicture();
-
         for (int i = 0; i < avatar.getPictureInventory().getSize(); i++) {
             Picture picture = avatar.getPictureInventory().getPicture(i);
             if (picture != null && picture.hasSubject() && picture.getSubject() == activePicture.getSubject()) {
                 picture.clearSubject();
+                activePicture = null;
+                selectedSlotIndex = -1;
                 break;
             }
         }
@@ -710,6 +725,11 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
 
     private void findObjectNearZuko() {
         highlighted.clear();
+
+        if (avatar.getPictureInventory().getUnusedPicture() == null && selectedSlotIndex == -1) {
+            return;
+        }
+        
         float range = (activePicture != null) ? STICK_PICTURE_DISTANCE: TAKE_PICTURE_DISTANCE;
         for (ObstacleSprite sprite : sprites) {
             if (sprite == avatar) continue;
@@ -885,6 +905,27 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             }
         }
         canvas.setColor(Color.WHITE);
+    }
+
+    private int getClickedSlot(float mouseX, float mouseY) {
+        float barWidth = 400f;
+        float barHeight = 80f;
+        float barX = canvas.getWidth() / 2 - barWidth / 2;
+        float barY = 0f;
+        float padding = 10f;
+        int size = avatar.getPictureInventory().getSize();
+
+        float slotSize = (barWidth - padding * (size + 1)) / size;
+        float startX = barX + padding;
+
+        for (int i = 0; i < size; i++) {
+            float slotX = startX + i * (slotSize + padding);
+            if (mouseX >= slotX && mouseX <= slotX + slotSize &&
+            mouseY >= barY && mouseY <= barY + barHeight) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     @Override
