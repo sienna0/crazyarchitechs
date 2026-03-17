@@ -83,12 +83,14 @@ public class LevelSelectScene implements Screen {
         titleLayout.setText("SELECT LEVEL");
         titleLayout.layout();
 
+        font.getData().setScale(0.4f);
         instructionLayout = new TextLayout();
         instructionLayout.setFont(font);
         instructionLayout.setAlignment(TextAlign.middleCenter);
         instructionLayout.setColor(new Color(0.89f, 0.87f, 0.76f, 1.0f));
         instructionLayout.setText("ARROWS OR MOUSE, ENTER TO START, ESC TO QUIT");
         instructionLayout.layout();
+        font.getData().setScale(1f);
 
         optionLayout = new TextLayout();
         optionLayout.setFont(font);
@@ -183,21 +185,23 @@ public class LevelSelectScene implements Screen {
             canvas.setColor(selected ? new Color(0.80f, 0.31f, 0.18f, 1.0f) : new Color(0.23f, 0.29f, 0.33f, 1.0f));
             canvas.draw(pixel, bounds.x, bounds.y, bounds.width, bounds.height);
 
+            font.getData().setScale(0.85f);
             optionLayout.setColor(selected ? Color.WHITE : new Color(0.84f, 0.84f, 0.80f, 1.0f));
             optionLayout.setText("LEVEL " + (ii + 1));
             optionLayout.layout();
-            canvas.drawText(optionLayout, bounds.x + bounds.width / 2.0f, bounds.y + bounds.height / 2.0f + 18.0f);
+            canvas.drawText(optionLayout, bounds.x + bounds.width / 2.0f, bounds.y + bounds.height / 2.0f + 2.0f);
         }
+        font.getData().setScale(1.0f);
 
         canvas.end();
     }
 
     private Rectangle getButtonBounds(int index) {
         float buttonWidth = Math.min(width * 0.55f, 520.0f);
-        float buttonHeight = 92.0f;
-        float gap = 28.0f;
+        float buttonHeight = 64.0f;
+        float gap = 16.0f;
         float totalHeight = totalLevels * buttonHeight + (totalLevels - 1) * gap;
-        float startY = (height - totalHeight) / 2.0f;
+        float startY = (height - totalHeight) / 2.0f -40f;
         float x = (width - buttonWidth) / 2.0f;
         float y = startY + (totalLevels - 1 - index) * (buttonHeight + gap);
         return new Rectangle(x, y, buttonWidth, buttonHeight);
