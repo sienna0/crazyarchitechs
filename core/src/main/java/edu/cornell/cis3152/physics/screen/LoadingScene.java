@@ -239,7 +239,7 @@ public class LoadingScene implements Screen, InputProcessor {
      */
     private void draw() {
         // Cornell colors
-        ScreenUtils.clear( 0.702f, 0.1255f, 0.145f,1.0f );
+        ScreenUtils.clear( 0.0f, 0.0f, 0.0f,1.0f );
 
         if (camera != null) {
             camera.update();

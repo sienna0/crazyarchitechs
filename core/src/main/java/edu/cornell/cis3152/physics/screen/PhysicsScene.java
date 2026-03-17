@@ -479,7 +479,7 @@ public abstract class PhysicsScene implements Screen {
      */
     public void draw(float dt) {
         // Clear the screen (color is homage to the XNA years)
-        ScreenUtils.clear(0.39f, 0.58f, 0.93f, 1.0f);
+        ScreenUtils.clear( 0.0f, 0.0f, 0.0f,1.0f );
 
         if (camera != null) {
             camera.update();

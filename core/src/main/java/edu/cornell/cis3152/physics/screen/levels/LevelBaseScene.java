@@ -31,7 +31,6 @@ import com.badlogic.gdx.physics.box2d.ContactListener;
 import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.Manifold;
 import com.badlogic.gdx.physics.box2d.World;
-import com.badlogic.gdx.physics.box2d.joints.WeldJointDef;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.utils.ObjectSet;
@@ -42,7 +41,6 @@ import edu.cornell.gdiac.assets.AssetDirectory;
 import edu.cornell.gdiac.audio.SoundEffect;
 import edu.cornell.gdiac.audio.SoundEffectManager;
 import edu.cornell.gdiac.graphics.SpriteBatch;
-import edu.cornell.gdiac.graphics.TextAlign;
 import edu.cornell.gdiac.graphics.TextLayout;
 import edu.cornell.gdiac.math.Path2;
 import edu.cornell.gdiac.math.PathFactory;
@@ -108,18 +106,17 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     private boolean showRange = false;
     private static final float LIFT_SPRING_STIFFNESS = 6.0f;
     private static final float LIFT_SPRING_DAMPING = 3.5f;
+    private static final float STUCK_PICTURE_SIZE = 22.0f;
+    private static final float STUCK_PICTURE_INSET = 8.0f;
+    private static final float STUCK_PICTURE_BORDER = 2.0f;
+    private static final float STUCK_PICTURE_INNER_PADDING = 4.0f;
     /** Mark set to handle more sophisticated collision callbacks */
     protected ObjectSet<Fixture> sensorFixtures;
 
     private TextLayout cameraLabel;
-    private TextLayout pictureMarkerLabel;
     private OrthographicCamera textCamera;
     private BitmapFont font;
     private Texture markerPixel;
-    private Path2 markerOutline;
-    private static final float PICTURE_MARKER_WIDTH = 28.0f;
-    private static final float PICTURE_MARKER_HEIGHT = 22.0f;
-    private static final float PICTURE_MARKER_OFFSET_Y = 6.0f;
 
     /**
      * Resolves a texture from the asset directory, with a direct file fallback for
@@ -157,19 +154,11 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         cameraLabel = new TextLayout();
         cameraLabel.setFont( font );
 
-        pictureMarkerLabel = new TextLayout();
-        pictureMarkerLabel.setFont(font);
-        pictureMarkerLabel.setAlignment(TextAlign.middleCenter);
-        pictureMarkerLabel.setColor(Color.BLACK);
-
         Pixmap markerPixmap = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
         markerPixmap.setColor(Color.WHITE);
         markerPixmap.fill();
         markerPixel = new Texture(markerPixmap);
         markerPixmap.dispose();
-
-        markerOutline = new Path2();
-        new PathFactory().makeRect(0, 0, PICTURE_MARKER_WIDTH, PICTURE_MARKER_HEIGHT, markerOutline);
     }
 
     @Override
@@ -335,7 +324,6 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         }
 
         Texture cloudTexture = requireTexture("platform-cloud", "platform/cloud.png");
-        float cloudHeight = objWidth * ((float) rockTexture.getHeight() / rockTexture.getWidth());
 
         JsonValue clouds = constants.get("level"+currentLevel).get("objectLocations");
         JsonValue cloudjv = clouds.get("cloud");
@@ -767,7 +755,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         }
     }
 
-    private void drawPlacedPictureMarkers() {
+    private void drawPlacedPictures() {
         for (Picture picture : pictures) {
             if (picture.getTarget() == null) {
                 continue;
@@ -775,48 +763,39 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
 
             GameObject target = picture.getTarget();
             Obstacle obstacle = target.getObstacle();
-            Rectangle targetBounds = target.getMesh().computeBounds();
             float units = obstacle.getPhysicsUnits();
             float centerX = obstacle.getX() * units;
             float centerY = obstacle.getY() * units;
 
-            float markerX = centerX + targetBounds.x + targetBounds.width - PICTURE_MARKER_WIDTH;
-            float markerY = centerY + targetBounds.y + targetBounds.height + PICTURE_MARKER_OFFSET_Y;
-            markerX = MathUtils.clamp(markerX, 0.0f, viewport.getWidth() - PICTURE_MARKER_WIDTH);
-            markerY = MathUtils.clamp(markerY, 0.0f, viewport.getHeight() - PICTURE_MARKER_HEIGHT);
+            float angle = obstacle.getAngle();
+            float rotation = angle * MathUtils.radiansToDegrees;
 
-            batch.setColor(getMarkerColor(picture.getCameraType()));
-            batch.draw(markerPixel, markerX, markerY, PICTURE_MARKER_WIDTH, PICTURE_MARKER_HEIGHT);
-
-            highlightTransform.idt();
-            highlightTransform.preTranslate(markerX, markerY);
-            batch.setColor(Color.BLACK);
-            batch.outline(markerOutline, highlightTransform);
-
-            pictureMarkerLabel.setText(Integer.toString(getMarkerNumber(picture.getCameraType())));
-            pictureMarkerLabel.layout();
-            batch.drawText(
-                    pictureMarkerLabel,
-                    markerX + (PICTURE_MARKER_WIDTH / 2.0f),
-                    markerY + (PICTURE_MARKER_HEIGHT / 2.0f) + 7.0f
-            );
+            drawStuckPictureLayer(centerX, centerY, STUCK_PICTURE_SIZE + (STUCK_PICTURE_BORDER * 2.0f), Color.BLACK, rotation);
+            drawStuckPictureLayer(centerX, centerY, STUCK_PICTURE_SIZE, new Color(0.96f, 0.95f, 0.91f, 1.0f), rotation);
+            drawStuckPictureLayer(centerX, centerY, STUCK_PICTURE_SIZE - (STUCK_PICTURE_INNER_PADDING * 2.0f), picture.getColor(), rotation);
         }
     }
 
-    private int getMarkerNumber(CameraType cameraType) {
-        return switch (cameraType) {
-            case THERMAL -> 1;
-            case REGULAR -> 2;
-            case TEXTURE -> 3;
-        };
-    }
-
-    private Color getMarkerColor(CameraType cameraType) {
-        return switch (cameraType) {
-            case THERMAL -> new Color(0.95f, 0.62f, 0.29f, 0.95f);
-            case REGULAR -> new Color(0.92f, 0.92f, 0.92f, 0.95f);
-            case TEXTURE -> new Color(0.45f, 0.82f, 0.55f, 0.95f);
-        };
+    private void drawStuckPictureLayer(float centerX, float centerY, float size, Color color, float rotation) {
+        batch.setColor(color);
+        batch.draw(
+                markerPixel,
+                centerX - (size * 0.5f),
+                centerY - (size * 0.5f),
+                size * 0.5f,
+                size * 0.5f,
+                size,
+                size,
+                1.0f,
+                1.0f,
+                rotation,
+                0,
+                0,
+                1,
+                1,
+                false,
+                false
+        );
     }
 
     @Override
@@ -885,7 +864,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             }
         }
 
-        drawPlacedPictureMarkers();
+        drawPlacedPictures();
 
         batch.end();
         viewport.reset();

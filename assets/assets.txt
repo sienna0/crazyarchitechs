@@ -21,6 +21,7 @@ platform/ropebridge.png
 platform/traci.png
 platform/walltile.png
 platform/zukojump.png
+shared/Floor Tile 200x200.png
 shared/RetroGame.ttf
 shared/background.png
 shared/cloud.png

@@ -175,7 +175,7 @@ public class LevelSelectScene implements Screen {
     }
 
     private void draw() {
-        ScreenUtils.clear(0.10f, 0.14f, 0.18f, 1.0f);
+        ScreenUtils.clear(0.0f, 0.0f, 0.0f, 1.0f);
         camera.update();
 
         viewport.apply();
