@@ -67,6 +67,16 @@ public class GameObject extends ObstacleSprite {
         return gravityScale;
     }
 
+    public float getOriginalTemp() { return data.getFloat("temp"); }
+
+    public float getOriginalWeight() { return data.getFloat("weight"); }
+
+    public float getOriginalElasticity() { return data.getFloat("elasticity"); }
+
+    public float getOriginalFriction() { return data.getFloat("friction"); }
+
+    public float getOriginalGravityScale() { return data.getFloat("gravityScale"); }
+
     public boolean hasLiftPicture() {
         return hasPicture && gravityScale <= 0.0f;
     }
@@ -78,7 +88,7 @@ public class GameObject extends ObstacleSprite {
         hasPicture = true;
         switch (cameraType) {
             case THERMAL:
-                this.temp = other.getTemp();
+                this.temp = other.getOriginalTemp();
                 if (other.object == Obj.ICE) {
                     freezeInPlace();
                 } else if (this.object == Obj.ICE) {
@@ -86,16 +96,16 @@ public class GameObject extends ObstacleSprite {
                 }
                 break;
             case REGULAR:
-                this.weight = other.getWeight();
-                this.gravityScale = other.getGravityScale();
+                this.weight = other.getOriginalWeight();
+                this.gravityScale = other.getOriginalGravityScale();
                 this.body.setMass(weight);
                 this.body.setGravityScale(gravityScale);
                 this.body.setFixedRotation(true);
                 this.body.setAngularVelocity(0.0f);
                 break;
             case TEXTURE:
-                this.elasticity = other.getElasticity();
-                this.friction = other.getFriction();
+                this.elasticity = other.getOriginalElasticity();
+                this.friction = other.getOriginalFriction();
                 this.body.setRestitution(elasticity);
                 this.body.setFriction(friction);
                 this.body.setFixedRotation(true);
