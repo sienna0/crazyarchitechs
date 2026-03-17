@@ -19,6 +19,7 @@ platform/plop.wav
 platform/rock.png
 platform/ropebridge.png
 platform/traci.png
+platform/walltile.png
 platform/zukojump.png
 shared/RetroGame.ttf
 shared/background.png

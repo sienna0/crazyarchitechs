@@ -7,7 +7,7 @@
         },
         "shared-cloud": "shared/cloud.png",
         "shared-background": "shared/background.png",
-        "shared-goal":   "shared/goaldoor.png",
+        "shared-goal":   "platform/walltile.png",
         "platform-traci"    : "platform/traci.png",
         "platform-camera"   : "platform/cameraflash.png",
         "platform-jump"     : "platform/zukojump.png",
