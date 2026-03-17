@@ -32,7 +32,6 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.utils.ScreenUtils;
 import edu.cornell.cis3152.physics.GameCanvas;
 import edu.cornell.gdiac.assets.AssetDirectory;
 import edu.cornell.gdiac.graphics.TextAlign;
@@ -127,11 +126,9 @@ public class PauseMenuScene implements Screen {
         boolean clickPressed   = Gdx.input.isButtonPressed(Input.Buttons.LEFT);
 
         if (showingControls) {
-            // ESC goes back
             if (escapePressed && !escapePrev) {
                 showingControls = false;
             }
-            // clicking the <- BACK button goes back
             if (clickPressed && !clickPrev && isBackButtonHovered()) {
                 showingControls = false;
             }
@@ -171,10 +168,10 @@ public class PauseMenuScene implements Screen {
     }
 
     private void draw() {
+        font.getData().setScale(0.5f);
         camera.update();
         canvas.begin(camera);
 
-        // Panel
         float panelWidth  = width;
         float panelHeight = height;
         float panelX = 0;
@@ -184,18 +181,18 @@ public class PauseMenuScene implements Screen {
         canvas.draw(pixel, panelX, panelY, panelWidth, panelHeight);
 
         if (showingControls) {
-            drawControls(panelX, panelY, panelWidth, panelHeight);
+            drawControls();
         } else {
-            drawButtons(panelX, panelY, panelWidth, panelHeight);
+            drawButtons( panelHeight);
         }
 
         canvas.end();
     }
 
-    private void drawButtons(float panelX, float panelY, float panelWidth, float panelHeight) {
+    private void drawButtons( float panelHeight) {
         titleLayout.setText("PAUSED");
         titleLayout.layout();
-        canvas.drawText(titleLayout, width / 2f, (float) (panelY + panelHeight * 0.85));
+        canvas.drawText(titleLayout, width / 2f, (float) (panelHeight * 0.85));
 
         for (int i = 0; i < LABELS.length; i++) {
             Rectangle b = getButtonBounds(i);
@@ -212,13 +209,11 @@ public class PauseMenuScene implements Screen {
         }
     }
 
-     private void drawControls(float panelX, float panelY, float panelWidth, float panelHeight) {
-        // Title higher up
+     private void drawControls() {
         titleLayout.setText("HOW TO PLAY");
         titleLayout.layout();
         canvas.drawText(titleLayout, width / 2f, height * 0.85f);
 
-        // Controls list starts below the title
         float cy = height * 0.75f;
         for (String line : CONTROLS) {
             optionLayout.setColor(new Color(0.84f, 0.84f, 0.80f, 1f));
@@ -228,7 +223,6 @@ public class PauseMenuScene implements Screen {
             cy -= 40f;
         }
 
-        // <- BACK button
         Rectangle back = getBackButtonBounds();
         boolean hovered = isBackButtonHovered();
         canvas.setColor(hovered
@@ -280,5 +274,7 @@ public class PauseMenuScene implements Screen {
 
     @Override public void pause()   {}
     @Override public void resume()  {}
-    @Override public void dispose() { pixel.dispose(); }
+    @Override public void dispose() {
+        pixel.dispose();
+    }
 }
