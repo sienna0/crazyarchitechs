@@ -24,7 +24,7 @@ public class Picture extends ObstacleSprite {
     boolean hasSubject;
 
     /** The id of this picture. Also serves as its index position in the inventory. */
-    private final int id;
+    private int id;
 
 
     /** Cache offset for pictures on objects */
@@ -61,6 +61,10 @@ public class Picture extends ObstacleSprite {
 
     /** Returns the ID of this picture */
     public int getId(){return id;}
+
+    public void setId(int id){
+        this.id = id;
+    }
 
 
     /** Returns whether this picture has a subject */

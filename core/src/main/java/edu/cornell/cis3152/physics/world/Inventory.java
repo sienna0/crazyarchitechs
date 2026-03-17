@@ -124,9 +124,16 @@ public class Inventory{
     public void addPicture(Picture picture){
         for (int i = 0; i < pictureInventory.size; i++) {
             if (!pictureInventory.get(i).hasSubject) {
+                picture.setId(i);
                 pictureInventory.set(i,  picture);
                 return;
             }
+        }
+    }
+
+    public void removePicture(int index){
+        if (index >= 0 && index < pictureInventory.size){
+            pictureInventory.set(index, new Picture(index));
         }
     }
 
