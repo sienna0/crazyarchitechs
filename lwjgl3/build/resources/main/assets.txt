@@ -8,12 +8,15 @@ loading/splash1.png
 platform/barrier.png
 platform/bullet.png
 platform/cameraflash.png
+platform/cloud.png
 platform/constants.json
 platform/constants0.json
 platform/constants1.json
+platform/ice.png
 platform/jump.wav
 platform/pew.wav
 platform/plop.wav
+platform/rock.png
 platform/ropebridge.png
 platform/traci.png
 platform/zukojump.png

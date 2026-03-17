@@ -20,6 +20,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Affine2;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
@@ -40,6 +41,7 @@ import edu.cornell.cis3152.physics.world.*;
 import edu.cornell.gdiac.assets.AssetDirectory;
 import edu.cornell.gdiac.audio.SoundEffect;
 import edu.cornell.gdiac.audio.SoundEffectManager;
+import edu.cornell.gdiac.graphics.TextAlign;
 import edu.cornell.gdiac.graphics.TextLayout;
 import edu.cornell.gdiac.math.Path2;
 import edu.cornell.gdiac.math.PathFactory;
@@ -66,6 +68,8 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
 
     private Texture cloudTexture;
     private Texture earthTexture;
+
+    private Texture slotTexture;
 
     /** The jump sound. We only want to play once. */
     private SoundEffect jumpSound;
@@ -104,8 +108,14 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     protected ObjectSet<Fixture> sensorFixtures;
 
     private TextLayout cameraLabel;
+    private TextLayout pictureMarkerLabel;
     private OrthographicCamera textCamera;
     private BitmapFont font;
+    private Texture markerPixel;
+    private Path2 markerOutline;
+    private static final float PICTURE_MARKER_WIDTH = 28.0f;
+    private static final float PICTURE_MARKER_HEIGHT = 22.0f;
+    private static final float PICTURE_MARKER_OFFSET_Y = 6.0f;
     /**
      * Creates and initialize a new instance of the platformer game
      *
@@ -128,6 +138,20 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         font = new BitmapFont();
         cameraLabel = new TextLayout();
         cameraLabel.setFont( font );
+
+        pictureMarkerLabel = new TextLayout();
+        pictureMarkerLabel.setFont(font);
+        pictureMarkerLabel.setAlignment(TextAlign.middleCenter);
+        pictureMarkerLabel.setColor(Color.BLACK);
+
+        Pixmap markerPixmap = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
+        markerPixmap.setColor(Color.WHITE);
+        markerPixmap.fill();
+        markerPixel = new Texture(markerPixmap);
+        markerPixmap.dispose();
+
+        markerOutline = new Path2();
+        new PathFactory().makeRect(0, 0, PICTURE_MARKER_WIDTH, PICTURE_MARKER_HEIGHT, markerOutline);
     }
 
     /**
@@ -247,7 +271,10 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
 //        float platformLeftX = 25.0f;
 //        float platformTopY = 10.0f;
 
+        float objWidth = 1.5f;
 
+        Texture rockTexture = directory.getEntry( "platform-rock", Texture.class );
+        float rockHeight = objWidth * ((float) rockTexture.getHeight() / rockTexture.getWidth());
 
         JsonValue rocks = constants.get("level"+currentLevel).get("objectLocations");
         JsonValue rockjv = rocks.get("rock");
@@ -256,13 +283,33 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             rock = new GameObject(
                     Obj.ROCK, constants.get("rock"), units,
                     rockPositions[0], rockPositions[1],
-                    rockSize, rockSize,
+                    objWidth, rockHeight,
                     BodyDef.BodyType.DynamicBody,
                     false
             );
-            rock.setTexture(earthTexture);
+            rock.setTexture(rockTexture);
             addSprite(rock);
         }
+        Texture iceTexture = directory.getEntry( "platform-ice", Texture.class );
+        float iceHeight = objWidth * ((float) iceTexture.getHeight() / iceTexture.getWidth());
+
+        JsonValue ices = constants.get("level"+currentLevel).get("objectLocations");
+        JsonValue icejv = ices.get("ice");
+        for (int ii = 0;  ii < icejv.size; ii++){
+            float [] icePosition = icejv.get(ii).asFloatArray();
+            ice = new GameObject(
+                    Obj.ICE, constants.get("ice"), units,
+                    icePosition[0], icePosition[1],
+                    objWidth, iceHeight,
+                    BodyDef.BodyType.DynamicBody,
+                    false
+            );
+            ice.setTexture(iceTexture);
+            addSprite(ice);
+        }
+
+        Texture cloudTexture = directory.getEntry( "platform-cloud", Texture.class );
+        float cloudHeight = objWidth * ((float) rockTexture.getHeight() / rockTexture.getWidth());
 
         JsonValue clouds = constants.get("level"+currentLevel).get("objectLocations");
         JsonValue cloudjv = clouds.get("cloud");
@@ -304,12 +351,12 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
 //        addSprite(cloud);
 //        cloudHomeY = cloud.getObstacle().getY();
 
-        float iceSize = 1.5f;
-        Pixmap icePixmap = new Pixmap(64, 64, Pixmap.Format.RGBA8888);
-        icePixmap.setColor(0.7f, 0.78f, 0.85f, 1.0f);
-        icePixmap.fill();
-        Texture iceTexture = new Texture(icePixmap);
-        icePixmap.dispose();
+//        float iceSize = 1.5f;
+//        Pixmap icePixmap = new Pixmap(64, 64, Pixmap.Format.RGBA8888);
+//        icePixmap.setColor(0.7f, 0.78f, 0.85f, 1.0f);
+//        icePixmap.fill();
+//        Texture iceTexture = new Texture(icePixmap);
+//        icePixmap.dispose();
 
 //        float[] icePositions = constants.get("level" + currentLevel).get("objectLocations").get("ice").asFloatArray();
 //        ice = new GameObject(
@@ -320,21 +367,6 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
 //        );
 //        ice.setTexture(iceTexture);
 //        addSprite(ice);
-
-        JsonValue ices = constants.get("level"+currentLevel).get("objectLocations");
-        JsonValue icejv = ices.get("ice");
-        for (int ii = 0;  ii < icejv.size; ii++){
-            float [] icePosition = icejv.get(ii).asFloatArray();
-            ice = new GameObject(
-                    Obj.ICE, constants.get("ice"), units,
-                    icePosition[0], icePosition[1],
-                    iceSize, iceSize,
-                    BodyDef.BodyType.DynamicBody,
-                    false
-            );
-            ice.setTexture(iceTexture);
-            addSprite(ice);
-        }
 
     }
 
@@ -394,6 +426,13 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         if (input.didDropPhoto()) {
             activePicture = null;
             pictures.clear();
+
+            for (int i = 0; i < avatar.getPictureInventory().getSize(); i++) {
+                Picture p = avatar.getPictureInventory().getPicture(i);
+                if (p != null) {
+                    p.clearSubject();
+                }
+            }
         }
         if (input.didToggleRange()) {
             showRange = !showRange;
@@ -459,12 +498,21 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             return;
         }
 
+        if (avatar.getPictureInventory().getUnusedPicture() == null) {
+            return;
+        }
+
         avatar.getCamera().takePicture();
         avatar.startPhotoAnimation();
         Picture picture = new Picture(target, avatar.getCamera().getCameraType());
-        pictures.clear();
+//        pictures.clear();
         pictures.add(picture);
         activePicture = picture;
+
+        Picture slot = avatar.getPictureInventory().getUnusedPicture();
+        if (slot != null) {
+            slot.setSubject(target, avatar.getCamera().getCameraType());
+        }
 
         SoundEffectManager sounds = SoundEffectManager.getInstance();
         float picVolume = Math.min(1.0f, volume * 1.75f);
@@ -493,6 +541,17 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         }
 
         activePicture.setTarget(target, height / bounds.height);
+
+        Picture slot = avatar.getPictureInventory().getUnusedPicture();
+
+        for (int i = 0; i < avatar.getPictureInventory().getSize(); i++) {
+            Picture picture = avatar.getPictureInventory().getPicture(i);
+            if (picture != null && picture.hasSubject() && picture.getSubject() == activePicture.getSubject()) {
+                picture.clearSubject();
+                break;
+            }
+        }
+
         SoundEffectManager sounds = SoundEffectManager.getInstance();
         sounds.play("fire", fireSound, volume);
     }
@@ -663,6 +722,59 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
 
         }
     }
+
+    private void drawPlacedPictureMarkers() {
+        for (Picture picture : pictures) {
+            if (picture.getTarget() == null) {
+                continue;
+            }
+
+            GameObject target = picture.getTarget();
+            Obstacle obstacle = target.getObstacle();
+            Rectangle targetBounds = target.getMesh().computeBounds();
+            float units = obstacle.getPhysicsUnits();
+            float centerX = obstacle.getX() * units;
+            float centerY = obstacle.getY() * units;
+
+            float markerX = centerX + targetBounds.x + targetBounds.width - PICTURE_MARKER_WIDTH;
+            float markerY = centerY + targetBounds.y + targetBounds.height + PICTURE_MARKER_OFFSET_Y;
+            markerX = MathUtils.clamp(markerX, 0.0f, canvas.getWidth() - PICTURE_MARKER_WIDTH);
+            markerY = MathUtils.clamp(markerY, 0.0f, canvas.getHeight() - PICTURE_MARKER_HEIGHT);
+
+            canvas.setColor(getMarkerColor(picture.getCameraType()));
+            canvas.draw(markerPixel, markerX, markerY, PICTURE_MARKER_WIDTH, PICTURE_MARKER_HEIGHT);
+
+            highlightTransform.idt();
+            highlightTransform.preTranslate(markerX, markerY);
+            canvas.setColor(Color.BLACK);
+            canvas.outline(markerOutline, highlightTransform);
+
+            pictureMarkerLabel.setText(Integer.toString(getMarkerNumber(picture.getCameraType())));
+            pictureMarkerLabel.layout();
+            canvas.drawText(
+                    pictureMarkerLabel,
+                    markerX + (PICTURE_MARKER_WIDTH / 2.0f),
+                    markerY + (PICTURE_MARKER_HEIGHT / 2.0f) + 7.0f
+            );
+        }
+    }
+
+    private int getMarkerNumber(CameraType cameraType) {
+        return switch (cameraType) {
+            case THERMAL -> 1;
+            case REGULAR -> 2;
+            case TEXTURE -> 3;
+        };
+    }
+
+    private Color getMarkerColor(CameraType cameraType) {
+        return switch (cameraType) {
+            case THERMAL -> new Color(0.95f, 0.62f, 0.29f, 0.95f);
+            case REGULAR -> new Color(0.92f, 0.92f, 0.92f, 0.95f);
+            case TEXTURE -> new Color(0.45f, 0.82f, 0.55f, 0.95f);
+        };
+    }
+
     @Override
     public void draw(float dt) {
         super.draw(dt);
@@ -723,6 +835,8 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             }
         }
 
+        drawPlacedPictureMarkers();
+
         canvas.end();
 
         String label = avatar.getCamera().getCameraType().getLabel();
@@ -735,5 +849,50 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         canvas.setColor(Color.WHITE);
         canvas.drawText(cameraLabel, 50, canvas.getHeight()-20);
         canvas.end();
+
+        canvas.begin(camera);
+        canvas.setColor(new Color(0.3f, 0.3f, 0.3f, 0.8f));
+        canvas.draw(slotTexture, canvas.getWidth()/2 - 200, 0, 400, 80);
+        drawInventory();
+        canvas.setColor(Color.WHITE);
+        canvas.end();
+    }
+
+    private void drawInventory() {
+        float barWidth = 400f;
+        float barHeight = 80f;
+        float barX = canvas.getWidth() / 2 - barWidth / 2;
+        float barY = 0f;
+        float padding = 10f;
+        int size = avatar.getPictureInventory().getSize();
+
+        float slotSize = (barWidth - padding * (size + 1)) / size;
+        float startX = barX + padding;
+        float startY = barY + (barHeight - slotSize) / 2f;
+
+        for (int i = 0; i < size; i++) {
+            float slotX = startX + i * (slotSize + padding);
+            Picture picture = avatar.getPictureInventory().getPicture(i);
+
+            canvas.setColor(Color.GRAY);
+            canvas.draw(slotTexture, slotX, startY, slotSize, slotSize);
+
+            if (picture != null && picture.hasSubject()) {
+                canvas.setColor(picture.getColor());
+                canvas.draw(slotTexture, slotX, startY, slotSize, slotSize);
+                canvas.setColor(Color.WHITE);
+                canvas.draw(picture.getSubject().getTexture(), slotX + 5f, startY + 5f, slotSize - 10f, slotSize - 10f);
+            }
+        }
+        canvas.setColor(Color.WHITE);
+    }
+
+    @Override
+    public void dispose() {
+        if (markerPixel != null) {
+            markerPixel.dispose();
+            markerPixel = null;
+        }
+        super.dispose();
     }
 }

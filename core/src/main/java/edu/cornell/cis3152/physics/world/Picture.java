@@ -1,5 +1,7 @@
 package edu.cornell.cis3152.physics.world;
 
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Vector2;
 import edu.cornell.gdiac.graphics.SpriteMesh;
 import edu.cornell.gdiac.physics2.BoxObstacle;
@@ -28,6 +30,9 @@ public class Picture extends ObstacleSprite {
     /** Cache offset for pictures on objects */
     private final Vector2 offset = new Vector2();
 
+    /** Texture of this picture */
+    private Texture texture;
+
     /**
      * Constructor for a blank Picture instance with no subject yet
      */
@@ -49,7 +54,7 @@ public class Picture extends ObstacleSprite {
         // Picture itself would need to be a GameObject for this
         mesh = new SpriteMesh(subject.getMesh());
         mesh.scl(0.5f);
-        setTexture(subject.getSpriteSheet().getTexture());
+        this.texture = subject.getTexture();
         id = -1;
         cameraType = camera;
     }
@@ -67,6 +72,9 @@ public class Picture extends ObstacleSprite {
 
     /** Returns the enum type of the Camera that took this picture */
     public CameraType getCameraType(){return cameraType;}
+
+    /** Returns the texture of this picture */
+    public Texture getTexture(){return texture;}
 
     /**
      * Sets a GameObject subject for this picture instance.
@@ -141,6 +149,20 @@ public class Picture extends ObstacleSprite {
         );
         obstacle.getBody().setLinearVelocity(target.getObstacle().getBody().getLinearVelocity().cpy());
         obstacle.getBody().setAngularVelocity(0);  // zero this out, setTransform handles rotation
+    }
+
+    public void clearSubject() {
+        this.subject = null;
+        this.subjectType = null;
+        hasSubject = false;
+    }
+
+    public Color getColor() {
+        return switch (cameraType) {
+            case THERMAL -> Color.RED;
+            case REGULAR -> Color.CYAN;
+            case TEXTURE -> Color.GREEN;
+        };
     }
 
 
