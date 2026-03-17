@@ -1,6 +1,7 @@
 package edu.cornell.cis3152.physics;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import edu.cornell.cis3152.physics.screen.PhysicsScene;
@@ -8,6 +9,7 @@ import edu.cornell.cis3152.physics.screen.LevelSelectScene;
 import edu.cornell.cis3152.physics.screen.levels.LevelController;
 import edu.cornell.gdiac.assets.AssetDirectory;
 import edu.cornell.gdiac.util.ScreenListener;
+import edu.cornell.cis3152.physics.screen.PauseMenuScene;
 
 /**
  * A simple example gameplay screen.
@@ -26,6 +28,7 @@ public class GameMode implements Screen, ScreenListener {
     private ScreenListener listener;
     private LevelController levelController;
     private LevelSelectScene levelSelectScene;
+    private PauseMenuScene pauseMenuScene;
 
 
     private int width;
@@ -33,6 +36,7 @@ public class GameMode implements Screen, ScreenListener {
 
     private boolean active;
     private boolean showingLevelSelect;
+    private boolean paused;
 
 //    private float playerX;
 ////    private float playerY;
@@ -49,6 +53,7 @@ public class GameMode implements Screen, ScreenListener {
         this.canvas = canvas;
         this.levelController = new LevelController(assets, canvas);
         this.levelSelectScene = new LevelSelectScene(assets, canvas, levelController.getTotalLevels());
+        pauseMenuScene = new PauseMenuScene(assets, canvas);
 
         camera = new OrthographicCamera();
         resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -108,6 +113,38 @@ public class GameMode implements Screen, ScreenListener {
             } else if (levelSelectScene.consumeExitRequested() && listener != null) {
                 listener.exitScreen(this, 0);
             }
+        } else {
+            if (Gdx.input.isKeyJustPressed(Input.Keys.P)) {
+                paused = !paused;
+                if (paused) {
+                    pauseMenuScene.show();
+                    levelController.getCurrentScene().setGamePaused(true);
+                }
+                else {
+                    pauseMenuScene.hide();
+                    levelController.getCurrentScene().setGamePaused(false);
+
+                }
+            }
+            if (paused) {
+                int choice = pauseMenuScene.consumeChoice();
+                if (choice == PauseMenuScene.RESUME)  {
+                    paused = false;
+                    pauseMenuScene.hide();
+                    levelController.getCurrentScene().setGamePaused(false);
+
+                }
+                if (choice == PauseMenuScene.RESTART) {
+                    levelController.loadLevel(levelController.getCurrentLevel());
+                    levelController.getCurrentScene().setGamePaused(false);
+                    paused = false;
+                }
+                if (choice == PauseMenuScene.QUIT)    {
+                    paused = false;
+                    showingLevelSelect = true;
+                    levelSelectScene.show();
+                }
+            }
         }
     }
 
@@ -121,6 +158,9 @@ public class GameMode implements Screen, ScreenListener {
             PhysicsScene currentScene = levelController.getCurrentScene();
             if (currentScene != null) {
                 currentScene.render(Gdx.graphics.getDeltaTime());
+            }
+            if (paused) {
+                pauseMenuScene.render(Gdx.graphics.getDeltaTime());
             }
         }
     }
@@ -152,6 +192,9 @@ public class GameMode implements Screen, ScreenListener {
         camera.setToOrtho(false, this.width, this.height);
         if (levelSelectScene != null) {
             levelSelectScene.resize(width, height);
+        }
+        if (pauseMenuScene != null) {
+            pauseMenuScene.resize(width, height);
         }
         if (levelController != null && levelController.getCurrentScene() != null) {
             levelController.getCurrentScene().resize(width, height);

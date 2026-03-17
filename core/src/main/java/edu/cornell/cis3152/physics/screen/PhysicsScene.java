@@ -115,6 +115,7 @@ public abstract class PhysicsScene implements Screen {
     /** Countdown active for winning or losing */
     protected int countdown;
 
+    protected boolean gamePaused;
     /**
      * Returns true if debug mode is active.
      *
@@ -126,6 +127,9 @@ public abstract class PhysicsScene implements Screen {
         return debug;
     }
 
+    public void setGamePaused(boolean paused) {
+        gamePaused = paused;
+    }
     /**
      * Sets whether debug mode is active.
      *
@@ -524,9 +528,11 @@ public abstract class PhysicsScene implements Screen {
      */
     public void render(float delta) {
         if (active) {
-            if (preUpdate(delta)) {
-                update(delta); // This is the one that must be defined.
-                postUpdate(delta);
+            if (!gamePaused) {
+                if (preUpdate(delta)) {
+                    update(delta); // This is the one that must be defined.
+                    postUpdate(delta);
+                }
             }
             draw(delta);
         }

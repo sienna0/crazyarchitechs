@@ -60,7 +60,7 @@ public class DesktopLauncher {
         config.resizable = false;
         config.width = 1024;
         config.height = 576;
-        config.rawHDPI = false;
+        config.rawHDPI = true;
 
         // Use OpenGLES 2.0
         config.useGL30 = false;
