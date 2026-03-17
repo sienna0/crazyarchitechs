@@ -1,5 +1,6 @@
 package edu.cornell.cis3152.physics.world;
 
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.utils.JsonValue;
@@ -28,6 +29,9 @@ public class GameObject extends ObstacleSprite {
     float friction;
     /** This object's temperature (hot/cold) */
     float temp;
+
+    /** This object's texture */
+    private Texture texture;
 
     public GameObject(Obj object, JsonValue data) {
         this.data = data;
@@ -98,6 +102,15 @@ public class GameObject extends ObstacleSprite {
             freezeInPlace();
         }
 
+    }
+
+    public void setTexture(Texture texture) {
+        this.texture = texture;
+        super.setTexture(texture);
+    }
+
+    public Texture getTexture() {
+        return texture;
     }
 
     public float getWeight() {

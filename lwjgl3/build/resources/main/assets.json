@@ -12,7 +12,10 @@
         "platform-jump"     : "platform/zukojump.png",
         "platform-rope"     : "platform/ropebridge.png",
         "platform-barrier"  : "platform/barrier.png",
-        "platform-bullet"   : "platform/bullet.png"
+        "platform-bullet"   : "platform/bullet.png",
+        "platform-ice"      : "platform/ice.png",
+        "platform-rock"     : "platform/rock.png",
+        "platform-cloud"    : "platform/cloud.png"
     },
     "jsons"  : {
         "platform-constants": "platform/constants.json"
