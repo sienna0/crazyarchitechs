@@ -945,7 +945,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     private int getClickedSlot(float mouseX, float mouseY) {
         float barWidth = 400f;
         float barHeight = 80f;
-        float barX = canvas.getWidth() / 2 - barWidth / 2;
+        float barX = viewport.getWidth() / 2 - barWidth / 2;
         float barY = 0f;
         float padding = 10f;
         int size = avatar.getPictureInventory().getSize();
