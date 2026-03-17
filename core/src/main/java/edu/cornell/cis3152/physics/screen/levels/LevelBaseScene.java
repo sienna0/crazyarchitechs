@@ -789,13 +789,13 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             float a = obj.getAngle();
             Vector2 p = obj.getPosition();
 
-            for (int t = -1; t <= 1; t++) {
+            for (int t = -2; t <= 2; t++) {
                 highlightTransform.idt();
                 highlightTransform.preRotate((float)(a * 180.0f/ Math.PI));
                 highlightTransform.preTranslate(p.x * u + t, p.y * u);
                 canvas.outline(obj.getOutline(), highlightTransform);
             }
-            for (int t = -1; t <= 1; t++) {
+            for (int t = -2; t <= 2; t++) {
                 highlightTransform.idt();
                 highlightTransform.preRotate((float)(a * 180.0f/ Math.PI));
                 highlightTransform.preTranslate(p.x * u, p.y * u + t);
