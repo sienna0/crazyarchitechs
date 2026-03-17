@@ -20,6 +20,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Affine2;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
@@ -40,6 +41,7 @@ import edu.cornell.cis3152.physics.world.*;
 import edu.cornell.gdiac.assets.AssetDirectory;
 import edu.cornell.gdiac.audio.SoundEffect;
 import edu.cornell.gdiac.audio.SoundEffectManager;
+import edu.cornell.gdiac.graphics.TextAlign;
 import edu.cornell.gdiac.graphics.TextLayout;
 import edu.cornell.gdiac.math.Path2;
 import edu.cornell.gdiac.math.PathFactory;
@@ -104,8 +106,14 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     protected ObjectSet<Fixture> sensorFixtures;
 
     private TextLayout cameraLabel;
+    private TextLayout pictureMarkerLabel;
     private OrthographicCamera textCamera;
     private BitmapFont font;
+    private Texture markerPixel;
+    private Path2 markerOutline;
+    private static final float PICTURE_MARKER_WIDTH = 28.0f;
+    private static final float PICTURE_MARKER_HEIGHT = 22.0f;
+    private static final float PICTURE_MARKER_OFFSET_Y = 6.0f;
     /**
      * Creates and initialize a new instance of the platformer game
      *
@@ -128,6 +136,20 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         font = new BitmapFont();
         cameraLabel = new TextLayout();
         cameraLabel.setFont( font );
+
+        pictureMarkerLabel = new TextLayout();
+        pictureMarkerLabel.setFont(font);
+        pictureMarkerLabel.setAlignment(TextAlign.middleCenter);
+        pictureMarkerLabel.setColor(Color.BLACK);
+
+        Pixmap markerPixmap = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
+        markerPixmap.setColor(Color.WHITE);
+        markerPixmap.fill();
+        markerPixel = new Texture(markerPixmap);
+        markerPixmap.dispose();
+
+        markerOutline = new Path2();
+        new PathFactory().makeRect(0, 0, PICTURE_MARKER_WIDTH, PICTURE_MARKER_HEIGHT, markerOutline);
     }
 
     /**
@@ -663,6 +685,59 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
 
         }
     }
+
+    private void drawPlacedPictureMarkers() {
+        for (Picture picture : pictures) {
+            if (picture.getTarget() == null) {
+                continue;
+            }
+
+            GameObject target = picture.getTarget();
+            Obstacle obstacle = target.getObstacle();
+            Rectangle targetBounds = target.getMesh().computeBounds();
+            float units = obstacle.getPhysicsUnits();
+            float centerX = obstacle.getX() * units;
+            float centerY = obstacle.getY() * units;
+
+            float markerX = centerX + targetBounds.x + targetBounds.width - PICTURE_MARKER_WIDTH;
+            float markerY = centerY + targetBounds.y + targetBounds.height + PICTURE_MARKER_OFFSET_Y;
+            markerX = MathUtils.clamp(markerX, 0.0f, canvas.getWidth() - PICTURE_MARKER_WIDTH);
+            markerY = MathUtils.clamp(markerY, 0.0f, canvas.getHeight() - PICTURE_MARKER_HEIGHT);
+
+            canvas.setColor(getMarkerColor(picture.getCameraType()));
+            canvas.draw(markerPixel, markerX, markerY, PICTURE_MARKER_WIDTH, PICTURE_MARKER_HEIGHT);
+
+            highlightTransform.idt();
+            highlightTransform.preTranslate(markerX, markerY);
+            canvas.setColor(Color.BLACK);
+            canvas.outline(markerOutline, highlightTransform);
+
+            pictureMarkerLabel.setText(Integer.toString(getMarkerNumber(picture.getCameraType())));
+            pictureMarkerLabel.layout();
+            canvas.drawText(
+                    pictureMarkerLabel,
+                    markerX + (PICTURE_MARKER_WIDTH / 2.0f),
+                    markerY + (PICTURE_MARKER_HEIGHT / 2.0f) + 7.0f
+            );
+        }
+    }
+
+    private int getMarkerNumber(CameraType cameraType) {
+        return switch (cameraType) {
+            case THERMAL -> 1;
+            case REGULAR -> 2;
+            case TEXTURE -> 3;
+        };
+    }
+
+    private Color getMarkerColor(CameraType cameraType) {
+        return switch (cameraType) {
+            case THERMAL -> new Color(0.95f, 0.62f, 0.29f, 0.95f);
+            case REGULAR -> new Color(0.92f, 0.92f, 0.92f, 0.95f);
+            case TEXTURE -> new Color(0.45f, 0.82f, 0.55f, 0.95f);
+        };
+    }
+
     @Override
     public void draw(float dt) {
         super.draw(dt);
@@ -716,6 +791,8 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             }
         }
 
+        drawPlacedPictureMarkers();
+
         canvas.end();
 
         String label = avatar.getCamera().getCameraType().getLabel();
@@ -728,5 +805,14 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         canvas.setColor(Color.WHITE);
         canvas.drawText(cameraLabel, 50, canvas.getHeight()-20);
         canvas.end();
+    }
+
+    @Override
+    public void dispose() {
+        if (markerPixel != null) {
+            markerPixel.dispose();
+            markerPixel = null;
+        }
+        super.dispose();
     }
 }
