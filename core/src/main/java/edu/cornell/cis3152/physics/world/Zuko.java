@@ -24,7 +24,6 @@ import com.badlogic.gdx.utils.JsonValue;
 import edu.cornell.gdiac.assets.ParserUtils;
 import edu.cornell.gdiac.graphics.SpriteBatch;
 import edu.cornell.gdiac.graphics.SpriteSheet;
-import edu.cornell.cis3152.physics.GameCanvas;
 import edu.cornell.gdiac.graphics.Texture2D;
 import edu.cornell.gdiac.math.Path2;
 import edu.cornell.gdiac.math.PathFactory;
@@ -567,14 +566,14 @@ public class Zuko extends ObstacleSprite {
      * draw the outline of the sensor, and in a different color. Since it
      * is not an obstacle, we have to draw that by hand.
      *
-     * @param canvas The game canvas to draw to
+     * @param batch The sprite batch to draw to
      */
-    public void drawDebug(GameCanvas canvas) {
-         super.drawDebug( canvas.getSpriteBatch() );
+    public void drawDebug(SpriteBatch batch) {
+         super.drawDebug(batch);
 
          if (sensorOutline != null) {
-             canvas.setTexture( Texture2D.getBlank() );
-             canvas.setColor( sensorColor );
+             batch.setTexture( Texture2D.getBlank() );
+             batch.setColor( sensorColor );
 
             Vector2 p = obstacle.getPosition();
             float a = obstacle.getAngle();
@@ -586,7 +585,7 @@ public class Zuko extends ObstacleSprite {
             transform.preTranslate( p.x * u, p.y * u );
 
             //
-            canvas.outline( sensorOutline, transform );
+            batch.outline( sensorOutline, transform );
         }
     }
 }

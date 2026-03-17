@@ -8,6 +8,7 @@ import edu.cornell.cis3152.physics.screen.PhysicsScene;
 import edu.cornell.cis3152.physics.screen.LevelSelectScene;
 import edu.cornell.cis3152.physics.screen.levels.LevelController;
 import edu.cornell.gdiac.assets.AssetDirectory;
+import edu.cornell.gdiac.graphics.SpriteBatch;
 import edu.cornell.gdiac.util.ScreenListener;
 import edu.cornell.cis3152.physics.screen.PauseMenuScene;
 
@@ -23,7 +24,8 @@ import edu.cornell.cis3152.physics.screen.PauseMenuScene;
 public class GameMode implements Screen, ScreenListener {
 
     private AssetDirectory assets;
-    private GameCanvas canvas;
+    private SpriteBatch batch;
+    private CanvasRender viewport;
     private OrthographicCamera camera;
     private ScreenListener listener;
     private LevelController levelController;
@@ -46,14 +48,16 @@ public class GameMode implements Screen, ScreenListener {
      * Creates the game mode with loaded assets.
      *
      * @param assets the asset directory from LoadingScene
-     * @param canvas the shared game canvas
+     * @param batch the shared sprite batch
+     * @param viewport the shared letterboxed viewport
      */
-    public GameMode(AssetDirectory assets, GameCanvas canvas) {
+    public GameMode(AssetDirectory assets, SpriteBatch batch, CanvasRender viewport) {
         this.assets = assets;
-        this.canvas = canvas;
-        this.levelController = new LevelController(assets, canvas);
-        this.levelSelectScene = new LevelSelectScene(assets, canvas, levelController.getTotalLevels());
-        pauseMenuScene = new PauseMenuScene(assets, canvas);
+        this.batch = batch;
+        this.viewport = viewport;
+        this.levelController = new LevelController(assets, batch, viewport);
+        this.levelSelectScene = new LevelSelectScene(assets, batch, viewport, levelController.getTotalLevels());
+        pauseMenuScene = new PauseMenuScene(assets, batch, viewport);
 
         camera = new OrthographicCamera();
         resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -186,8 +190,8 @@ public class GameMode implements Screen, ScreenListener {
      */
     @Override
     public void resize(int width, int height) {
-        this.width = (int)canvas.getWidth();
-        this.height = (int)canvas.getHeight();
+        this.width = (int)viewport.getWidth();
+        this.height = (int)viewport.getHeight();
 
         camera.setToOrtho(false, this.width, this.height);
         if (levelSelectScene != null) {

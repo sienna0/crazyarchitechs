@@ -1,8 +1,9 @@
 package edu.cornell.cis3152.physics.screen.levels;
-import edu.cornell.cis3152.physics.GameCanvas;
+import edu.cornell.cis3152.physics.CanvasRender;
 import edu.cornell.cis3152.physics.screen.PhysicsScene;
 import edu.cornell.gdiac.assets.AssetDirectory;
 import com.badlogic.gdx.Screen;
+import edu.cornell.gdiac.graphics.SpriteBatch;
 
 /**
  * Controls which level is currently active.
@@ -18,8 +19,10 @@ public class LevelController {
     /** Loaded assets */
     private AssetDirectory assets;
 
-    /** Shared game canvas */
-    private GameCanvas canvas;
+    /** Shared sprite batch */
+    private SpriteBatch batch;
+    /** Shared letterboxed viewport */
+    private CanvasRender viewport;
 
     /** Current level screen */
     private PhysicsScene currentScene;
@@ -27,9 +30,10 @@ public class LevelController {
     /**
      * Constructor
      */
-    public LevelController(AssetDirectory assets, GameCanvas canvas) {
+    public LevelController(AssetDirectory assets, SpriteBatch batch, CanvasRender viewport) {
         this.assets = assets;
-        this.canvas = canvas;
+        this.batch = batch;
+        this.viewport = viewport;
 
         currentLevel = 1;
         totalLevels = 3;
@@ -48,7 +52,8 @@ public class LevelController {
             return;
         }
 
-        currentScene.setCanvas(canvas);
+        currentScene.setBatch(batch);
+        currentScene.setViewport(viewport);
         currentScene.show();
         currentScene.resize(com.badlogic.gdx.Gdx.graphics.getWidth(), com.badlogic.gdx.Gdx.graphics.getHeight());
         currentLevel = level;

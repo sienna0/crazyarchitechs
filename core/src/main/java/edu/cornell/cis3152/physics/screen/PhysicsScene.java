@@ -35,9 +35,10 @@ import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.utils.ScreenUtils;
 import edu.cornell.cis3152.physics.InputController;
-import edu.cornell.cis3152.physics.GameCanvas;
+import edu.cornell.cis3152.physics.CanvasRender;
 import edu.cornell.cis3152.physics.world.ObstacleGroup;
 import edu.cornell.gdiac.assets.AssetDirectory;
+import edu.cornell.gdiac.graphics.SpriteBatch;
 import edu.cornell.gdiac.util.*;
 import edu.cornell.gdiac.graphics.*;
 import edu.cornell.gdiac.physics2.*;
@@ -46,9 +47,9 @@ import edu.cornell.gdiac.physics2.*;
 /**
  * Base class for a world-specific controller.
  *
- * A world has its own objects, assets, and input controller.  Thus this is
- * really a mini-GameEngine in its own right.  The only thing that it does
- * not do is create a GameCanvas; that is shared with the main application.
+ * A world has its own objects, assets, and input controller. Thus this is
+ * really a mini-GameEngine in its own right. The only thing that it does
+ * not do is create the shared SpriteBatch and viewport.
  *
  * You should NOT copy this class for your game. This only exists because we
  * have separate minigames. It factors out all of the common code from each
@@ -69,8 +70,10 @@ public abstract class PhysicsScene implements Screen {
     protected AssetDirectory directory;
     /** The drawing camera for this scene */
     protected OrthographicCamera camera;
-    /** Reference to the game canvas */
-    protected GameCanvas canvas;
+    /** Shared sprite batch */
+    protected SpriteBatch batch;
+    /** Shared letterboxed viewport */
+    protected CanvasRender viewport;
 
     protected float width;
     protected float height;
@@ -201,25 +204,34 @@ public abstract class PhysicsScene implements Screen {
     }
 
     /**
-     * Returns the game canvas associated with this scene
+     * Returns the shared sprite batch associated with this scene.
      *
-     * The canvas is shared across all scenes.
+     * The batch is shared across all scenes.
      *
-     * @return the game canvas associated with this scene
+     * @return the shared sprite batch
      */
-    public GameCanvas getCanvas() {
-        return canvas;
+    public SpriteBatch getBatch() {
+        return batch;
     }
 
     /**
-     * Sets the game canvas associated with this scene
+     * Sets the shared sprite batch associated with this scene.
      *
-     * The game canvas is shared across all scenes.
+     * The batch is shared across all scenes.
      *
-     * @param canvas the game canvas associated with this scene
+     * @param batch the shared sprite batch
      */
-    public void setCanvas(GameCanvas canvas) {
-        this.canvas = canvas;
+    public void setBatch(SpriteBatch batch) {
+        this.batch = batch;
+    }
+
+    /**
+     * Sets the shared viewport associated with this scene.
+     *
+     * @param viewport the shared viewport
+     */
+    public void setViewport(CanvasRender viewport) {
+        this.viewport = viewport;
     }
 
     /**
@@ -284,7 +296,8 @@ public abstract class PhysicsScene implements Screen {
         bounds = null;
         scale = null;
         world = null;
-        canvas = null;
+        batch = null;
+        viewport = null;
     }
 
     /**
@@ -360,7 +373,7 @@ public abstract class PhysicsScene implements Screen {
      */
     public boolean preUpdate(float dt) {
         InputController input = InputController.getInstance();
-        input.sync(bounds, scale, canvas);
+        input.sync(bounds, scale, viewport);
         if (listener == null) {
             return true;
         }
@@ -472,29 +485,41 @@ public abstract class PhysicsScene implements Screen {
             camera.update();
         }
 
-        // This shows off how powerful our new GameCanvas is
-        canvas.begin(camera);
+        viewport.apply();
+        batch.begin(camera);
+
+        drawBackground(batch);
 
         // Draw the meshes (images)
         for(ObstacleSprite obj : sprites) {
-            canvas.draw(obj);
+            obj.draw(batch);
         }
 
         if (debug) {
             // Draw the outlines
             for (ObstacleSprite obj : sprites) {
-                canvas.drawDebug( obj );
+                obj.drawDebug(batch);
             }
         }
 
         // Draw a final message
         if (complete && !failed) {
-            canvas.drawText(goodMessage, width/2, height/2);
+            batch.drawText(goodMessage, width/2, height/2);
         } else if (failed) {
-            canvas.drawText(badMessage, width/2, height/2);
+            batch.drawText(badMessage, width/2, height/2);
         }
 
-        canvas.end();
+        batch.end();
+        viewport.reset();
+    }
+
+    /**
+     * Draws any scene background before world sprites render.
+     *
+     * Subclasses can override this to supply a full-screen background.
+     */
+    protected void drawBackground(SpriteBatch batch) {
+        // Default scene uses only the clear color.
     }
 
     /**
@@ -507,8 +532,8 @@ public abstract class PhysicsScene implements Screen {
      * @param height The new height in pixels
      */
     public void resize(int width, int height) {
-        this.width  = canvas == null ? width : canvas.getWidth();
-        this.height = canvas == null ? height : canvas.getHeight();
+        this.width  = viewport == null ? width : viewport.getWidth();
+        this.height = viewport == null ? height : viewport.getHeight();
         if (camera == null) {
             camera = new OrthographicCamera();
         }

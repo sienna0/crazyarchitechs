@@ -11,8 +11,9 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.ScreenUtils;
-import edu.cornell.cis3152.physics.GameCanvas;
+import edu.cornell.cis3152.physics.CanvasRender;
 import edu.cornell.gdiac.assets.AssetDirectory;
+import edu.cornell.gdiac.graphics.SpriteBatch;
 import edu.cornell.gdiac.graphics.TextAlign;
 import edu.cornell.gdiac.graphics.TextLayout;
 
@@ -20,8 +21,10 @@ import edu.cornell.gdiac.graphics.TextLayout;
  * Simple menu screen for selecting a level.
  */
 public class LevelSelectScene implements Screen {
-    /** Shared game canvas */
-    private GameCanvas canvas;
+    /** Shared sprite batch */
+    private SpriteBatch batch;
+    /** Shared letterboxed viewport */
+    private CanvasRender viewport;
     /** Drawing camera */
     private OrthographicCamera camera;
     /** Shared font */
@@ -61,8 +64,9 @@ public class LevelSelectScene implements Screen {
     /** Reusable coordinate buffer */
     private final Vector2 pointer;
 
-    public LevelSelectScene(AssetDirectory assets, GameCanvas canvas, int totalLevels) {
-        this.canvas = canvas;
+    public LevelSelectScene(AssetDirectory assets, SpriteBatch batch, CanvasRender viewport, int totalLevels) {
+        this.batch = batch;
+        this.viewport = viewport;
         this.totalLevels = totalLevels;
         this.font = assets.getEntry("shared-retro", BitmapFont.class);
         this.camera = new OrthographicCamera();
@@ -99,8 +103,8 @@ public class LevelSelectScene implements Screen {
         resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
     }
 
-    public void setCanvas(GameCanvas canvas) {
-        this.canvas = canvas;
+    public void setBatch(SpriteBatch batch) {
+        this.batch = batch;
     }
 
     public int consumeChosenLevel() {
@@ -174,26 +178,28 @@ public class LevelSelectScene implements Screen {
         ScreenUtils.clear(0.10f, 0.14f, 0.18f, 1.0f);
         camera.update();
 
-        canvas.begin(camera);
-        canvas.drawText(titleLayout, width / 2.0f, height - 100.0f);
-        canvas.drawText(instructionLayout, width / 2.0f, height - 170.0f);
+        viewport.apply();
+        batch.begin(camera);
+        batch.drawText(titleLayout, width / 2.0f, height - 100.0f);
+        batch.drawText(instructionLayout, width / 2.0f, height - 170.0f);
 
         for (int ii = 0; ii < totalLevels; ii++) {
             Rectangle bounds = getButtonBounds(ii);
             boolean selected = ii == selectedIndex;
 
-            canvas.setColor(selected ? new Color(0.80f, 0.31f, 0.18f, 1.0f) : new Color(0.23f, 0.29f, 0.33f, 1.0f));
-            canvas.draw(pixel, bounds.x, bounds.y, bounds.width, bounds.height);
+            batch.setColor(selected ? new Color(0.80f, 0.31f, 0.18f, 1.0f) : new Color(0.23f, 0.29f, 0.33f, 1.0f));
+            batch.draw(pixel, bounds.x, bounds.y, bounds.width, bounds.height);
 
             font.getData().setScale(0.85f);
             optionLayout.setColor(selected ? Color.WHITE : new Color(0.84f, 0.84f, 0.80f, 1.0f));
             optionLayout.setText("LEVEL " + (ii + 1));
             optionLayout.layout();
-            canvas.drawText(optionLayout, bounds.x + bounds.width / 2.0f, bounds.y + bounds.height / 2.0f + 2.0f);
+            batch.drawText(optionLayout, bounds.x + bounds.width / 2.0f, bounds.y + bounds.height / 2.0f + 2.0f);
         }
         font.getData().setScale(1.0f);
 
-        canvas.end();
+        batch.end();
+        viewport.reset();
     }
 
     private Rectangle getButtonBounds(int index) {
@@ -208,7 +214,7 @@ public class LevelSelectScene implements Screen {
     }
 
     private int getHoveredIndex() {
-        canvas.screenToCanvas(Gdx.input.getX(), Gdx.input.getY(), pointer);
+        viewport.screenToCanvas(Gdx.input.getX(), Gdx.input.getY(), pointer);
         float x = pointer.x;
         float y = pointer.y;
         for (int ii = 0; ii < totalLevels; ii++) {
@@ -221,8 +227,8 @@ public class LevelSelectScene implements Screen {
 
     @Override
     public void resize(int width, int height) {
-        this.width = (int)canvas.getWidth();
-        this.height = (int)canvas.getHeight();
+        this.width = (int)viewport.getWidth();
+        this.height = (int)viewport.getHeight();
         camera.setToOrtho(false, this.width, this.height);
     }
 

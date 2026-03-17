@@ -34,8 +34,10 @@ import edu.cornell.gdiac.graphics.*;
 public class GDXRoot extends Game implements ScreenListener {
     /** AssetManager to load game assets (textures, sounds, etc.) */
     AssetDirectory directory;
-    /** The game canvas to draw the screen (VIEW CLASS) */
-    private GameCanvas canvas;
+    /** Shared sprite batch for drawing */
+    private SpriteBatch batch;
+    /** Shared letterboxed viewport */
+    private CanvasRender viewport;
     /** Scene for the asset loading screen (CONTROLLER CLASS) */
     private LoadingScene loading;
     /** Player mode for the the game proper (CONTROLLER CLASS) */
@@ -56,10 +58,11 @@ public class GDXRoot extends Game implements ScreenListener {
      * prepares the asynchronous loader for all other assets.
      */
     public void create() {
-        canvas  = new GameCanvas();
+        batch = new SpriteBatch();
+        viewport = new CanvasRender();
 
         // Create the loading scene
-        loading = new LoadingScene("assets.json",canvas,1);
+        loading = new LoadingScene("assets.json", batch, viewport, 1);
         loading.setScreenListener(this);
         setScreen(loading);
     }
@@ -81,8 +84,11 @@ public class GDXRoot extends Game implements ScreenListener {
             gameMode = null;
         }
 
-        canvas.dispose();
-        canvas = null;
+        if (batch != null) {
+            batch.dispose();
+            batch = null;
+        }
+        viewport = null;
 
         // Unload all of the resources
         if (directory != null) {
@@ -103,8 +109,8 @@ public class GDXRoot extends Game implements ScreenListener {
      * @param height The new height in pixels
      */
     public void resize(int width, int height) {
-        if (canvas != null) {
-            canvas.resize(width, height);
+        if (viewport != null) {
+            viewport.resize(width, height);
         }
         if (loading != null) {
             loading.resize(width,height);
@@ -129,7 +135,7 @@ public class GDXRoot extends Game implements ScreenListener {
             loading.dispose();
             loading = null;
 
-            gameMode = new GameMode(directory, canvas);
+            gameMode = new GameMode(directory, batch, viewport);
             gameMode.setScreenListener(this);
             setScreen(gameMode);
         } else if (exitCode == PhysicsScene.EXIT_QUIT) {

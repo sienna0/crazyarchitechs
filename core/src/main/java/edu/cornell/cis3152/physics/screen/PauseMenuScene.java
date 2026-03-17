@@ -32,7 +32,8 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
-import edu.cornell.cis3152.physics.GameCanvas;
+import edu.cornell.cis3152.physics.CanvasRender;
+import edu.cornell.gdiac.graphics.SpriteBatch;
 import edu.cornell.gdiac.assets.AssetDirectory;
 import edu.cornell.gdiac.graphics.TextAlign;
 import edu.cornell.gdiac.graphics.TextLayout;
@@ -43,7 +44,8 @@ public class PauseMenuScene implements Screen {
     public static final int RESTART     = 1;
     public static final int QUIT        = 2;
 
-    private GameCanvas canvas;
+    private CanvasRender viewport;
+    private SpriteBatch batch;
     private OrthographicCamera camera;
     private BitmapFont font;
     private Texture pixel;
@@ -75,8 +77,9 @@ public class PauseMenuScene implements Screen {
             "P  —  Pause"
     };
 
-    public PauseMenuScene(AssetDirectory assets, GameCanvas canvas) {
-        this.canvas = canvas;
+    public PauseMenuScene(AssetDirectory assets, SpriteBatch batch, CanvasRender viewport) {
+        this.viewport = viewport;
+        this.batch = batch;
         this.font   = assets.getEntry("shared-retro", BitmapFont.class);
         this.camera = new OrthographicCamera();
 
@@ -170,15 +173,16 @@ public class PauseMenuScene implements Screen {
     private void draw() {
         font.getData().setScale(0.5f);
         camera.update();
-        canvas.begin(camera);
+        viewport.apply();
+        batch.begin(camera);
 
         float panelWidth  = width;
         float panelHeight = height;
         float panelX = 0;
         float panelY = 0;
 
-        canvas.setColor(new Color(0.2f, 0.45f, 0.2f, 0.6f));
-        canvas.draw(pixel, panelX, panelY, panelWidth, panelHeight);
+        batch.setColor(new Color(0.2f, 0.45f, 0.2f, 0.6f));
+        batch.draw(pixel, panelX, panelY, panelWidth, panelHeight);
 
         if (showingControls) {
             drawControls();
@@ -186,54 +190,55 @@ public class PauseMenuScene implements Screen {
             drawButtons( panelHeight);
         }
 
-        canvas.end();
+        batch.end();
+        viewport.reset();
     }
 
     private void drawButtons( float panelHeight) {
         titleLayout.setText("PAUSED");
         titleLayout.layout();
-        canvas.drawText(titleLayout, width / 2f, (float) (panelHeight * 0.85));
+        batch.drawText(titleLayout, width / 2f, (float) (panelHeight * 0.85));
 
         for (int i = 0; i < LABELS.length; i++) {
             Rectangle b = getButtonBounds(i);
             boolean selected = i == selectedIndex;
-            canvas.setColor(selected
+            batch.setColor(selected
                     ? new Color(0.80f, 0.31f, 0.18f, 1f)
                     : new Color(0.0f, 0.0f, 0.0f, 0f));
-            canvas.draw(pixel, b.x, b.y, b.width, b.height);
+            batch.draw(pixel, b.x, b.y, b.width, b.height);
 
             optionLayout.setColor(selected ? Color.WHITE : new Color(0.84f, 0.84f, 0.80f, 1f));
             optionLayout.setText(LABELS[i]);
             optionLayout.layout();
-            canvas.drawText(optionLayout, width / 2f, b.y + b.height / 2f + 18f);
+            batch.drawText(optionLayout, width / 2f, b.y + b.height / 2f + 18f);
         }
     }
 
      private void drawControls() {
         titleLayout.setText("HOW TO PLAY");
         titleLayout.layout();
-        canvas.drawText(titleLayout, width / 2f, height * 0.85f);
+        batch.drawText(titleLayout, width / 2f, height * 0.85f);
 
         float cy = height * 0.75f;
         for (String line : CONTROLS) {
             optionLayout.setColor(new Color(0.84f, 0.84f, 0.80f, 1f));
             optionLayout.setText(line);
             optionLayout.layout();
-            canvas.drawText(optionLayout, width / 2f, cy);
+            batch.drawText(optionLayout, width / 2f, cy);
             cy -= 40f;
         }
 
         Rectangle back = getBackButtonBounds();
         boolean hovered = isBackButtonHovered();
-        canvas.setColor(hovered
+        batch.setColor(hovered
                 ? new Color(0.80f, 0.31f, 0.18f, 1f)
                 : new Color(0.23f, 0.29f, 0.33f, 0.9f));
-        canvas.draw(pixel, back.x, back.y, back.width, back.height);
+        batch.draw(pixel, back.x, back.y, back.width, back.height);
 
         optionLayout.setColor(Color.WHITE);
         optionLayout.setText("< BACK");
         optionLayout.layout();
-        canvas.drawText(optionLayout, back.x + back.width / 2f, back.y + back.height / 2f + 18f);
+        batch.drawText(optionLayout, back.x + back.width / 2f, back.y + back.height / 2f + 18f);
     }
 
     private Rectangle getButtonBounds(int index) {
@@ -253,12 +258,12 @@ public class PauseMenuScene implements Screen {
     }
 
     private boolean isBackButtonHovered() {
-        canvas.screenToCanvas(Gdx.input.getX(), Gdx.input.getY(), pointer);
+        viewport.screenToCanvas(Gdx.input.getX(), Gdx.input.getY(), pointer);
         return getBackButtonBounds().contains(pointer.x, pointer.y);
     }
 
     private int getHoveredIndex() {
-        canvas.screenToCanvas(Gdx.input.getX(), Gdx.input.getY(), pointer);
+        viewport.screenToCanvas(Gdx.input.getX(), Gdx.input.getY(), pointer);
         for (int i = 0; i < LABELS.length; i++) {
             if (getButtonBounds(i).contains(pointer.x, pointer.y)) return i;
         }
@@ -267,8 +272,8 @@ public class PauseMenuScene implements Screen {
 
     @Override
     public void resize(int width, int height) {
-        this.width  = (int) canvas.getWidth();
-        this.height = (int) canvas.getHeight();
+        this.width  = (int) viewport.getWidth();
+        this.height = (int) viewport.getHeight();
         camera.setToOrtho(false, this.width, this.height);
     }
 

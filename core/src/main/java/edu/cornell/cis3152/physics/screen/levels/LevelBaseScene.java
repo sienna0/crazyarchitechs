@@ -41,6 +41,7 @@ import edu.cornell.cis3152.physics.world.*;
 import edu.cornell.gdiac.assets.AssetDirectory;
 import edu.cornell.gdiac.audio.SoundEffect;
 import edu.cornell.gdiac.audio.SoundEffectManager;
+import edu.cornell.gdiac.graphics.SpriteBatch;
 import edu.cornell.gdiac.graphics.TextAlign;
 import edu.cornell.gdiac.graphics.TextLayout;
 import edu.cornell.gdiac.math.Path2;
@@ -68,6 +69,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
 
     private Texture cloudTexture;
     private Texture earthTexture;
+    private Texture backgroundTexture;
 
     private Texture slotTexture;
 
@@ -118,6 +120,19 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     private static final float PICTURE_MARKER_WIDTH = 28.0f;
     private static final float PICTURE_MARKER_HEIGHT = 22.0f;
     private static final float PICTURE_MARKER_OFFSET_Y = 6.0f;
+
+    /**
+     * Resolves a texture from the asset directory, with a direct file fallback for
+     * cases where the manifest key is temporarily out of sync.
+     */
+    private Texture requireTexture(String key, String fallbackPath) {
+        Texture texture = directory.getEntry(key, Texture.class);
+        if (texture == null) {
+            texture = new Texture(Gdx.files.internal(fallbackPath));
+        }
+        return texture;
+    }
+
     /**
      * Creates and initialize a new instance of the platformer game
      *
@@ -133,6 +148,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         fireSound = directory.getEntry( "platform-pew", SoundEffect.class );
         plopSound = directory.getEntry( "platform-plop", SoundEffect.class );
         volume = constants.getFloat("volume", 1.0f);
+        backgroundTexture = requireTexture("shared-background", "shared/background.png");
 
         textCamera = new OrthographicCamera();
         textCamera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -154,6 +170,14 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
 
         markerOutline = new Path2();
         new PathFactory().makeRect(0, 0, PICTURE_MARKER_WIDTH, PICTURE_MARKER_HEIGHT, markerOutline);
+    }
+
+    @Override
+    protected void drawBackground(SpriteBatch batch) {
+        if (backgroundTexture != null) {
+            batch.setColor(Color.WHITE);
+            batch.draw(backgroundTexture, 0, 0, viewport.getWidth(), viewport.getHeight());
+        }
     }
 
     /**
@@ -205,7 +229,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         float units = height/bounds.height;
 
         // Add level goal
-        Texture texture = directory.getEntry( "shared-goal", Texture.class );
+        Texture texture = requireTexture("shared-goal", "shared/goaldoor.png");
 
         if (constants.get("level" + currentLevel) == null)
         {
@@ -231,7 +255,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         addSprite(goalDoor);
 
         // Create ground pieces
-        texture = directory.getEntry( "shared-earth", Texture.class );
+        texture = requireTexture("shared-earth", "shared/earthtile.png");
         Texture earthTexture = texture;
 
         Surface wall;
@@ -257,15 +281,15 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         }
 
         // Create Zuko
-        texture = directory.getEntry( "platform-traci", Texture.class );
+        texture = requireTexture("platform-traci", "platform/traci.png");
         avatar = new Zuko(units, constants.get("level" + currentLevel).get("objectLocations").get("zuko"));
         avatar.setTexture(texture);
         avatar.setBaseTexture(texture);
         addSprite(avatar);
         avatar.createSensor();
-        Texture photoSheet = directory.getEntry( "platform-camera", Texture.class );
+        Texture photoSheet = requireTexture("platform-camera", "platform/cameraflash.png");
         avatar.setPhotoAnimation(photoSheet, 1, 17, 17);
-        Texture jumpSheet = directory.getEntry( "platform-jump", Texture.class );
+        Texture jumpSheet = requireTexture("platform-jump", "platform/zukojump.png");
         avatar.setJumpAnimation(jumpSheet, 1, 7, 7);
 
         float rockSize = 1.5f;
@@ -275,7 +299,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
 
         float objWidth = 1.5f;
 
-        Texture rockTexture = directory.getEntry( "platform-rock", Texture.class );
+        Texture rockTexture = requireTexture("platform-rock", "platform/rock.png");
         float rockHeight = objWidth * ((float) rockTexture.getHeight() / rockTexture.getWidth());
 
         JsonValue rocks = constants.get("level"+currentLevel).get("objectLocations");
@@ -292,7 +316,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             rock.setTexture(rockTexture);
             addSprite(rock);
         }
-        Texture iceTexture = directory.getEntry( "platform-ice", Texture.class );
+        Texture iceTexture = requireTexture("platform-ice", "platform/ice.png");
         float iceHeight = objWidth * ((float) iceTexture.getHeight() / iceTexture.getWidth());
 
         JsonValue ices = constants.get("level"+currentLevel).get("objectLocations");
@@ -310,7 +334,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             addSprite(ice);
         }
 
-        Texture cloudTexture = directory.getEntry( "platform-cloud", Texture.class );
+        Texture cloudTexture = requireTexture("platform-cloud", "platform/cloud.png");
         float cloudHeight = objWidth * ((float) rockTexture.getHeight() / rockTexture.getWidth());
 
         JsonValue clouds = constants.get("level"+currentLevel).get("objectLocations");
@@ -758,20 +782,20 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
 
             float markerX = centerX + targetBounds.x + targetBounds.width - PICTURE_MARKER_WIDTH;
             float markerY = centerY + targetBounds.y + targetBounds.height + PICTURE_MARKER_OFFSET_Y;
-            markerX = MathUtils.clamp(markerX, 0.0f, canvas.getWidth() - PICTURE_MARKER_WIDTH);
-            markerY = MathUtils.clamp(markerY, 0.0f, canvas.getHeight() - PICTURE_MARKER_HEIGHT);
+            markerX = MathUtils.clamp(markerX, 0.0f, viewport.getWidth() - PICTURE_MARKER_WIDTH);
+            markerY = MathUtils.clamp(markerY, 0.0f, viewport.getHeight() - PICTURE_MARKER_HEIGHT);
 
-            canvas.setColor(getMarkerColor(picture.getCameraType()));
-            canvas.draw(markerPixel, markerX, markerY, PICTURE_MARKER_WIDTH, PICTURE_MARKER_HEIGHT);
+            batch.setColor(getMarkerColor(picture.getCameraType()));
+            batch.draw(markerPixel, markerX, markerY, PICTURE_MARKER_WIDTH, PICTURE_MARKER_HEIGHT);
 
             highlightTransform.idt();
             highlightTransform.preTranslate(markerX, markerY);
-            canvas.setColor(Color.BLACK);
-            canvas.outline(markerOutline, highlightTransform);
+            batch.setColor(Color.BLACK);
+            batch.outline(markerOutline, highlightTransform);
 
             pictureMarkerLabel.setText(Integer.toString(getMarkerNumber(picture.getCameraType())));
             pictureMarkerLabel.layout();
-            canvas.drawText(
+            batch.drawText(
                     pictureMarkerLabel,
                     markerX + (PICTURE_MARKER_WIDTH / 2.0f),
                     markerY + (PICTURE_MARKER_HEIGHT / 2.0f) + 7.0f
@@ -799,9 +823,10 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     public void draw(float dt) {
         super.draw(dt);
 
-        canvas.begin(camera);
+        viewport.apply();
+        batch.begin(camera);
         Color highlighter = (activePicture != null) ? Color.LIME : Color.CORAL;
-        canvas.setColor(highlighter);
+        batch.setColor(highlighter);
 
         for (GameObject go : highlighted) {
             Obstacle obj = go.getObstacle();
@@ -809,17 +834,22 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             float a = obj.getAngle();
             Vector2 p = obj.getPosition();
 
+            highlightTransform.idt();
+            highlightTransform.preRotate((float)(a * 180.0f/ Math.PI));
+            highlightTransform.preTranslate(p.x * u, p.y * u);
+
+            batch.outline(obj.getOutline(), highlightTransform);
             for (int t = -2; t <= 2; t++) {
                 highlightTransform.idt();
                 highlightTransform.preRotate((float)(a * 180.0f/ Math.PI));
                 highlightTransform.preTranslate(p.x * u + t, p.y * u);
-                canvas.outline(obj.getOutline(), highlightTransform);
+                batch.outline(obj.getOutline(), highlightTransform);
             }
             for (int t = -2; t <= 2; t++) {
                 highlightTransform.idt();
                 highlightTransform.preRotate((float)(a * 180.0f/ Math.PI));
                 highlightTransform.preTranslate(p.x * u, p.y * u + t);
-                canvas.outline(obj.getOutline(), highlightTransform);
+                batch.outline(obj.getOutline(), highlightTransform);
             }
         }
         if (showRange) {
@@ -834,30 +864,31 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             PathFactory factory = new PathFactory();
 
             highlightTransform.idt();
-            canvas.setColor(Color.LIME);
+            batch.setColor(Color.LIME);
             for (float angle = 0; angle < 360; angle += total) {
                 Path2 stickArc = factory.makeArc(cx,cy, (STICK_PICTURE_DISTANCE * u * 2) - 1, angle, dashSize, false);
-                canvas.outline(stickArc, highlightTransform);
+                batch.outline(stickArc, highlightTransform);
                 Path2 stickArc2 = factory.makeArc(cx,cy, (STICK_PICTURE_DISTANCE * u * 2) , angle, dashSize, false);
-                canvas.outline(stickArc2, highlightTransform);
+                batch.outline(stickArc2, highlightTransform);
                 Path2 stickArc3 = factory.makeArc(cx,cy, (STICK_PICTURE_DISTANCE * u * 2) -2, angle, dashSize, false);
-                canvas.outline(stickArc3, highlightTransform);
+                batch.outline(stickArc3, highlightTransform);
             }
-            canvas.setColor(Color.CORAL);
+            batch.setColor(Color.CORAL);
             for (float angle = 0; angle < 360; angle += total) {
                 Path2 takeArc = factory.makeArc(cx,cy, (TAKE_PICTURE_DISTANCE * u * 2) - 1, angle, dashSize, false);
-                canvas.outline(takeArc, highlightTransform);
+                batch.outline(takeArc, highlightTransform);
                 Path2 takeArc2 = factory.makeArc(cx,cy, (TAKE_PICTURE_DISTANCE * u  * 2), angle, dashSize, false);
-                canvas.outline(takeArc2, highlightTransform);
+                batch.outline(takeArc2, highlightTransform);
                 Path2 takeArc3 = factory.makeArc(cx,cy, (TAKE_PICTURE_DISTANCE * u * 2) - 2, angle, dashSize, false);
-                canvas.outline(takeArc3, highlightTransform);
+                batch.outline(takeArc3, highlightTransform);
 
             }
         }
 
         drawPlacedPictureMarkers();
 
-        canvas.end();
+        batch.end();
+        viewport.reset();
 
         String label = avatar.getCamera().getCameraType().getLabel();
 
@@ -865,23 +896,27 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
 
         cameraLabel.setText(label);
 
-        canvas.begin(textCamera);
-        canvas.setColor(Color.WHITE);
-        canvas.drawText(cameraLabel, 50, canvas.getHeight()-20);
-        canvas.end();
+        viewport.apply();
+        batch.begin(textCamera);
+        batch.setColor(Color.WHITE);
+        batch.drawText(cameraLabel, 50, viewport.getHeight()-20);
+        batch.end();
+        viewport.reset();
 
-        canvas.begin(camera);
-        canvas.setColor(new Color(0.3f, 0.3f, 0.3f, 0.8f));
-        canvas.draw(slotTexture, canvas.getWidth()/2 - 200, 0, 400, 80);
+        viewport.apply();
+        batch.begin(camera);
+        batch.setColor(new Color(0.3f, 0.3f, 0.3f, 0.8f));
+        batch.draw(slotTexture, viewport.getWidth()/2 - 200, 0, 400, 80);
         drawInventory();
-        canvas.setColor(Color.WHITE);
-        canvas.end();
+        batch.setColor(Color.WHITE);
+        batch.end();
+        viewport.reset();
     }
 
     private void drawInventory() {
         float barWidth = 400f;
         float barHeight = 80f;
-        float barX = canvas.getWidth() / 2 - barWidth / 2;
+        float barX = viewport.getWidth() / 2 - barWidth / 2;
         float barY = 0f;
         float padding = 10f;
         int size = avatar.getPictureInventory().getSize();
@@ -894,17 +929,17 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             float slotX = startX + i * (slotSize + padding);
             Picture picture = avatar.getPictureInventory().getPicture(i);
 
-            canvas.setColor(Color.GRAY);
-            canvas.draw(slotTexture, slotX, startY, slotSize, slotSize);
+            batch.setColor(Color.GRAY);
+            batch.draw(slotTexture, slotX, startY, slotSize, slotSize);
 
             if (picture != null && picture.hasSubject()) {
-                canvas.setColor(picture.getColor());
-                canvas.draw(slotTexture, slotX, startY, slotSize, slotSize);
-                canvas.setColor(Color.WHITE);
-                canvas.draw(picture.getSubject().getTexture(), slotX + 5f, startY + 5f, slotSize - 10f, slotSize - 10f);
+                batch.setColor(picture.getColor());
+                batch.draw(slotTexture, slotX, startY, slotSize, slotSize);
+                batch.setColor(Color.WHITE);
+                batch.draw(picture.getSubject().getTexture(), slotX + 5f, startY + 5f, slotSize - 10f, slotSize - 10f);
             }
         }
-        canvas.setColor(Color.WHITE);
+        batch.setColor(Color.WHITE);
     }
 
     private int getClickedSlot(float mouseX, float mouseY) {

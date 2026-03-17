@@ -10,8 +10,8 @@ platform/bullet.png
 platform/cameraflash.png
 platform/cloud.png
 platform/constants.json
-platform/constants0.json
 platform/constants1.json
+platform/constants2.json
 platform/ice.png
 platform/jump.wav
 platform/pew.wav
@@ -21,6 +21,7 @@ platform/ropebridge.png
 platform/traci.png
 platform/zukojump.png
 shared/RetroGame.ttf
+shared/background.png
 shared/cloud.png
 shared/earthtile.png
 shared/goaldoor.png

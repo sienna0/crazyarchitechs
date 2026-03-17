@@ -3,9 +3,10 @@
         "shared-earth" : {
             "file":  "shared/earthtile.png",
             "wrapU": "repeated",
-            "wrapV": "repeated",
-            "cloud": "shared/cloud.png"
+            "wrapV": "repeated"
         },
+        "shared-cloud": "shared/cloud.png",
+        "shared-background": "shared/background.png",
         "shared-goal":   "shared/goaldoor.png",
         "platform-traci"    : "platform/traci.png",
         "platform-camera"   : "platform/cameraflash.png",
@@ -15,7 +16,8 @@
         "platform-bullet"   : "platform/bullet.png",
         "platform-ice"      : "platform/ice.png",
         "platform-rock"     : "platform/rock.png",
-        "platform-cloud"    : "platform/cloud.png"
+        "platform-cloud"    : "platform/cloud.png",
+        "cloud"             : "platform/cloud.png"
     },
     "jsons"  : {
         "platform-constants": "platform/constants.json"

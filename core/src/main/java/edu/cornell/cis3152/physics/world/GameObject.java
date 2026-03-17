@@ -79,6 +79,11 @@ public class GameObject extends ObstacleSprite {
         switch (cameraType) {
             case THERMAL:
                 this.temp = other.getTemp();
+                if (other.object == Obj.ICE) {
+                    freezeInPlace();
+                } else if (this.object == Obj.ICE) {
+                    thawFromThermalPicture();
+                }
                 break;
             case REGULAR:
                 this.weight = other.getWeight();
@@ -97,11 +102,6 @@ public class GameObject extends ObstacleSprite {
                 this.body.setAngularVelocity(0.0f);
                 break;
         }
-
-        if (other.object == Obj.ICE) {
-            freezeInPlace();
-        }
-
     }
 
     public void setTexture(Texture texture) {
@@ -173,6 +173,21 @@ public class GameObject extends ObstacleSprite {
             physicsBody.setAngularVelocity(0.0f);
             physicsBody.setGravityScale(0.0f);
             physicsBody.setType(BodyDef.BodyType.StaticBody);
+            physicsBody.setAwake(true);
+        }
+    }
+
+    private void thawFromThermalPicture() {
+        frozenByIcePicture = false;
+        this.body.setBodyType(BodyDef.BodyType.DynamicBody);
+        this.body.setGravityScale(gravityScale);
+        this.body.setFixedRotation(true);
+        this.body.setAngularVelocity(0.0f);
+
+        Body physicsBody = this.body.getBody();
+        if (physicsBody != null) {
+            physicsBody.setType(BodyDef.BodyType.DynamicBody);
+            physicsBody.setGravityScale(gravityScale);
             physicsBody.setAwake(true);
         }
     }

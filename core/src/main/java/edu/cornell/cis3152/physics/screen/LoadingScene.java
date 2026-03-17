@@ -32,8 +32,9 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.utils.ScreenUtils;
 import edu.cornell.cis3152.physics.AssetHead;
+import edu.cornell.cis3152.physics.CanvasRender;
 import edu.cornell.gdiac.assets.*;
-import edu.cornell.cis3152.physics.GameCanvas;
+import edu.cornell.gdiac.graphics.SpriteBatch;
 import edu.cornell.gdiac.util.ScreenListener;
 
 /**
@@ -56,8 +57,10 @@ public class LoadingScene implements Screen, InputProcessor {
 
     /** The drawing camera for this scene */
     private OrthographicCamera camera;
-    /** Reference to game canvas created by the root */
-    private GameCanvas canvas;
+    /** Shared sprite batch */
+    private SpriteBatch batch;
+    /** Shared letterboxed viewport */
+    private CanvasRender viewport;
     /** Affine transform for displaying images */
     private Affine2 affine;
     /** Listener that will update the player mode when we are done */
@@ -153,10 +156,11 @@ public class LoadingScene implements Screen, InputProcessor {
      * Creates a LoadingScene with the default budget, size and position.
      *
      * @param file      The asset directory to load in the background
-     * @param canvas     The game canvas to draw to
+     * @param batch     The shared sprite batch
+     * @param viewport  The shared letterboxed viewport
      */
-    public LoadingScene(String file, GameCanvas canvas) {
-        this(file, canvas, DEFAULT_BUDGET);
+    public LoadingScene(String file, SpriteBatch batch, CanvasRender viewport) {
+        this(file, batch, viewport, DEFAULT_BUDGET);
     }
 
     /**
@@ -168,11 +172,13 @@ public class LoadingScene implements Screen, InputProcessor {
      * do something else. This is how game companies animate their loading screens.
      *
      * @param file      The asset directory to load in the background
-     * @param canvas     The game canvas to draw to
+     * @param batch The shared sprite batch
+     * @param viewport The shared letterboxed viewport
      * @param millis The loading budget in milliseconds
      */
-    public LoadingScene(String file, GameCanvas canvas, int millis) {
-        this.canvas  = canvas;
+    public LoadingScene(String file, SpriteBatch batch, CanvasRender viewport, int millis) {
+        this.batch = batch;
+        this.viewport = viewport;
         budget = millis;
 
         // We need these files loaded immediately
@@ -239,12 +245,13 @@ public class LoadingScene implements Screen, InputProcessor {
             camera.update();
         }
 
-        canvas.begin(camera);
-        canvas.setColor( Color.WHITE );
+        viewport.apply();
+        batch.begin(camera);
+        batch.setColor( Color.WHITE );
 
         // Height lock the logo
         Texture texture = internal.getEntry( "splash", Texture.class );
-        canvas.draw(texture,0, 0, width, height);
+        batch.draw(texture,0, 0, width, height);
 
         if (progress < 1.0f) {
             drawProgress();
@@ -255,13 +262,14 @@ public class LoadingScene implements Screen, InputProcessor {
             Color tint = (pressState == 1 ? Color.GRAY : Color.WHITE);
 //            texture = internal.getEntry("play",Texture.class);
 //
-//            GameCanvas.computeTransform( affine, texture.getWidth() / 2, texture.getHeight() / 2,
+//            SpriteBatch.computeTransform( affine, texture.getWidth() / 2, texture.getHeight() / 2,
 //                                          cx, cy, 0, s, s );
 //
-//            canvas.setColor( tint );
-//            canvas.draw( texture, affine );
+//            batch.setColor( tint );
+//            batch.draw( texture, affine );
         }
-        canvas.end();
+        batch.end();
+        viewport.reset();
     }
 
     /**
@@ -278,36 +286,36 @@ public class LoadingScene implements Screen, InputProcessor {
         TextureRegion region1, region2, region3;
 
         // "3-patch" the background
-        canvas.setColor( Color.WHITE );
+        batch.setColor( Color.WHITE );
         region1 = internal.getEntry( "progress.backleft", TextureRegion.class );
-        canvas.draw(region1,cx-w/2, cy, scale*region1.getRegionWidth(), scale*region1.getRegionHeight());
+        batch.draw(region1,cx-w/2, cy, scale*region1.getRegionWidth(), scale*region1.getRegionHeight());
 
         region2 = internal.getEntry( "progress.backright", TextureRegion.class );
-        canvas.draw(region2,cx+w/2-scale*region2.getRegionWidth(), cy,
+        batch.draw(region2,cx+w/2-scale*region2.getRegionWidth(), cy,
                 scale*region2.getRegionWidth(), scale*region2.getRegionHeight());
 
         region3 = internal.getEntry( "progress.background", TextureRegion.class );
-        canvas.draw(region3, cx-w/2+scale*region1.getRegionWidth(), cy,
+        batch.draw(region3, cx-w/2+scale*region1.getRegionWidth(), cy,
                 w-scale*(region2.getRegionWidth()+region1.getRegionWidth()),
                 scale*region3.getRegionHeight());
 
         // "3-patch" the foreground
         region1 = internal.getEntry( "progress.foreleft", TextureRegion.class );
-        canvas.draw(region1,cx-w/2, cy,scale*region1.getRegionWidth(), scale*region1.getRegionHeight());
+        batch.draw(region1,cx-w/2, cy,scale*region1.getRegionWidth(), scale*region1.getRegionHeight());
 
         if (progress > 0) {
             region2 = internal.getEntry( "progress.foreright", TextureRegion.class );
             float span = progress*(w-scale*(region1.getRegionWidth()+region2.getRegionWidth()));
 
-            canvas.draw( region2,cx-w/2+scale*region1.getRegionWidth()+span, cy,
+            batch.draw( region2,cx-w/2+scale*region1.getRegionWidth()+span, cy,
                     scale*region2.getRegionWidth(), scale*region2.getRegionHeight());
 
             region3 = internal.getEntry( "progress.foreground", TextureRegion.class );
-            canvas.draw(region3, cx-w/2+scale*region1.getRegionWidth(), cy,
+            batch.draw(region3, cx-w/2+scale*region1.getRegionWidth(), cy,
                         span, scale*region3.getRegionHeight());
         } else {
             region2 = internal.getEntry( "progress.foreright", TextureRegion.class );
-            canvas.draw(region2, cx-w/2+scale*region1.getRegionWidth(), cy,
+            batch.draw(region2, cx-w/2+scale*region1.getRegionWidth(), cy,
                     scale*region2.getRegionWidth(), scale*region2.getRegionHeight());
         }
 
@@ -345,11 +353,11 @@ public class LoadingScene implements Screen, InputProcessor {
      */
     public void resize(int width, int height) {
         // Compute the drawing scale
-        float canvasHeight = canvas.getHeight();
+        float canvasHeight = viewport.getHeight();
         scale = canvasHeight/constants.getFloat( "height" );
 
-        this.width  = (int)canvas.getWidth();
-        this.height = (int)canvas.getHeight();
+        this.width  = (int)viewport.getWidth();
+        this.height = (int)viewport.getHeight();
         if (camera == null) {
             camera = new OrthographicCamera(this.width,this.height);
          } else {
@@ -421,7 +429,7 @@ public class LoadingScene implements Screen, InputProcessor {
             return true;
         }
 
-        canvas.screenToCanvas(screenX, screenY, this.pointer);
+        viewport.screenToCanvas(screenX, screenY, this.pointer);
         float canvasX = this.pointer.x;
         float canvasY = this.pointer.y;
 
