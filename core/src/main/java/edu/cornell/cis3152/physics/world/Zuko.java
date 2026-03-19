@@ -296,9 +296,18 @@ public class Zuko extends ObstacleSprite {
 
 
     /**
+     * Starts the photo-taking process
+     */
+    public void startTakingPhoto(boolean shouldFaceRight) {
+        faceRight = shouldFaceRight;
+        startPhotoAnimation();
+    }
+
+
+    /**
      * Starts the photo-taking animation
      */
-    public void startPhotoAnimation() {
+    private void startPhotoAnimation() {
         playingPhoto = true;
         photoAnimationTime = 0f;
     }

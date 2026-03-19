@@ -513,14 +513,14 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         }
 
         if (activePicture == null || selectedSlotIndex == -1) {
-            takePictureOfTarget(target);
+            takePictureOfTarget(input, target);
             return;
         }
 
         applyPictureToTarget(target);
     }
 
-    private void takePictureOfTarget(GameObject target) {
+    private void takePictureOfTarget(InputController input, GameObject target) {
         if (!avatar.getCamera().canTakePicture(
                 target.getObstacle().getX(),
                 target.getObstacle().getY(),
@@ -534,7 +534,10 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         }
 
         avatar.getCamera().takePicture();
-        avatar.startPhotoAnimation();
+        Vector2 mousePosition = input.getCrossHair();
+        Vector2 avatarPosition = avatar.getObstacle().getPosition();
+        boolean shouldFaceRight = 0 < mousePosition.x - avatarPosition.x;
+        avatar.startTakingPhoto(shouldFaceRight);
         Picture picture = new Picture(target, avatar.getCamera().getCameraType());
 //        pictures.clear();
         pictures.add(picture);
