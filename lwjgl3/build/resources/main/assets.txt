@@ -5,8 +5,6 @@ loading/play.png
 loading/progress.png
 loading/splash.png
 loading/splash1.png
-platform/barrier.png
-platform/bullet.png
 platform/cameraflash.png
 platform/cloud.png
 platform/constants.json
@@ -17,13 +15,10 @@ platform/jump.wav
 platform/pew.wav
 platform/plop.wav
 platform/rock.png
-platform/ropebridge.png
-platform/traci.png
 platform/walltile.png
+platform/zuko.png
 platform/zukojump.png
 shared/Floor Tile 200x200.png
 shared/RetroGame.ttf
 shared/background.png
-shared/cloud.png
 shared/earthtile.png
-shared/goaldoor.png

@@ -333,7 +333,6 @@ public class LevelScene2 extends PhysicsScene implements ContactListener {
         // Process actions in object model
         avatar.setMovement(input.getHorizontal() * avatar.getForce());
         avatar.setJumping(input.didPrimary());
-        avatar.setShooting(input.didSecondary());
 
         if (input.didToggleRange()) {
             showRange = !showRange;

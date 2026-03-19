@@ -342,46 +342,6 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             cloudHomeY = cloud.getObstacle().getY();
         }
 
-        // Rock
-//        float[] rockPositions = constants.get("level" + currentLevel).get("objectLocations").get("rock").asFloatArray();
-//        rock = new GameObject(
-//                Obj.ROCK, constants.get("rock"), units,
-//                rockPositions[0], rockPositions[1],
-//                rockSize, rockSize,
-//                BodyDef.BodyType.DynamicBody,
-//                false
-//        );
-//        rock.setTexture(earthTexture);
-//        addSprite(rock);
-
-//        Texture cloudTexture = directory.getEntry( "cloud", Texture.class );
-//        // Cloud (normal mode = "floaty platform marker": gravity off, collides)
-//        float[] cloudPositions = constants.get("level" + currentLevel).get("objectLocations").get("cloud").asFloatArray();
-//        cloud = new GameObject(
-//                Obj.CLOUD, constants.get("cloud"), units, cloudPositions[0], cloudPositions[1], cloudSize,
-//                cloudSize, BodyDef.BodyType.DynamicBody, false
-//        );
-//        cloud.setTexture(cloudTexture);
-//        addSprite(cloud);
-//        cloudHomeY = cloud.getObstacle().getY();
-
-//        float iceSize = 1.5f;
-//        Pixmap icePixmap = new Pixmap(64, 64, Pixmap.Format.RGBA8888);
-//        icePixmap.setColor(0.7f, 0.78f, 0.85f, 1.0f);
-//        icePixmap.fill();
-//        Texture iceTexture = new Texture(icePixmap);
-//        icePixmap.dispose();
-
-//        float[] icePositions = constants.get("level" + currentLevel).get("objectLocations").get("ice").asFloatArray();
-//        ice = new GameObject(
-//                Obj.ICE, constants.get("ice"), units,
-//                icePositions[0], icePositions[1],
-//                iceSize, iceSize,
-//                BodyDef.BodyType.StaticBody, false
-//        );
-//        ice.setTexture(iceTexture);
-//        addSprite(ice);
-
     }
 
     /**
@@ -473,7 +433,6 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     private void updateAvatarMovement(InputController input) {
         avatar.setMovement(input.getHorizontal() * avatar.getForce());
         avatar.setJumping(input.didPrimary());
-        avatar.setShooting(input.didSecondary());
     }
 
     private GameObject resolveCurrentTarget(InputController input) {

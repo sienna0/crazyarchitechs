@@ -1,19 +1,3 @@
-/*
- * Traci.java
- *
- * This is the class for Traci Nathans-Kelly cartoon avatar. WHile it is also
- * an ObstacleSprite, this class is much more than an organizational tool. This
- * class has all sorts of logic, like the whether Traci can jump or whether
- * Traci can fire a bullet.
- *
- * You SHOULD NOT need to modify this file. However, you may learn valuable
- * lessons for the rest of the lab by looking at it.
- *
- * Based on the original PhysicsDemo Lab by Don Holden, 2007
- *
- * Author:  Walker M. White
- * Version: 2/8/2025
- */
 package edu.cornell.cis3152.physics.world;
 
 import com.badlogic.gdx.math.*;
@@ -30,7 +14,7 @@ import edu.cornell.gdiac.math.PathFactory;
 import edu.cornell.gdiac.physics2.*;
 
 /**
- * Traci's avatar for the platform game.
+ * Zuko's avatar for the platform game.
  *
  * An ObstacleSprite is a sprite (specifically a textured mesh) that is
  * connected to a obstacle. It is designed to be the same size as the
@@ -40,7 +24,7 @@ import edu.cornell.gdiac.physics2.*;
  * Note that unlike a traditional ObstacleSprite, this attaches some additional
  * information to the obstacle. In particular, we add a sensor fixture. This
   * sensor is used to prevent double-jumping. However, we only have one mesh,
- * the mesh for Traci. The sensor is invisible and only shows up in debug mode.
+ * the mesh for Zuko. The sensor is invisible and only shows up in debug mode.
  * While we could have made the fixture a separate obstacle, we want it to be a
  * simple fixture so that we can attach it to the obstacle WITHOUT using joints.
  */
@@ -50,9 +34,9 @@ public class Zuko extends ObstacleSprite {
 
     /** The initializing data (to avoid magic numbers) */
     private final JsonValue data;
-    /** The width of Traci's avatar */
+    /** The width of Zuko's avatar */
     private float width;
-    /** The height of Traci's avatar */
+    /** The height of Zuko's avatar */
     private float height;
 
     /** The factor to multiply by the input */
@@ -65,8 +49,6 @@ public class Zuko extends ObstacleSprite {
     private float jump_force;
     /** Cooldown (in animation frames) for jumping */
     private int jumpLimit;
-    /** Cooldown (in animation frames) for shooting */
-    private int shotLimit;
 
     /** The current horizontal movement of the character */
     private float   movement;
@@ -80,8 +62,6 @@ public class Zuko extends ObstacleSprite {
     private int shootCooldown;
     /** Whether our feet are on the ground */
     private boolean isGrounded;
-    /** Whether we are actively shooting */
-    private boolean isShooting;
 
     /** The outline of the sensor obstacle */
     private Path2 sensorOutline;
@@ -153,74 +133,56 @@ public class Zuko extends ObstacleSprite {
     }
 
     /**
-     * Returns true if Traci is actively firing.
+     * Returns true if Zuko is actively jumping.
      *
-     * @return true if Traci is actively firing.
-     */
-    public boolean isShooting() {
-        return isShooting && shootCooldown <= 0;
-    }
-
-    /**
-     * Sets whether Traci is actively firing.
-     *
-     * @param value whether Traci is actively firing.
-     */
-    public void setShooting(boolean value) {
-        isShooting = value;
-    }
-
-    /**
-     * Returns true if Traci is actively jumping.
-     *
-     * @return true if Traci is actively jumping.
+     * @return true if Zuko is actively jumping.
      */
     public boolean isJumping() {
         return isJumping && isGrounded && jumpCooldown <= 0;
     }
 
     /**
-     * Sets whether Traci is actively jumping.
+     * Sets whether Zuko is actively jumping.
      *
-     * @param value whether Traci is actively jumping.
+     * @param value whether Zuko is actively jumping.
      */
     public void setJumping(boolean value) {
         isJumping = value;
     }
 
     /**
-     * Returns true if Traci is on the ground.
+     * Returns true if Zuko is on the ground.
      *
-     * @return true if Traci is on the ground.
+     * @return true if Zuko is on the ground.
      */
     public boolean isGrounded() {
         return isGrounded;
     }
 
     /**
-     * Sets whether Traci is on the ground.
+     * Sets whether Zuko is on the ground.
      *
-     * @param value whether Traci is on the ground.
+     * @param value whether Zuko is on the ground.
      */
     public void setGrounded(boolean value) {
         isGrounded = value;
     }
 
     /**
-     * Returns how much force to apply to get Traci moving
+     * Returns how much force to apply to get Zuko moving
      *
      * Multiply this by the input to get the movement value.
      *
-     * @return how much force to apply to get Traci moving
+     * @return how much force to apply to get Zuko moving
      */
     public float getForce() {
         return force;
     }
 
     /**
-     * Returns how hard the brakes are applied to stop Traci moving
+     * Returns how hard the brakes are applied to stop Zuko moving
      *
-     * @return how hard the brakes are applied to stop Traci moving
+     * @return how hard the brakes are applied to stop Zuko moving
      */
     public float getDamping() {
         return damping;
@@ -231,11 +193,11 @@ public class Zuko extends ObstacleSprite {
     }
 
     /**
-     * Returns the upper limit on Traci's left-right movement.
+     * Returns the upper limit on Zuko's left-right movement.
      *
      * This does NOT apply to vertical movement.
      *
-     * @return the upper limit on Traci's left-right movement.
+     * @return the upper limit on Zuko's left-right movement.
      */
     public float getMaxSpeed() {
         return maxspeed;
@@ -261,8 +223,6 @@ public class Zuko extends ObstacleSprite {
     public boolean isFacingRight() {
         return faceRight;
     }
-    // TODO: rename this to Zuko
-    // TODO: add takePicture class and call functions as necessary
 
     /**
      * returns the object currently under the mouse
@@ -342,7 +302,7 @@ public class Zuko extends ObstacleSprite {
 
 
     /**
-     * Creates a new Traci avatar with the given physics data
+     * Creates a new Zuko avatar with the given physics data
      *
      * The physics units are used to size the mesh relative to the physics
      * body. All other attributes are defined by the JSON file. Because of
@@ -350,7 +310,7 @@ public class Zuko extends ObstacleSprite {
      * thinner than the mesh in order to give a tighter hitbox.
      *
      * @param units     The physics units
-     * @param data      The physics constants for Traci
+     * @param data      The physics constants for Zuko
      */
     public Zuko(float units, JsonValue data) {
         this.data = data;
@@ -374,7 +334,7 @@ public class Zuko extends ObstacleSprite {
         obstacle.setFixedRotation(true);
         obstacle.setPhysicsUnits( units );
         obstacle.setUserData( this );
-        obstacle.setName("traci");
+        obstacle.setName("Zuko");
 
         debug = ParserUtils.parseColor( debugInfo.get("avatar"),  Color.WHITE);
         sensorColor = ParserUtils.parseColor( debugInfo.get("sensor"),  Color.WHITE);
@@ -384,11 +344,9 @@ public class Zuko extends ObstacleSprite {
         force = data.getFloat("force", 0);
         jump_force = data.getFloat( "jump_force", 0 );
         jumpLimit = data.getInt( "jump_cool", 0 );
-        shotLimit = data.getInt( "shot_cool", 0 );
 
         // Gameplay attributes
         isGrounded = false;
-        isShooting = false;
         isJumping = false;
         faceRight = true;
 
@@ -402,8 +360,7 @@ public class Zuko extends ObstacleSprite {
         // Inventory
         pictureInventory = new Inventory(data);
 
-        // Create a rectangular mesh for Traci. This is the same as for door,
-        // since Traci is a rectangular image. But note that the capsule is
+        // Create a rectangular mesh for Zuko. Note that the capsule is
         // actually smaller than the image, making a tighter hitbox. You can
         // see this when you enable debug mode.
         mesh.set(-size/2.0f,-size/2.0f,size,size);
@@ -412,12 +369,12 @@ public class Zuko extends ObstacleSprite {
     }
 
     /**
-     * Creates the sensor for Traci.
+     * Creates the sensor for Zuko.
      *
-     * We only allow the Traci to jump when she's on the ground. Double jumping
+     * We only allow the Zuko to jump when she's on the ground. Double jumping
      * is not allowed.
      *
-     * To determine whether Traci is on the ground we create a thin sensor under
+     * To determine whether Zuko is on the ground we create a thin sensor under
      * her feet, which reports collisions with the world but has no collision
      * response. This sensor is just a FIXTURE, it is not an obstacle. We will
      * talk about the different between these later.
@@ -441,7 +398,7 @@ public class Zuko extends ObstacleSprite {
         // Ground sensor to represent our feet
         Body body = obstacle.getBody();
         Fixture sensorFixture = body.createFixture( sensorDef );
-        sensorName = "traci_sensor";
+        sensorName = "zuko_sensor";
         sensorFixture.setUserData(sensorName);
 
         // Finally, we need a debug outline
@@ -452,7 +409,7 @@ public class Zuko extends ObstacleSprite {
     }
 
     /**
-     * Applies the force to the body of Traci
+     * Applies the force to the body of Zuko
      *
      * This method should be called after the force attribute is set.
      */
@@ -504,11 +461,6 @@ public class Zuko extends ObstacleSprite {
             jumpCooldown = Math.max(0, jumpCooldown - 1);
         }
 
-        if (isShooting()) {
-            shootCooldown = shotLimit;
-        } else {
-            shootCooldown = Math.max(0, shootCooldown - 1);
-        }
         if (playingPhoto && photoSheet != null) {
             photoAnimationTime += dt;
             int frame = (int)(photoAnimationTime / photoFrameDuration);

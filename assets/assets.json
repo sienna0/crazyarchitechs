@@ -5,19 +5,14 @@
             "wrapU": "repeated",
             "wrapV": "repeated"
         },
-        "shared-cloud": "shared/cloud.png",
         "shared-background": "shared/background.png",
         "shared-goal":   "platform/walltile.png",
-        "platform-traci"    : "platform/traci.png",
+        "platform-traci"    : "platform/zuko.png",
         "platform-camera"   : "platform/cameraflash.png",
         "platform-jump"     : "platform/zukojump.png",
-        "platform-rope"     : "platform/ropebridge.png",
-        "platform-barrier"  : "platform/barrier.png",
-        "platform-bullet"   : "platform/bullet.png",
         "platform-ice"      : "platform/ice.png",
         "platform-rock"     : "platform/rock.png",
-        "platform-cloud"    : "platform/cloud.png",
-        "cloud"             : "platform/cloud.png"
+        "platform-cloud"    : "platform/cloud.png"
     },
     "jsons"  : {
         "platform-constants": "platform/constants.json"
