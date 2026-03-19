@@ -494,7 +494,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
 
         avatar.getCamera().takePicture();
         Vector2 mousePosition = input.getCrossHair();
-        Vector2 avatarPosition = avatar.getObstacle().getPosition();
+        Vector2 avatarPosition = avatar.getPosition();
         boolean shouldFaceRight = 0 < mousePosition.x - avatarPosition.x;
         avatar.startTakingPhoto(shouldFaceRight);
         Picture picture = new Picture(target, avatar.getCamera().getCameraType());

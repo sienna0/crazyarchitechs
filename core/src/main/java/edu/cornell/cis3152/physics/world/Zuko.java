@@ -103,6 +103,14 @@ public class Zuko extends ObstacleSprite {
 
     private Texture baseTexture;
 
+    /**
+     * Returns the position of this character's obstacle
+     *
+     * @return the position of this character's obstacle.
+     */
+    public Vector2 getPosition() {
+        return getObstacle().getPosition();
+    }
 
     /**
      * Returns the left/right movement of this character.
