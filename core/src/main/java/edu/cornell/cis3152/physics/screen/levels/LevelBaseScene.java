@@ -398,17 +398,28 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
 
     private void handlePictureShortcuts(InputController input) {
         if (input.didDropPhoto()) {
-            activePicture = null;
-            selectedSlotIndex = -1;
-            pictures.clear();
-            avatar.getPictureInventory().reset();
-
-            for (int i = 0; i < avatar.getPictureInventory().getSize(); i++) {
-                Picture p = avatar.getPictureInventory().getPicture(i);
+            if (activePicture != null)
+            {
+                Picture p = avatar.getPictureInventory().getPicture(selectedSlotIndex);
                 if (p != null) {
                     p.clearSubject();
                 }
+
+                pictures.removeValue(p, true);
+
+                selectedSlotIndex = -1;
+                activePicture = null;
             }
+
+//            pictures.clear();
+//            avatar.getPictureInventory().reset();
+
+//            for (int i = 0; i < avatar.getPictureInventory().getSize(); i++) {
+//                Picture p = avatar.getPictureInventory().getPicture(i);
+//                if (p != null) {
+//                    p.clearSubject();
+//                }
+//            }
         }
         if (input.didToggleRange()) {
             showRange = !showRange;
