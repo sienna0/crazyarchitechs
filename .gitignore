@@ -13,3 +13,4 @@ content
 out
 .idea
 *.iml
+/build/reports/problems/problems-report.html

@@ -7,6 +7,8 @@ import edu.cornell.gdiac.graphics.SpriteMesh;
 import edu.cornell.gdiac.physics2.BoxObstacle;
 import edu.cornell.gdiac.physics2.ObstacleSprite;
 
+import static edu.cornell.cis3152.physics.world.Obj.ROCK;
+
 public class Picture extends ObstacleSprite {
     /** The GameObject subject of this picture */
     GameObject subject;
@@ -160,6 +162,14 @@ public class Picture extends ObstacleSprite {
         this.subjectType = null;
         hasSubject = false;
     }
+
+//    public Color getSubjectColor() {
+//        return switch (subjectType) {
+//            case ROCK -> Color.GRAY;
+//            case ICE -> Color.TEAL;
+//            case CLOUD -> Color.WHITE;
+//        };
+//    }
 
     public Color getColor() {
         return switch (cameraType) {
