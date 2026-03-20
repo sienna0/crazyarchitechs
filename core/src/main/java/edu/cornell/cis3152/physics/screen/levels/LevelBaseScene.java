@@ -461,10 +461,29 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
 
             if (clickedSlot >= 0) {
                 Picture slotPicture = avatar.getPictureInventory().getPicture(clickedSlot);
-                if (slotPicture != null && slotPicture.hasSubject()) {
-                    selectedSlotIndex = clickedSlot;
-                    activePicture = slotPicture;
+                if (slotPicture != null && slotPicture.hasSubject())
+                {
+                    // If we have no picture selected, select a picture.
+                    if (activePicture == null) {
+                        selectedSlotIndex = clickedSlot;
+                        activePicture = slotPicture;
+                    }
+                    // If we have a picture selected, select a new picture or deselect the old one.
+                    else
+                    {
+                        if (clickedSlot != selectedSlotIndex)
+                        {
+                            selectedSlotIndex = clickedSlot;
+                            activePicture = slotPicture;
+                        }
+                        else
+                        {
+                            selectedSlotIndex = -1;
+                            activePicture = null;
+                        }
+                    }
                 }
+
                 return;
             }
         }
