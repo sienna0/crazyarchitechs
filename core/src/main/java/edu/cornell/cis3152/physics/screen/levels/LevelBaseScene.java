@@ -896,18 +896,21 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         float startX = barX + padding;
         float startY = barY + (barHeight - slotSize) / 2f;
 
+        float selectedRaise = 12f;
+
         for (int i = 0; i < size; i++) {
             float slotX = startX + i * (slotSize + padding);
+            float slotY = (i == selectedSlotIndex) ? startY + selectedRaise : startY;
             Picture picture = avatar.getPictureInventory().getPicture(i);
 
             batch.setColor(Color.GRAY);
-            batch.draw(slotTexture, slotX, startY, slotSize, slotSize);
+            batch.draw(slotTexture, slotX, slotY, slotSize, slotSize);
 
             if (picture != null && picture.hasSubject()) {
                 batch.setColor(picture.getColor());
-                batch.draw(slotTexture, slotX, startY, slotSize, slotSize);
+                batch.draw(slotTexture, slotX, slotY, slotSize, slotSize);
                 batch.setColor(Color.WHITE);
-                batch.draw(picture.getSubject().getTexture(), slotX + 5f, startY + 5f, slotSize - 10f, slotSize - 10f);
+                batch.draw(picture.getSubject().getTexture(), slotX + 5f, slotY + 5f, slotSize - 10f, slotSize - 10f);
             }
         }
         batch.setColor(Color.WHITE);
