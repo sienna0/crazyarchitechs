@@ -118,7 +118,11 @@ public class GameMode implements Screen, ScreenListener {
                 listener.exitScreen(this, 0);
             }
         } else {
-            if (Gdx.input.isKeyJustPressed(Input.Keys.P)) {
+            boolean pauseToggle = Gdx.input.isKeyJustPressed(Input.Keys.P);
+            if (!pauseToggle && levelController.getCurrentScene() != null) {
+                pauseToggle = levelController.getCurrentScene().consumePauseClick();
+            }
+            if (pauseToggle) {
                 paused = !paused;
                 if (paused) {
                     pauseMenuScene.show();
@@ -127,7 +131,6 @@ public class GameMode implements Screen, ScreenListener {
                 else {
                     pauseMenuScene.hide();
                     levelController.getCurrentScene().setGamePaused(false);
-
                 }
             }
             if (paused) {

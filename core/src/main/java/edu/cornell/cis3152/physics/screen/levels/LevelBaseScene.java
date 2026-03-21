@@ -70,6 +70,9 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     private Texture backgroundTexture;
 
     private Texture slotTexture;
+    private Texture pauseIconTexture;
+    private boolean pauseIconHovered;
+    private boolean pauseIconWasHovered;
 
     private int selectedSlotIndex = -1;
 
@@ -79,6 +82,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     private SoundEffect fireSound;
     /** The weapon pop sound. We only want to play once. */
     private SoundEffect plopSound;
+    private SoundEffect hoverSound;
     /** The default sound volume */
     private float volume;
 
@@ -144,8 +148,10 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         jumpSound = directory.getEntry( "platform-jump", SoundEffect.class );
         fireSound = directory.getEntry( "platform-pew", SoundEffect.class );
         plopSound = directory.getEntry( "platform-plop", SoundEffect.class );
+        hoverSound = directory.getEntry( "platform-hover", SoundEffect.class );
         volume = constants.getFloat("volume", 1.0f);
         backgroundTexture = requireTexture("shared-background", "shared/background.png");
+        pauseIconTexture = requireTexture("platform-pause", "platform/pause_icon.png");
 
         textCamera = new OrthographicCamera();
         textCamera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -372,7 +378,25 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         return true;
     }
 
+    private final Vector2 pauseMouseCache = new Vector2();
+
     public void update(float dt) {
+        viewport.screenToCanvas(Gdx.input.getX(), Gdx.input.getY(), pauseMouseCache);
+        float iconSize = 50f;
+        float iconX = viewport.getWidth() - iconSize - 15f;
+        float iconY = viewport.getHeight() - iconSize - 15f;
+        pauseIconHovered = pauseMouseCache.x >= iconX && pauseMouseCache.x <= iconX + iconSize &&
+                           pauseMouseCache.y >= iconY && pauseMouseCache.y <= iconY + iconSize;
+
+        if (pauseIconHovered && !pauseIconWasHovered) {
+            SoundEffectManager.getInstance().play("hover", hoverSound, volume * 0.4f);
+        }
+        pauseIconWasHovered = pauseIconHovered;
+
+        if (pauseIconHovered && Gdx.input.justTouched()) {
+            pauseClicked = true;
+        }
+
         InputController input = InputController.getInstance();
         findObjectNearZuko();
         handlePictureShortcuts(input);
@@ -902,6 +926,17 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         batch.draw(slotTexture, viewport.getWidth()/2 - 200, 0, 400, 80);
         drawInventory();
         batch.setColor(Color.WHITE);
+
+        if (pauseIconTexture != null) {
+            float baseSize = 50f;
+            float iconSize = pauseIconHovered ? 60f : baseSize;
+            float baseX = viewport.getWidth() - baseSize - 15f;
+            float baseY = viewport.getHeight() - baseSize - 15f;
+            float iconX = baseX - (iconSize - baseSize) / 2f;
+            float iconY = baseY - (iconSize - baseSize) / 2f;
+            batch.draw(pauseIconTexture, iconX, iconY, iconSize, iconSize);
+        }
+
         batch.end();
         viewport.reset();
     }

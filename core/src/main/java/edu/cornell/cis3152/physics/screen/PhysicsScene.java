@@ -119,6 +119,13 @@ public abstract class PhysicsScene implements Screen {
     protected int countdown;
 
     protected boolean gamePaused;
+    protected boolean pauseClicked;
+
+    public boolean consumePauseClick() {
+        boolean val = pauseClicked;
+        pauseClicked = false;
+        return val;
+    }
     /**
      * Returns true if debug mode is active.
      *
