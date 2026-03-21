@@ -765,6 +765,28 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             drawStuckPictureLayer(centerX, centerY, STUCK_PICTURE_SIZE + (STUCK_PICTURE_BORDER * 2.0f), Color.BLACK, rotation);
             drawStuckPictureLayer(centerX, centerY, STUCK_PICTURE_SIZE, new Color(0.96f, 0.95f, 0.91f, 1.0f), rotation);
             drawStuckPictureLayer(centerX, centerY, STUCK_PICTURE_SIZE - (STUCK_PICTURE_INNER_PADDING * 2.0f), picture.getColor(), rotation);
+
+            Texture subjectTex = picture.getTexture();
+            if (subjectTex != null) {
+                float texSize = STUCK_PICTURE_SIZE - (STUCK_PICTURE_INNER_PADDING * 2.0f) - 4.0f;
+                batch.setColor(Color.WHITE);
+                batch.draw(
+                        subjectTex,
+                        centerX - (texSize * 0.5f),
+                        centerY - (texSize * 0.5f),
+                        texSize * 0.5f,
+                        texSize * 0.5f,
+                        texSize,
+                        texSize,
+                        1.0f,
+                        1.0f,
+                        rotation,
+                        0, 0,
+                        subjectTex.getWidth(),
+                        subjectTex.getHeight(),
+                        false, false
+                );
+            }
         }
     }
 
