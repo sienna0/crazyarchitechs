@@ -14,10 +14,8 @@ package edu.cornell.cis3152.physics.screen.levels;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Affine2;
 import com.badlogic.gdx.math.MathUtils;
@@ -118,8 +116,6 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     protected ObjectSet<Fixture> sensorFixtures;
 
     private TextLayout cameraLabel;
-    private OrthographicCamera textCamera;
-    private BitmapFont font;
     private Texture markerPixel;
 
     /**
@@ -153,12 +149,8 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         backgroundTexture = requireTexture("shared-background", "shared/background.png");
         pauseIconTexture = requireTexture("platform-pause", "platform/pause_icon.png");
 
-        textCamera = new OrthographicCamera();
-        textCamera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-
-        font = new BitmapFont();
         cameraLabel = new TextLayout();
-        cameraLabel.setFont( font );
+        cameraLabel.setFont( displayFont );
 
         Pixmap markerPixmap = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
         markerPixmap.setColor(Color.WHITE);
@@ -907,19 +899,6 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         batch.end();
         viewport.reset();
 
-        String label = avatar.getCamera().getCameraType().getLabel();
-
-
-
-        cameraLabel.setText(label);
-
-        viewport.apply();
-        batch.begin(textCamera);
-        batch.setColor(Color.WHITE);
-        batch.drawText(cameraLabel, 50, viewport.getHeight()-20);
-        batch.end();
-        viewport.reset();
-
         viewport.apply();
         batch.begin(camera);
         batch.setColor(new Color(0.3f, 0.3f, 0.3f, 0.8f));
@@ -936,6 +915,21 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             float iconY = baseY - (iconSize - baseSize) / 2f;
             batch.draw(pauseIconTexture, iconX, iconY, iconSize, iconSize);
         }
+
+        String label = avatar.getCamera().getCameraType().getLabel();
+        displayFont.getData().setScale(0.25f);
+        cameraLabel.setText("Camera Mode");
+        cameraLabel.layout();
+        cameraLabel.setColor(Color.LIGHT_GRAY);
+        batch.setColor(Color.WHITE);
+        batch.drawText(cameraLabel, 100, viewport.getHeight() - 10);
+
+        displayFont.getData().setScale(0.4f);
+        cameraLabel.setText(label);
+        cameraLabel.layout();
+        cameraLabel.setColor(Color.WHITE);
+        batch.drawText(cameraLabel, 100, viewport.getHeight() - 30);
+        displayFont.getData().setScale(1.0f);
 
         batch.end();
         viewport.reset();
