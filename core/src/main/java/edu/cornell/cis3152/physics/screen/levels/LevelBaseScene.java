@@ -337,6 +337,9 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             );
             cloud.setTexture(cloudTexture);
             addSprite(cloud);
+
+            // FIXME This is required for objects to have correct attributes initialized, all objects need this
+            cloud.resetAttributes();
             // FIXME I'm assuming setting cloudHomeY over and over will break this
             cloudHomeY = cloud.getObstacle().getY();
         }
@@ -415,10 +418,9 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         if (input.didDropPhoto()) {
             if (activePicture != null)
             {
-                Picture p = avatar.getPictureInventory().getPicture(selectedSlotIndex);
-                if (p != null) {
-                    p.clearSubject();
-                }
+                Inventory pictureInventory = avatar.getPictureInventory();
+                Picture p = pictureInventory.getPicture(selectedSlotIndex);
+                pictureInventory.removePicture(selectedSlotIndex);
 
                 pictures.removeValue(p, true);
 
@@ -570,9 +572,10 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             return;
         }
 
-        if (activePicture.getTarget() != null) {
-            activePicture.getTarget().resetAttributes();
-        }
+        // FIXME wtf is this
+//        if (activePicture.getTarget() != null) {
+//            activePicture.getTarget().resetAttributes();
+//        }
 
         activePicture.setTarget(target, height / bounds.height);
 
@@ -598,9 +601,6 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
 
         target.resetAttributes();
         attachedPicture.clearTarget();
-        if (activePicture == attachedPicture) {
-            activePicture = attachedPicture;
-        }
 
         SoundEffectManager sounds = SoundEffectManager.getInstance();
         sounds.play("plop", plopSound, volume);

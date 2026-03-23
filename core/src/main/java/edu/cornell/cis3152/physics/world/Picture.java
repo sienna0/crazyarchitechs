@@ -136,6 +136,12 @@ public class Picture extends ObstacleSprite {
         target = null;
     }
 
+    /** Removes picture from the object it is currently attached to. */
+    public void unstickPicture() {
+        target.resetAttributes();
+        clearTarget();
+    }
+
     /**
      * Overrides the update method to add extra functionality. In particular, this allows the
      * picture to update its location, angle, and velocity in relation to its target without

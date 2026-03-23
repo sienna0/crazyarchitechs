@@ -61,6 +61,9 @@ public class GameObject extends ObstacleSprite {
         float drawW = w * units;
         float drawH = h * units;
         mesh.set(-drawW / 2.0f, -drawH / 2.0f, drawW, drawH);
+
+        // FIXME This could potentially replace most of the code in the constructor, Box2D body not initialized above
+        resetAttributes();
     }
 
     public float getGravityScale() {

@@ -67,6 +67,23 @@ public class Inventory{
         return pictureInventory.get(id);
     }
 
+
+    // FIXME review this and inventory class role in general
+    /**
+     * Returns the picture in inventory stuck on given object
+     *
+     * @param stuckObject is the target of the desired picture
+     * @return Picture instance if found, null otherwise
+     */
+    public Picture getStuckPicture(GameObject stuckObject){
+        for (Picture pic : pictureInventory) {
+            if (pic.getTarget() == stuckObject) {
+                return pic;
+            }
+        }
+        return null;
+    }
+
     /**
      * Returns if there's an available picture to use
      *
