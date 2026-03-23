@@ -71,6 +71,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     private Texture pauseIconTexture;
     private boolean pauseIconHovered;
     private boolean pauseIconWasHovered;
+    private final Vector2 pauseMouseCache = new Vector2();
 
     private int selectedSlotIndex = -1;
 
@@ -369,8 +370,6 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         }
         return true;
     }
-
-    private final Vector2 pauseMouseCache = new Vector2();
 
     public void update(float dt) {
         viewport.screenToCanvas(Gdx.input.getX(), Gdx.input.getY(), pauseMouseCache);

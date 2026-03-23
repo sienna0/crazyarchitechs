@@ -10,8 +10,10 @@ platform/cloud.png
 platform/constants.json
 platform/constants1.json
 platform/constants2.json
+platform/hover.wav
 platform/ice.png
 platform/jump.wav
+platform/pause_icon.png
 platform/pew.wav
 platform/plop.wav
 platform/rock.png

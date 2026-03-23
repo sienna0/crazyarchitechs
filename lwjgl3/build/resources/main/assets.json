@@ -12,7 +12,8 @@
         "platform-jump"     : "platform/zukojump.png",
         "platform-ice"      : "platform/ice.png",
         "platform-rock"     : "platform/rock.png",
-        "platform-cloud"    : "platform/cloud.png"
+        "platform-cloud"    : "platform/cloud.png",
+        "platform-pause"    : "platform/pause_icon.png"
     },
     "jsons"  : {
         "platform-constants": "platform/constants.json"
@@ -20,7 +21,8 @@
     "soundfx" : {
         "platform-jump"     : "platform/jump.wav",
         "platform-pew"      : "platform/pew.wav",
-        "platform-plop"     : "platform/plop.wav"
+        "platform-plop"     : "platform/plop.wav",
+        "platform-hover"    : "platform/hover.wav"
     },
     "fonts": {
         "shared-retro": {
