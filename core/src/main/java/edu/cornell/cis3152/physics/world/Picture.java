@@ -107,12 +107,15 @@ public class Picture extends ObstacleSprite {
      * Sets the target the picture will be placed on. Must be called before adding the picture
      * to the World.
      *
+     * This pair of functions should do the heavy-lifting of calling appropriate
+     * GameObject functions to change attributes. LevelBaseScene should use these for a
+     * majority of picture placing and removing.
+     *
      * @param target is the GameObject the picture is placed on
-     * @param units are the physics units for the World
      */
     // FIXME remove the units call, unneeded
     //  and add the camera type as a parameter
-    public void setTarget(GameObject target, float units) {
+    public void setTarget(GameObject target) {
         this.target = target;
         BoxObstacle original = (BoxObstacle) target.getObstacle();
         BoxObstacle copy = new BoxObstacle(
@@ -126,13 +129,19 @@ public class Picture extends ObstacleSprite {
         copy.setGravityScale(0.0f);
         obstacle = copy;
 
-
         target.putPicture(subject,cameraType);
-
     }
 
-    /** Clears the object this picture is currently attached to. */
+    /** Clears the object this picture is currently attached to.
+     *
+     * This should be used entirely as the 'undoing' of setTarget.
+     *
+     * This pair of functions should do the heavy-lifting of calling appropriate
+     * GameObject functions to change attributes. LevelBaseScene should use these for a
+     * majority of picture placing and removing.
+     */
     public void clearTarget() {
+        target.resetAttributes();
         target = null;
     }
 

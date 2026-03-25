@@ -22,6 +22,8 @@ public class GameObject extends ObstacleSprite {
     private boolean hasPicture = false;
     private boolean frozenByIcePicture = false;
 
+    private boolean initializedBody;
+
     float gravityScale;
     /** This object's elasticity (rigid/bouncy) */
     float elasticity;
@@ -29,6 +31,8 @@ public class GameObject extends ObstacleSprite {
     float friction;
     /** This object's temperature (hot/cold) */
     float temp;
+    /** If this object is a cloud, then this is its starting height */
+    float cloudHome;
 
     /** This object's texture */
     private Texture texture;
@@ -41,6 +45,7 @@ public class GameObject extends ObstacleSprite {
         friction = data.getFloat("friction");
         temp = data.getFloat("temp");
         gravityScale = data.getFloat("gravityScale");
+        initializedBody = false;
     }
 
     public GameObject(Obj object, JsonValue data, float units, float x, float y, float w,
@@ -61,9 +66,6 @@ public class GameObject extends ObstacleSprite {
         float drawW = w * units;
         float drawH = h * units;
         mesh.set(-drawW / 2.0f, -drawH / 2.0f, drawW, drawH);
-
-        // FIXME This could potentially replace most of the code in the constructor, Box2D body not initialized above
-        resetAttributes();
     }
 
     public float getGravityScale() {
@@ -80,11 +82,26 @@ public class GameObject extends ObstacleSprite {
 
     public float getOriginalGravityScale() { return data.getFloat("gravityScale"); }
 
+    public float getCloudHome() {return cloudHome;}
+
+    public void setCloudHome(float x) {cloudHome = x;}
+
     public boolean hasLiftPicture() {
         return hasPicture && gravityScale <= 0.0f;
     }
 
-    public void putPicture(GameObject other, CameraType cameraType) {
+    /**
+     * This initializes the physics body. It should be called once after the physics body has been
+     * added to the world. Should be called in LevelBaseScene.populateLevel.
+     */
+    public void initializeBody(){
+        if (!initializedBody){
+            resetAttributes();
+            initializedBody = true;
+        }
+    }
+
+    protected void putPicture(GameObject other, CameraType cameraType) {
         if (hasPicture) {
             return;
         }
@@ -142,7 +159,7 @@ public class GameObject extends ObstacleSprite {
         return friction;
     }
 
-    public void resetAttributes() {
+    protected void resetAttributes() {
         hasPicture = false;
         frozenByIcePicture = false;
         this.weight = data.getFloat("weight");

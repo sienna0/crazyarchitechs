@@ -4,5 +4,6 @@ package edu.cornell.cis3152.physics.world;
 public enum Obj {
     ROCK,
     CLOUD,
-    ICE
+    ICE,
+    SLIME
 }

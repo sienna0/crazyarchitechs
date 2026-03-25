@@ -97,7 +97,6 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     private GameObject rock;
     private GameObject cloud;
     private GameObject ice;
-    private float cloudHomeY;
 
     // Levels
     private int currentLevel = 1;
@@ -303,6 +302,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             );
             rock.setTexture(rockTexture);
             addSprite(rock);
+            rock.initializeBody();
         }
         Texture iceTexture = requireTexture("platform-ice", "platform/ice.png");
         float iceHeight = objWidth * ((float) iceTexture.getHeight() / iceTexture.getWidth());
@@ -320,6 +320,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             );
             ice.setTexture(iceTexture);
             addSprite(ice);
+            ice.initializeBody();
         }
 
         Texture cloudTexture = requireTexture("platform-cloud", "platform/cloud.png");
@@ -337,11 +338,9 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             );
             cloud.setTexture(cloudTexture);
             addSprite(cloud);
-
             // FIXME This is required for objects to have correct attributes initialized, all objects need this
-            cloud.resetAttributes();
-            // FIXME I'm assuming setting cloudHomeY over and over will break this
-            cloudHomeY = cloud.getObstacle().getY();
+            cloud.initializeBody();
+            cloud.setCloudHome(cloud.getObstacle().getY());
         }
 
     }
@@ -571,13 +570,19 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
                 STICK_PICTURE_DISTANCE)) {
             return;
         }
+        // TODO this fix here maybe is as simple as how all the interactions should be passed
+        // FIXME Nick and I think this should be in Picture -> Picture.setTarget should do this
+        if (activePicture.getSubjectType() == Obj.CLOUD){
+            target.setCloudHome(activePicture.getSubject().getCloudHome());
+        }
+        if (activePicture.getSubjectType() == Obj.ICE){
+            // TODO one for each of these
+        }
+        if (activePicture.getSubjectType() == Obj.SLIME){
+            // TODO one for each of these
+        }
 
-        // FIXME wtf is this
-//        if (activePicture.getTarget() != null) {
-//            activePicture.getTarget().resetAttributes();
-//        }
-
-        activePicture.setTarget(target, height / bounds.height);
+        activePicture.setTarget(target);
 
         for (int i = 0; i < avatar.getPictureInventory().getSize(); i++) {
             Picture picture = avatar.getPictureInventory().getPicture(i);
@@ -599,7 +604,6 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             return;
         }
 
-        target.resetAttributes();
         attachedPicture.clearTarget();
 
         SoundEffectManager sounds = SoundEffectManager.getInstance();
@@ -632,7 +636,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
                 continue;
             }
 
-            float displacement = cloudHomeY - body.getPosition().y;
+            float displacement = ((GameObject) sprite).getCloudHome() - body.getPosition().y;
             float damping = -LIFT_SPRING_DAMPING * body.getLinearVelocity().y;
             float springForce = (LIFT_SPRING_STIFFNESS * displacement) + damping;
             body.applyForceToCenter(0.0f, body.getMass() * springForce, true);

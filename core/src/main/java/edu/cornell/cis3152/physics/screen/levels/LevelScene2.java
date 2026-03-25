@@ -391,7 +391,7 @@ public class LevelScene2 extends PhysicsScene implements ContactListener {
                     }
                     // Make sure the picture has a subject and there's not already a picture on the object
                     else if (currPic.hasSubject() && !avatar.getPictureInventory().hasPicture(target)){
-                        currPic.setTarget(target,0f);
+                        currPic.setTarget(target);
                         sprites.add(currPic);
                     }
                 }
