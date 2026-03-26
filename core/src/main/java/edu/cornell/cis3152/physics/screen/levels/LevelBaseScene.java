@@ -224,15 +224,6 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         }
 
         JsonValue level = constants.get("level" + currentLevel);
-        System.out.println(currentLevel);
-        System.out.println("bing");
-//        System.out.println("Level: " + level);
-//
-//        JsonValue objects = level.get("objectLocations");
-//        System.out.println("Objects: " + objects);
-//
-//        JsonValue goal1 = objects.get("goal");
-//        System.out.println("Goal: " + goal1);
 
         System.out.println("Level:" + constants.get("level" + currentLevel) + "; Constants: " + constants);
         JsonValue goal = constants.get("level" + currentLevel).get("objectLocations").get("goal");
@@ -281,8 +272,6 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
 
         float rockSize = 1.5f;
         float cloudSize = 1.5f;
-//        float platformLeftX = 25.0f;
-//        float platformTopY = 10.0f;
 
         float objWidth = 1.5f;
 
