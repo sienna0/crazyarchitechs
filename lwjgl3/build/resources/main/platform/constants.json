@@ -12,7 +12,7 @@
     "gravityScale": 1.0
   },
   "cloud": {
-    "weight": 30,
+    "weight": 2.0,
     "elasticity": 0.0,
     "friction": 0.5,
     "temp": 0.5,
@@ -271,9 +271,9 @@
       "positions": []
     },
     "objectLocations": {
-      "rock": [5.0, 4.75],
-      "cloud": [17.0, 5.5],
-      "ice": [12.0, 4.75],
+      "rock": [[5.0, 4.75]],
+      "cloud": [[17.0, 5.5]],
+      "ice": [[12.0, 4.75]],
       "goal": {
         "pos": [28.0, 11.5],
         "size": 3.0,
@@ -340,9 +340,9 @@
       ]
     },
     "objectLocations": {
-      "rock": [6.75, 4.5],
-      "cloud": [13.25, 12.5],
-      "ice": [12.0, 4.75],
+      "rock": [[6.75, 4.5]],
+      "cloud": [[13.25, 12.5]],
+      "ice": [[12.0, 4.75]],
       "goal": {
         "pos": [28.0, 11.5],
         "size": 3.0,

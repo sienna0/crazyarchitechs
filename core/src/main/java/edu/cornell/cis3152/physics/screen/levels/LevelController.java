@@ -36,7 +36,7 @@ public class LevelController {
         this.viewport = viewport;
 
         currentLevel = 1;
-        totalLevels = 3;
+        totalLevels = 1;
 
         loadLevel(currentLevel);
     }
@@ -51,6 +51,8 @@ public class LevelController {
             System.out.println("no level");
             return;
         }
+
+        totalLevels = ((LevelBaseScene)currentScene).getTotalLevelCount();
 
         currentScene.setBatch(batch);
         currentScene.setViewport(viewport);

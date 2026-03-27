@@ -131,6 +131,20 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     }
 
     /**
+     * Finds level count of JsonFile by looping through all level strings in the Json file
+     * until one is null.
+     */
+    public int getTotalLevelCount() {
+        int levelCount = 1;
+        while (constants.get("level" + levelCount) != null)
+        {
+            levelCount++;
+        }
+
+        return levelCount;
+    }
+
+    /**
      * Creates and initialize a new instance of the platformer game
      *
      * The game has default gravity and other settings
