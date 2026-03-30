@@ -159,16 +159,9 @@ public class Picture extends ObstacleSprite {
         hasSubject = false;
     }
 
-//    public Color getSubjectColor() {
-//        return switch (subjectType) {
-//            case ROCK -> Color.GRAY;
-//            case ICE -> Color.TEAL;
-//            case CLOUD -> Color.WHITE;
-//        };
-//    }
-
     public Color getColor() {
-        return Color.BLACK;
+        Color lightGreen = new Color(0.47f,0.75f,0.33f,1);
+        return lightGreen;
     }
 
 
