@@ -94,7 +94,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     private Array<Picture> pictures = new Array<>();
     private Picture activePicture;
 
-    private GameObject rock;
+    private GameObject honey;
     private GameObject cloud;
     private GameObject ice;
     private float cloudHomeY;
@@ -294,15 +294,15 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         JsonValue rockjv = rocks.get("rock");
         for (int ii = 0;  ii < rockjv.size; ii++){
             float [] rockPositions = rockjv.get(ii).asFloatArray();
-            rock = new GameObject(
-                    Obj.ROCK, constants.get("rock"), units,
+            honey = new GameObject(
+                    Obj.HONEY, constants.get("rock"), units,
                     rockPositions[0], rockPositions[1],
                     objWidth, rockHeight,
                     BodyDef.BodyType.DynamicBody,
                     false
             );
-            rock.setTexture(rockTexture);
-            addSprite(rock);
+            honey.setTexture(rockTexture);
+            addSprite(honey);
         }
         Texture iceTexture = requireTexture("platform-ice", "platform/ice.png");
         float iceHeight = objWidth * ((float) iceTexture.getHeight() / iceTexture.getWidth());
@@ -391,7 +391,6 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         InputController input = InputController.getInstance();
         findObjectNearZuko();
         handlePictureShortcuts(input);
-        updateCameraSelection(input);
         updateAvatarMovement(input);
 
         GameObject target = resolveCurrentTarget(input);
@@ -438,21 +437,6 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         }
         if (input.didToggleRange()) {
             showRange = !showRange;
-        }
-    }
-
-    private void updateCameraSelection(InputController input) {
-        if (input.didRegCamera()) {
-            avatar.getCamera().setCameraType(CameraType.REGULAR);
-        }
-        if (input.didTherCamera()) {
-            avatar.getCamera().setCameraType(CameraType.THERMAL);
-        }
-        if (input.didTexCamera()) {
-            avatar.getCamera().setCameraType(CameraType.TEXTURE);
-        }
-        if (input.didCycleCamera()) {
-            avatar.getCamera().cycleCameraType();
         }
     }
 
@@ -542,7 +526,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         Vector2 avatarPosition = avatar.getPosition();
         boolean shouldFaceRight = 0 < mousePosition.x - avatarPosition.x;
         avatar.startTakingPhoto(shouldFaceRight);
-        Picture picture = new Picture(target, avatar.getCamera().getCameraType());
+        Picture picture = new Picture(target);
 //        pictures.clear();
         pictures.add(picture);
 //        activePicture = picture;
@@ -915,20 +899,20 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             batch.draw(pauseIconTexture, iconX, iconY, iconSize, iconSize);
         }
 
-        String label = avatar.getCamera().getCameraType().getLabel();
-        displayFont.getData().setScale(0.25f);
-        cameraLabel.setText("Camera Mode");
-        cameraLabel.layout();
-        cameraLabel.setColor(Color.LIGHT_GRAY);
-        batch.setColor(Color.WHITE);
-        batch.drawText(cameraLabel, 100, viewport.getHeight() - 10);
-
-        displayFont.getData().setScale(0.4f);
-        cameraLabel.setText(label);
-        cameraLabel.layout();
-        cameraLabel.setColor(Color.WHITE);
-        batch.drawText(cameraLabel, 100, viewport.getHeight() - 30);
-        displayFont.getData().setScale(1.0f);
+//        String label = avatar.getCamera().getCameraType().getLabel();
+//        displayFont.getData().setScale(0.25f);
+//        cameraLabel.setText("Camera Mode");
+//        cameraLabel.layout();
+//        cameraLabel.setColor(Color.LIGHT_GRAY);
+//        batch.setColor(Color.WHITE);
+//        batch.drawText(cameraLabel, 100, viewport.getHeight() - 10);
+//
+//        displayFont.getData().setScale(0.4f);
+//        cameraLabel.setText(label);
+//        cameraLabel.layout();
+//        cameraLabel.setColor(Color.WHITE);
+//        batch.drawText(cameraLabel, 100, viewport.getHeight() - 30);
+//        displayFont.getData().setScale(1.0f);
 
         batch.end();
         viewport.reset();

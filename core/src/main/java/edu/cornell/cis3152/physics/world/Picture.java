@@ -7,7 +7,7 @@ import edu.cornell.gdiac.graphics.SpriteMesh;
 import edu.cornell.gdiac.physics2.BoxObstacle;
 import edu.cornell.gdiac.physics2.ObstacleSprite;
 
-import static edu.cornell.cis3152.physics.world.Obj.ROCK;
+import static edu.cornell.cis3152.physics.world.Obj.HONEY;
 
 public class Picture extends ObstacleSprite {
     /** The GameObject subject of this picture */
@@ -18,9 +18,6 @@ public class Picture extends ObstacleSprite {
 
     /** The Obj enum type of this picture's subject */
     Obj subjectType;
-
-    /** The CameraType enum type of Camera that took this picture */
-    CameraType cameraType;
 
     /** Whether this picture has been given a subject */
     boolean hasSubject;
@@ -35,6 +32,8 @@ public class Picture extends ObstacleSprite {
     /** Texture of this picture */
     private Texture texture;
 
+    private Quality subjectQuality;
+
     /**
      * Constructor for a blank Picture instance with no subject yet
      */
@@ -48,9 +47,10 @@ public class Picture extends ObstacleSprite {
      *
      * @param subject is the GameObject which is the subject of the picture
      */
-    public Picture(GameObject subject, CameraType camera) {
+    public Picture(GameObject subject) {
         this.subject = subject;
         this.subjectType = subject.object;
+        this.subjectQuality = subject.getQuality();
         hasSubject = true;
         // steal the draw data at reduced size
         // Picture itself would need to be a GameObject for this
@@ -58,7 +58,6 @@ public class Picture extends ObstacleSprite {
         mesh.scl(0.5f);
         this.texture = subject.getTexture();
         id = -1;
-        cameraType = camera;
     }
 
     /** Returns the ID of this picture */
@@ -76,8 +75,6 @@ public class Picture extends ObstacleSprite {
     /** Returns the enum type of this picture's subject */
     public Obj getSubjectType(){return subjectType;}
 
-    /** Returns the enum type of the Camera that took this picture */
-    public CameraType getCameraType(){return cameraType;}
 
     /** Returns the texture of this picture */
     public Texture getTexture(){return texture;}
@@ -87,14 +84,13 @@ public class Picture extends ObstacleSprite {
      *
      * @param go overrides/sets the pictures current object
      */
-    public void setSubject(GameObject go, CameraType camType) {
+    public void setSubject(GameObject go) {
         subject = go;
         subjectType = go.object;
         hasSubject = true;
         mesh = new SpriteMesh(subject.getMesh());
         mesh.scl(0.5f);
         setTexture(subject.getSpriteSheet().getTexture());
-        cameraType = camType;
     }
 
     /** Returns the subject of this picture */
@@ -127,7 +123,7 @@ public class Picture extends ObstacleSprite {
         obstacle = copy;
 
 
-        target.putPicture(subject,cameraType);
+        target.putPicture(subject);
 
     }
 
@@ -172,11 +168,7 @@ public class Picture extends ObstacleSprite {
 //    }
 
     public Color getColor() {
-        return switch (cameraType) {
-            case THERMAL -> Color.RED;
-            case REGULAR -> Color.CYAN;
-            case TEXTURE -> Color.GREEN;
-        };
+        return Color.BLACK;
     }
 
 

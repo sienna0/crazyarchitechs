@@ -7,6 +7,8 @@ import com.badlogic.gdx.utils.JsonValue;
 import edu.cornell.gdiac.physics2.BoxObstacle;
 import edu.cornell.gdiac.physics2.ObstacleSprite;
 
+import static edu.cornell.cis3152.physics.world.Quality.*;
+
 public class GameObject extends ObstacleSprite {
     /** The initializing values for this object */
     private final JsonValue data;
@@ -30,12 +32,25 @@ public class GameObject extends ObstacleSprite {
     /** This object's temperature (hot/cold) */
     float temp;
 
+    Quality quality;
+
     /** This object's texture */
     private Texture texture;
 
     public GameObject(Obj object, JsonValue data) {
         this.data = data;
         this.object = object;
+        switch(object) {
+            case CLOUD:
+                this.quality = FLOAT;
+                break;
+            case ICE:
+                this.quality = SLIPPERY;
+                break;
+            case HONEY:
+                this.quality = STICKY;
+                break;
+        }
         weight = data.getFloat("weight");
         elasticity = data.getFloat("elasticity");
         friction = data.getFloat("friction");
@@ -52,6 +67,7 @@ public class GameObject extends ObstacleSprite {
         body.setBodyType(bodyType);
         body.setPhysicsUnits(units);
         body.setUserData(this);
+        body.setFriction(friction);
         body.setGravityScale(gravityScale);
         body.setFixedRotation(true);
         body.setName(object.name().toLowerCase());
@@ -67,6 +83,8 @@ public class GameObject extends ObstacleSprite {
         return gravityScale;
     }
 
+    public Quality getQuality() { return quality; }
+
     public float getOriginalTemp() { return data.getFloat("temp"); }
 
     public float getOriginalWeight() { return data.getFloat("weight"); }
@@ -81,21 +99,15 @@ public class GameObject extends ObstacleSprite {
         return hasPicture && gravityScale <= 0.0f;
     }
 
-    public void putPicture(GameObject other, CameraType cameraType) {
+    public void putPicture(GameObject other) {
         if (hasPicture) {
             return;
         }
         hasPicture = true;
-        switch (cameraType) {
-            case THERMAL:
-                this.temp = other.getOriginalTemp();
-                if (other.object == Obj.ICE) {
-                    freezeInPlace();
-                } else if (this.object == Obj.ICE) {
-                    thawFromThermalPicture();
-                }
-                break;
-            case REGULAR:
+        Quality otherQuality = other.getQuality();
+        // determines quality to put on object and changes the parameters as expected
+        switch (otherQuality) {
+            case FLOAT:
                 this.weight = other.getOriginalWeight();
                 this.gravityScale = other.getOriginalGravityScale();
                 this.body.setMass(weight);
@@ -103,7 +115,15 @@ public class GameObject extends ObstacleSprite {
                 this.body.setFixedRotation(true);
                 this.body.setAngularVelocity(0.0f);
                 break;
-            case TEXTURE:
+            case SLIPPERY:
+                this.elasticity = other.getOriginalElasticity();
+                this.friction = other.getOriginalFriction();
+                this.body.setRestitution(elasticity);
+                this.body.setFriction(friction);
+                this.body.setFixedRotation(true);
+                this.body.setAngularVelocity(0.0f);
+                break;
+            case STICKY:
                 this.elasticity = other.getOriginalElasticity();
                 this.friction = other.getOriginalFriction();
                 this.body.setRestitution(elasticity);
@@ -112,6 +132,34 @@ public class GameObject extends ObstacleSprite {
                 this.body.setAngularVelocity(0.0f);
                 break;
         }
+
+
+//        switch (cameraType) {
+//            case THERMAL:
+//                this.temp = other.getOriginalTemp();
+//                if (other.object == Obj.ICE) {
+//                    freezeInPlace();
+//                } else if (this.object == Obj.ICE) {
+//                    thawFromThermalPicture();
+//                }
+//                break;
+//            case REGULAR:
+//                this.weight = other.getOriginalWeight();
+//                this.gravityScale = other.getOriginalGravityScale();
+//                this.body.setMass(weight);
+//                this.body.setGravityScale(gravityScale);
+//                this.body.setFixedRotation(true);
+//                this.body.setAngularVelocity(0.0f);
+//                break;
+//            case TEXTURE:
+//                this.elasticity = other.getOriginalElasticity();
+//                this.friction = other.getOriginalFriction();
+//                this.body.setRestitution(elasticity);
+//                this.body.setFriction(friction);
+//                this.body.setFixedRotation(true);
+//                this.body.setAngularVelocity(0.0f);
+//                break;
+//        }
     }
 
     public void setTexture(Texture texture) {

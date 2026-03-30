@@ -31,12 +31,6 @@ public class Camera {
      */
     private boolean pictureTaken;
 
-
-    /**
-     * Inventory of pictures that Zuko may use
-     */
-    private CameraType cameraType;
-
     /**
      * Returns true if Zuko can take a picture.
      * Zuko can take a picture if he has film remaining, picture cooldown has expired, there is a current target,
@@ -122,46 +116,6 @@ public class Camera {
         pictureTaken = false;
         maxSightDistance = 9.0f;
 
-        cameraType = CameraType.REGULAR;
-
-    }
-
-    /**
-     * Returns the current camera type.
-     *
-     * @return the current camera type
-     */
-    public CameraType getCameraType() {
-        return cameraType;
-    }
-
-    /**
-     * Sets the current camera type.
-     *
-     * @param type the new camera type
-     */
-    public void setCameraType(CameraType type) {
-        cameraType = type;
-    }
-
-    /**
-     * Cycles to the next camera type
-     * Order is REGULAR -> THERMAL -> TEXTURE -> REGULAR
-     */
-    public void cycleCameraType() {
-        switch (cameraType) {
-            case REGULAR:
-                cameraType = CameraType.THERMAL;
-                break;
-
-            case THERMAL:
-                cameraType = CameraType.TEXTURE;
-                break;
-
-            case TEXTURE:
-                cameraType = CameraType.REGULAR;
-                break;
-        }
     }
 
     /**
