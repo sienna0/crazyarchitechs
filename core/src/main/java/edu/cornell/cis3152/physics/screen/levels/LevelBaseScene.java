@@ -42,9 +42,6 @@ import edu.cornell.gdiac.physics2.ObstacleSprite;
  * chance to define a response.
  */
 public class LevelBaseScene extends PhysicsScene implements ContactListener {
-
-    private Texture cloudTexture;
-    private Texture earthTexture;
     private Texture backgroundTexture;
 
     private Texture slotTexture;
@@ -228,7 +225,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         ice = result.ice;
         cloud = result.cloud;
     }
-
+    
     /**
      * Switches level geometry from one level to the next
      */
@@ -330,8 +327,10 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             // See if we have landed on the ground.
             if ((avatar.getSensorName().equals(fd2) && avatar != bd1) ||
                     (avatar.getSensorName().equals(fd1) && avatar != bd2)) {
+                Fixture supportFixture = avatar == bd1 ? fix2 : fix1;
                 avatar.setGrounded(true);
-                sensorFixtures.add(avatar == bd1 ? fix2 : fix1);
+                sensorFixtures.add(supportFixture);
+                avatar.setCurrentPlatform(getSupportObj(supportFixture));
             }
 
             // Check for win condition
@@ -362,11 +361,38 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
 
         if ((avatar.getSensorName().equals(fd2) && avatar != bd1) ||
                 (avatar.getSensorName().equals(fd1) && avatar != bd2)) {
-            sensorFixtures.remove(avatar == bd1 ? fix2 : fix1);
+            Fixture supportFixture = avatar == bd1 ? fix2 : fix1;
+            sensorFixtures.remove(supportFixture);
             if (sensorFixtures.size == 0) {
                 avatar.setGrounded(false);
+                avatar.setCurrentPlatform(null);
+            } else if (avatar.getCurrentPlatform() == getSupportObj(supportFixture)) {
+                refreshCurrentSupport();
             }
         }
+    }
+
+    /**
+     * Chooses one of the active sensor contacts as the current supporting obstacle
+     * This is for texture blocks that edit movement
+     */
+    private void refreshCurrentSupport() {
+        for (Fixture fixture : sensorFixtures) {
+            GameObject support = getSupportObj(fixture);
+            if (support != null) {
+                avatar.setCurrentPlatform(support);
+                return;
+            }
+        }
+        avatar.setCurrentPlatform(null);
+    }
+
+    /**
+     * Returns the GameObject type associated with a support fixture
+     */
+    private GameObject getSupportObj(Fixture fixture) {
+        Object userData = fixture.getBody().getUserData();
+        return userData instanceof GameObject ? (GameObject) userData : null;
     }
 
     /** Unused ContactListener method */

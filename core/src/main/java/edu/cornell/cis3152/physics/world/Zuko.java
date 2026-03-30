@@ -62,6 +62,8 @@ public class Zuko extends ObstacleSprite {
     private int shootCooldown;
     /** Whether our feet are on the ground */
     private boolean isGrounded;
+    /** The object type currently supporting Zuko's ground sensor */
+    private GameObject currentPlatform;
 
     /** The outline of the sensor obstacle */
     private Path2 sensorOutline;
@@ -82,6 +84,9 @@ public class Zuko extends ObstacleSprite {
     private Inventory pictureInventory;
 
     private Camera camera;
+
+    private boolean canJump = true;
+    private boolean onIce = false;
 
     /** The SpriteSheet for Zuko's phototaking animation */
     private SpriteSheet photoSheet;
@@ -110,6 +115,14 @@ public class Zuko extends ObstacleSprite {
      */
     public Vector2 getPosition() {
         return getObstacle().getPosition();
+    }
+
+    public float getWidth() {
+        return width;
+    }
+
+    public float getHeight() {
+        return height;
     }
 
     /**
@@ -155,7 +168,11 @@ public class Zuko extends ObstacleSprite {
      * @param value whether Zuko is actively jumping.
      */
     public void setJumping(boolean value) {
-        isJumping = value;
+        if (value && canJump) {
+            isJumping = true;
+            return;
+        }
+        isJumping = false;
     }
 
     /**
@@ -174,6 +191,54 @@ public class Zuko extends ObstacleSprite {
      */
     public void setGrounded(boolean value) {
         isGrounded = value;
+    }
+
+    /**
+     * Returns the object type Zuko is currently standing on.
+     *
+     * @return the supporting object type, or null if airborne/non-object terrain
+     */
+    public GameObject getCurrentPlatform() {
+        return currentPlatform;
+    }
+
+    /**
+     * Sets the object type Zuko is currently standing on.
+     *
+     * @param platform the supporting object type, or null if airborne/non-object terrain
+     */
+    public void setCurrentPlatform(GameObject platform) {
+        currentPlatform = platform;
+        if (platform == null) {
+            canJump = true;
+            onIce = false;
+            return;
+        }
+
+        Quality effectiveTexture = platform.getQuality();
+        if (platform.hasPicture()) {
+            effectiveTexture = platform.getPictureQuality();
+        }
+        // this controls whether or not we can jump on the current block
+        // onIce is because i think we need to make ice MORE slippery which involves increasing velocity on ice but
+        // TBD TODO
+        switch (effectiveTexture) {
+            case STICKY:
+                canJump = false;
+                onIce = false;
+                // System.out.println("honey");
+                break;
+            case SLIPPERY:
+                canJump = true;
+                onIce = true;
+                // System.out.println("ice");
+                break;
+            default:
+                canJump = true;
+                onIce = false;
+                // System.out.println("nothing");
+                break;
+        }
     }
 
     /**
@@ -357,6 +422,7 @@ public class Zuko extends ObstacleSprite {
         isGrounded = false;
         isJumping = false;
         faceRight = true;
+        currentPlatform = null;
 
         shootCooldown = 0;
         jumpCooldown = 0;

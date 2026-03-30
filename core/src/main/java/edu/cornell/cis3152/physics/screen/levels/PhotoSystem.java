@@ -74,24 +74,6 @@ class PhotoSystem {
     void updateHighlights(Zuko avatar, PooledList<ObstacleSprite> sprites) {
         worldState.getHighlighted().clear();
         findObjectNearZuko(avatar, sprites);
-//        if (avatar.getPictureInventory().getUnusedPicture() == null && worldState.getSelectedSlotIndex() == -1) {
-//            return;
-//        }
-//
-//        float range = worldState.getActivePicture() != null ? stickDistance : takeDistance;
-//        for (ObstacleSprite sprite : sprites) {
-//            if (sprite == avatar || !(sprite instanceof GameObject go)) {
-//                continue;
-//            }
-//            if (avatar.getCamera().hasLineOfSight(
-//                    go.getObstacle().getX(),
-//                    go.getObstacle().getY(),
-//                    avatar.getObstacle().getX(),
-//                    avatar.getObstacle().getY(),
-//                    range)) {
-//                worldState.getHighlighted().add(go);
-//            }
-//        }
     }
 
     void handlePictureAction(InputController input,
