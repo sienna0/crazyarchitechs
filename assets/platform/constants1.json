@@ -19,21 +19,6 @@
         "texture" : 0.0,
         "temp" : 0.0
     },
-    "bridge" : {
-        "pos"     : [9.0, 3.8],
-        "size"    : [1.0, 0.125],
-        "extent"  : 14.0,
-        "density" : 1.0,
-        "pin_radius": 0.1
-    },
-    "spinner" : {
-        "pos"     : [13.0,12.5],
-        "size"    : [0.125,6.0],
-        "radius"  : 0.1,
-        "low density" : 0.0,
-        "high density": 10.0
-    },
-
 
     "level1" : {
         "goal" : {

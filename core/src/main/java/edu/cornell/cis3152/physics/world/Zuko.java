@@ -13,6 +13,8 @@ import edu.cornell.gdiac.math.Path2;
 import edu.cornell.gdiac.math.PathFactory;
 import edu.cornell.gdiac.physics2.*;
 
+// TODO i do think we should refactor this file.. it's getting quite long
+
 /**
  * Zuko's avatar for the platform game.
  *
@@ -29,8 +31,6 @@ import edu.cornell.gdiac.physics2.*;
  * simple fixture so that we can attach it to the obstacle WITHOUT using joints.
  */
 public class Zuko extends ObstacleSprite {
-    // TODO: rename this to Zuko
-    // TODO: add takePicture class and call functions as necessary
 
     /** The initializing data (to avoid magic numbers) */
     private final JsonValue data;
@@ -45,8 +45,10 @@ public class Zuko extends ObstacleSprite {
     private float damping;
     /** The maximum character speed */
     private float maxspeed;
-    /** The impulse for the character jump */
-    private float jump_force;
+    /** The impulse for a full-strength jump */
+    private float jumpForce;
+    /** The impulse for the current jump request */
+    private float currentJumpForce;
     /** Cooldown (in animation frames) for jumping */
     private int jumpLimit;
 
@@ -85,7 +87,9 @@ public class Zuko extends ObstacleSprite {
 
     private Camera camera;
 
-    private boolean canJump = true;
+    private static final float REDUCED_JUMP_MULTIPLIER = 0.5f;
+
+    private boolean canJumpFull = true;
     private boolean onIce = false;
 
     /** The SpriteSheet for Zuko's phototaking animation */
@@ -168,8 +172,9 @@ public class Zuko extends ObstacleSprite {
      * @param value whether Zuko is actively jumping.
      */
     public void setJumping(boolean value) {
-        if (value && canJump) {
+        if (value) {
             isJumping = true;
+            currentJumpForce = canJumpFull ? jumpForce : jumpForce * REDUCED_JUMP_MULTIPLIER;
             return;
         }
         isJumping = false;
@@ -210,31 +215,28 @@ public class Zuko extends ObstacleSprite {
     public void setCurrentPlatform(GameObject platform) {
         currentPlatform = platform;
         if (platform == null) {
-            canJump = true;
+            canJumpFull = true;
             onIce = false;
             return;
         }
 
-        Quality effectiveTexture = platform.getQuality();
-        if (platform.hasPicture()) {
-            effectiveTexture = platform.getPictureQuality();
-        }
+        Quality effectiveTexture = platform.getEffectiveSurfaceQuality();
         // this controls whether or not we can jump on the current block
         // onIce is because i think we need to make ice MORE slippery which involves increasing velocity on ice but
         // TBD TODO
         switch (effectiveTexture) {
             case STICKY:
-                canJump = false;
+                canJumpFull = false;
                 onIce = false;
                 // System.out.println("honey");
                 break;
             case SLIPPERY:
-                canJump = true;
+                canJumpFull = true;
                 onIce = true;
                 // System.out.println("ice");
                 break;
             default:
-                canJump = true;
+                canJumpFull = true;
                 onIce = false;
                 // System.out.println("nothing");
                 break;
@@ -415,7 +417,8 @@ public class Zuko extends ObstacleSprite {
         maxspeed = data.getFloat("maxspeed", 0);
         damping = data.getFloat("damping", 0);
         force = data.getFloat("force", 0);
-        jump_force = data.getFloat( "jump_force", 0 );
+        jumpForce = data.getFloat( "jump_force", 0 );
+        currentJumpForce = jumpForce;
         jumpLimit = data.getInt( "jump_cool", 0 );
 
         // Gameplay attributes
@@ -512,7 +515,7 @@ public class Zuko extends ObstacleSprite {
 
         // Jump!
         if (isJumping()) {
-            forceCache.set(0, jump_force);
+            forceCache.set(0, currentJumpForce);
             body.applyLinearImpulse(forceCache,pos,true);
         }
     }

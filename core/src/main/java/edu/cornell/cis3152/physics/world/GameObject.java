@@ -10,6 +10,7 @@ import edu.cornell.gdiac.physics2.ObstacleSprite;
 import java.util.HashMap;
 import java.util.Hashtable;
 
+import static edu.cornell.cis3152.physics.world.Obj.CLOUD;
 import static edu.cornell.cis3152.physics.world.Quality.*;
 
 public class GameObject extends ObstacleSprite {
@@ -25,7 +26,7 @@ public class GameObject extends ObstacleSprite {
     private BoxObstacle body;
 
     private boolean hasPicture = false;
-    private boolean frozenByIcePicture = false;
+    // private boolean frozenByIcePicture = false;
 
     float gravityScale;
     /** This object's elasticity (rigid/bouncy) */
@@ -74,7 +75,7 @@ public class GameObject extends ObstacleSprite {
         body.setUserData(this);
         body.setFriction(friction);
         body.setGravityScale(gravityScale);
-        body.setFixedRotation(true);
+        body.setFixedRotation(shouldLockRotation());
         body.setName(object.name().toLowerCase());
         body.setSensor(sensor);
         obstacle = body;
@@ -108,6 +109,18 @@ public class GameObject extends ObstacleSprite {
 
     public Quality getPictureQuality() { return pictureQuality; }
 
+    /**
+     * Returns the surface quality that should affect contact behavior.
+     *
+     */
+    public Quality getEffectiveSurfaceQuality() {
+        // this is for the jump reduction for texture qualities only
+        if (hasPicture && pictureQuality != null && pictureQuality != FLOAT) {
+            return pictureQuality;
+        }
+        return quality;
+    }
+
     public void putPicture(GameObject other) {
         if (hasPicture) {
             return;
@@ -121,7 +134,7 @@ public class GameObject extends ObstacleSprite {
                 this.gravityScale = other.getOriginalGravityScale();
                 this.body.setMass(weight);
                 this.body.setGravityScale(gravityScale);
-                this.body.setFixedRotation(true);
+                applyRotationConstraint();
                 this.body.setAngularVelocity(0.0f);
                 break;
             case SLIPPERY:
@@ -129,16 +142,14 @@ public class GameObject extends ObstacleSprite {
                 this.friction = other.getOriginalFriction();
                 this.body.setRestitution(elasticity);
                 this.body.setFriction(friction);
-                this.body.setFixedRotation(true);
-                this.body.setAngularVelocity(0.0f);
+                applyRotationConstraint();
                 break;
             case STICKY:
                 this.elasticity = other.getOriginalElasticity();
                 this.friction = other.getOriginalFriction();
                 this.body.setRestitution(elasticity);
                 this.body.setFriction(friction);
-                this.body.setFixedRotation(true);
-                this.body.setAngularVelocity(0.0f);
+                applyRotationConstraint();
                 break;
         }
     }
@@ -170,7 +181,7 @@ public class GameObject extends ObstacleSprite {
 
     public void resetAttributes() {
         hasPicture = false;
-        frozenByIcePicture = false;
+        // frozenByIcePicture = false;
         this.weight = data.getFloat("weight");
         this.elasticity = data.getFloat("elasticity");
         this.friction = data.getFloat("friction");
@@ -182,7 +193,7 @@ public class GameObject extends ObstacleSprite {
         this.body.setRestitution(elasticity);
         this.body.setFriction(friction);
         this.body.setGravityScale(gravityScale);
-        this.body.setFixedRotation(true);
+        applyRotationConstraint();
         this.body.setAngularVelocity(0.0f);
 
         Body physicsBody = this.body.getBody();
@@ -191,44 +202,16 @@ public class GameObject extends ObstacleSprite {
             physicsBody.setLinearVelocity(0.0f, 0.0f);
             physicsBody.setAngularVelocity(0.0f);
             physicsBody.setGravityScale(gravityScale);
+            physicsBody.setFixedRotation(shouldLockRotation());
             physicsBody.setAwake(true);
         }
     }
 
-    public boolean isFrozenByIcePicture() {
-        return frozenByIcePicture;
+    private boolean shouldLockRotation() {
+        return gravityScale <= 0.0f;
     }
 
-    private void freezeInPlace() {
-        frozenByIcePicture = true;
-        this.body.setBodyType(BodyDef.BodyType.StaticBody);
-        this.body.setGravityScale(0.0f);
-        this.body.setFixedRotation(true);
-        this.body.setAngularVelocity(0.0f);
-
-        Body physicsBody = this.body.getBody();
-        if (physicsBody != null) {
-            physicsBody.setLinearVelocity(0.0f, 0.0f);
-            physicsBody.setAngularVelocity(0.0f);
-            physicsBody.setGravityScale(0.0f);
-            physicsBody.setType(BodyDef.BodyType.StaticBody);
-            physicsBody.setAwake(true);
-        }
+    private void applyRotationConstraint() {
+        this.body.setFixedRotation(shouldLockRotation());
     }
-
-    private void thawFromThermalPicture() {
-        frozenByIcePicture = false;
-        this.body.setBodyType(BodyDef.BodyType.DynamicBody);
-        this.body.setGravityScale(gravityScale);
-        this.body.setFixedRotation(true);
-        this.body.setAngularVelocity(0.0f);
-
-        Body physicsBody = this.body.getBody();
-        if (physicsBody != null) {
-            physicsBody.setType(BodyDef.BodyType.DynamicBody);
-            physicsBody.setGravityScale(gravityScale);
-            physicsBody.setAwake(true);
-        }
-    }
-    // TODO: add anything else that you're thinking of and write an explanation in discord/text
 }

@@ -22,15 +22,6 @@ import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
 import edu.cornell.gdiac.physics2.*;
 
-/**
- * Container class for organizing obstacles connected by joints.
- *
- * In this lab, several obstacles will be connected by joints (e.g. rope bridge,
- * ragdoll, and spinner). We have found it useful to create a container class
- * for these connected obstacles. While the individual obstacles are still
- * added to the scene individually, and drawn individually, this class provides
- * a central location for creating and destroying joints.
- */
 public abstract class ObstacleGroup {
     /** A complex physics object has multiple bodies */
     protected Array<ObstacleSprite> sprites;

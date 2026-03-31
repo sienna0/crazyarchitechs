@@ -53,7 +53,6 @@ public class Surface extends ObstacleSprite {
      *
      * @param points    The outline of the shape as x,y pairs
      * @param units     The physics units
-     * @param data      The physics constants for this rope bridge
      */
     public Surface(float[] points, float units, JsonValue settings) {
         super();
