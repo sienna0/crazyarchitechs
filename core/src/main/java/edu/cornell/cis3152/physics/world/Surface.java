@@ -42,7 +42,6 @@ import edu.cornell.gdiac.physics2.PolygonObstacle;
  * to that shape.
  */
 public class Surface extends ObstacleSprite {
-
     /**
      * Creates a surface from the given set of points and physics units
      *

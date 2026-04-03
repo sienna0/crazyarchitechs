@@ -56,7 +56,7 @@ public class DesktopLauncher {
         config.title = "Physics";
 
         // Use windowed mode
-        config.fullscreen = true;
+        config.fullscreen = false;
         config.resizable = false;
 //        config.width = 1024;
 //        config.height = 576;

@@ -14,6 +14,7 @@ import edu.cornell.gdiac.math.PathFactory;
 import edu.cornell.gdiac.physics2.*;
 
 // TODO i do think we should refactor this file.. it's getting quite long
+// TODO split animation and movement?
 
 /**
  * Zuko's avatar for the platform game.
@@ -109,6 +110,13 @@ public class Zuko extends ObstacleSprite {
     private float jumpFrameDuration = 0.14f;
     /** Whether the animation is playing or not */
     private boolean playingJump = false;
+
+    /** The SpriteSheet for Zuko's walk animation */
+    private SpriteSheet walkSheet;
+    /** The duration of the walk animation */
+    private float walkAnimationTime = 0f;
+    /** The duration of each walk frame */
+    private float walkFrameDuration = 0.07f;
 
     private Texture baseTexture;
 
@@ -375,6 +383,16 @@ public class Zuko extends ObstacleSprite {
         jumpSheet = new SpriteSheet(sheet, rows, cols, size);
     }
 
+    /**
+     * Sets the walk animation SpriteSheet for Zuko
+     * @param sheet
+     * @param rows
+     * @param cols
+     */
+    public void setWalkAnimation(Texture sheet, int rows, int cols, int size) {
+        walkSheet = new SpriteSheet(sheet, rows, cols, size);
+    }
+
 
     /**
      * Creates a new Zuko avatar with the given physics data
@@ -505,15 +523,15 @@ public class Zuko extends ObstacleSprite {
             body.applyForce(forceCache,pos,true);
         }
 
+        // TODO add an even higher velocity for ice maybe?
         // Velocity too high, clamp it
-        if (Math.abs(vx) >= getMaxSpeed()) {
+        if (!onIce && Math.abs(vx) >= getMaxSpeed()) {
             obstacle.setVX(Math.signum(vx)*getMaxSpeed());
         } else {
             forceCache.set(getMovement(),0);
             body.applyForce(forceCache,pos,true);
         }
 
-        // Jump!
         if (isJumping()) {
             forceCache.set(0, currentJumpForce);
             body.applyLinearImpulse(forceCache,pos,true);
@@ -562,6 +580,13 @@ public class Zuko extends ObstacleSprite {
             } else {
                 jumpSheet.setFrame(frame);
             }
+        } else if (walkSheet != null && isGrounded && Math.abs(obstacle.getVX()) > 0.1f) {
+            walkAnimationTime += dt;
+            int frame = ((int)(walkAnimationTime / walkFrameDuration)) % walkSheet.getSize();
+            walkSheet.setFrame(frame);
+        } else if (walkSheet != null) {
+            walkAnimationTime = 0f;
+            walkSheet.setFrame(0);
         }
 
         camera.update(dt);
@@ -589,6 +614,8 @@ public class Zuko extends ObstacleSprite {
             setSpriteSheet(photoSheet);
         } else if (playingJump && jumpSheet != null) {
             setSpriteSheet(jumpSheet);
+        } else if (walkSheet != null && isGrounded && Math.abs(obstacle.getVX()) > 0.1f) {
+            setSpriteSheet(walkSheet);
         } else if (baseTexture != null) {
             setTexture(baseTexture);
         }

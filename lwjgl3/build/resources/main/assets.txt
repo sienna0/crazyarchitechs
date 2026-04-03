@@ -5,7 +5,9 @@ loading/play.png
 loading/progress.png
 loading/splash.png
 loading/splash1.png
+platform/32zuko.png
 platform/cameraflash.png
+platform/cameraflash1.png
 platform/cloud.png
 platform/constants.json
 platform/constants1.json
@@ -13,14 +15,20 @@ platform/constants2.json
 platform/hover.wav
 platform/ice.png
 platform/jump.wav
+platform/oldzuko.png
 platform/pause_icon.png
 platform/pew.wav
 platform/plop.wav
 platform/rock.png
 platform/walltile.png
 platform/zuko.png
+platform/zuko2.png
+platform/zuko3.png
 platform/zukojump.png
-shared/Floor Tile 200x200.png
+platform/zukojump1.png
+platform/zukowalk.png
 shared/RetroGame.ttf
 shared/background.png
 shared/earthtile.png
+shared/floortile.png
+shared/floortile1.png

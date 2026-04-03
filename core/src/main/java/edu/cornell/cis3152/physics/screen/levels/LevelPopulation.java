@@ -22,6 +22,8 @@ class LevelPopulation {
         GameObject cloud;
     }
 
+    float TERRAIN_BLOCK_SIZE = 1.5f;
+
     private final JsonValue constants;
     private final BiFunction<String, String, Texture> textureResolver;
     private final Consumer<ObstacleSprite> spriteAdder;
@@ -58,10 +60,20 @@ class LevelPopulation {
         JsonValue platforms = level.get("platforms");
         JsonValue platformPositions = platforms.get("positions");
         for (int ii = 0; ii < platformPositions.size; ii++) {
-            Surface platform = new Surface(platformPositions.get(ii).asFloatArray(), units, walls);
+            Surface platform = new Surface(platformPositions.get(ii).asFloatArray(), units, platforms);
             platform.getObstacle().setName("platform" + ii);
             platform.setTexture(texture);
             spriteAdder.accept(platform);
+        }
+
+        Texture floorTexture = textureResolver.apply("shared-floor", "shared/floortile.png");
+        JsonValue floors = level.get("floors");
+        JsonValue floorPositions = floors.get("positions");
+        for (int ii = 0; ii < floorPositions.size; ii++) {
+            Surface floor = new Surface(floorPositions.get(ii).asFloatArray(), units, floors);
+            floor.getObstacle().setName("floor" + ii);
+            floor.setTexture(floorTexture);
+            spriteAdder.accept(floor);
         }
 
         texture = textureResolver.apply("platform-traci", "platform/traci.png");
@@ -70,8 +82,10 @@ class LevelPopulation {
         result.avatar.setBaseTexture(texture);
         spriteAdder.accept(result.avatar);
         result.avatar.createSensor();
+        Texture walkSheet = textureResolver.apply("platform-walk", "platform/zukowalk.png");
+        result.avatar.setWalkAnimation(walkSheet, 1, 6, 6);
         Texture photoSheet = textureResolver.apply("platform-camera", "platform/cameraflash.png");
-        result.avatar.setPhotoAnimation(photoSheet, 1, 17, 17);
+        result.avatar.setPhotoAnimation(photoSheet, 1, 13, 13);
         Texture jumpSheet = textureResolver.apply("platform-jump", "platform/zukojump.png");
         result.avatar.setJumpAnimation(jumpSheet, 1, 7, 7);
 

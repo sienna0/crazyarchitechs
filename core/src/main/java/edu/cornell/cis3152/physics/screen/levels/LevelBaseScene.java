@@ -149,6 +149,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         if (texture == null) {
             texture = new Texture(Gdx.files.internal(fallbackPath));
         }
+        texture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
         return texture;
     }
 
@@ -214,7 +215,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
      * Lays out the game geography.
      */
     private void populateLevel() {
-        float units = height/bounds.height;
+        float units = height/(bounds.height);
         if (constants.get("level" + currentLevel) == null) {
             currentLevel = 1;
         }

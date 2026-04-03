@@ -5,9 +5,15 @@
             "wrapU": "repeated",
             "wrapV": "repeated"
         },
+        "shared-floor" : {
+            "file": "shared/floortile.png",
+            "wrapU": "repeated",
+            "wrapV": "repeated"
+        },
         "shared-background": "shared/background.png",
         "shared-goal":   "platform/walltile.png",
         "platform-traci"    : "platform/zuko.png",
+        "platform-walk"     : "platform/zukowalk.png",
         "platform-camera"   : "platform/cameraflash.png",
         "platform-jump"     : "platform/zukojump.png",
         "platform-ice"      : "platform/ice.png",
