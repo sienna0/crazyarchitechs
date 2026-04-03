@@ -1,25 +1,42 @@
 package edu.cornell.cis3152.physics.screen.levels;
 
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.utils.JsonValue;
+import com.badlogic.gdx.utils.JsonReader;
+import com.badlogic.gdx.utils.JsonWriter;
 import edu.cornell.cis3152.physics.screen.WorldState;
 import edu.cornell.cis3152.physics.world.*;
 import edu.cornell.gdiac.physics2.ObstacleSprite;
-
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
-/**
- * Builds the level sprites from JSON data.
- */
 class LevelPopulation {
+
+    private static final int TILE_PX = 16;
+    private static final float OBJECT_SIZE = 1.0f;
+    private static final float FLOOR_TILE_SCALE = 2.0f;
+
     static class Result {
         Door goalDoor;
         Zuko avatar;
+        /** Extra Zuko-sprite objects placed via the editor's zukosprite tool. */
+        List<Zuko> extraZukos = new ArrayList<>();
         GameObject honey;
         GameObject ice;
         GameObject cloud;
+
+        // Tilemap — purely visual, drawn manually each frame.
+        // Parallel arrays: tileRegions[i] is drawn at tilePositions[i] (world units).
+        List<TextureRegion> tileRegions    = new ArrayList<>();
+        /** [x, y] screen-space position in pixels for each tile, in the same order as tileRegions. */
+        List<float[]>       tilePositions  = new ArrayList<>();
     }
 
     float TERRAIN_BLOCK_SIZE = 1.5f;
@@ -39,21 +56,46 @@ class LevelPopulation {
     Result populate(int currentLevel, float units, WorldState worldState) {
         Result result = new Result();
 
-        Texture texture = textureResolver.apply("shared-goal", "shared/goaldoor.png");
         JsonValue level = constants.get("level" + currentLevel);
-        JsonValue goal = level.get("objectLocations").get("goal");
+        JsonValue objectLocations = level.get("objectLocations");
+
+        Texture texture = textureResolver.apply("shared-goal", "shared/goaldoor.png");
+        JsonValue goal = objectLocations.get("goal");
         result.goalDoor = new Door(units, goal);
         result.goalDoor.setTexture(texture);
         result.goalDoor.getObstacle().setName("goal");
         spriteAdder.accept(result.goalDoor);
 
-        texture = textureResolver.apply("shared-earth", "shared/earthtile.png");
+        Texture tilesetTexture = textureResolver.apply("platform-tileset", "platform/tileset.png");
+        JsonValue tilemap = level.get("tilemap");
+        if (tilemap != null) {
+            for (int ii = 0; ii < tilemap.size; ii++) {
+                JsonValue entry = tilemap.get(ii);
+                int tx  = entry.getInt("tx");
+                int ty  = entry.getInt("ty");
+                int col = entry.getInt("col");
+                int row = entry.getInt("row");
+
+                // 16x16 from tileset
+                TextureRegion region = new TextureRegion(
+                        tilesetTexture,
+                        col * TILE_PX, row * TILE_PX,
+                        TILE_PX, TILE_PX
+                );
+                result.tileRegions.add(region);
+
+                result.tilePositions.add(new float[]{ tx * units, ty * units });
+            }
+        }
+
+        // ── Walls ────────────────────────────────────────────────────────────
+        Texture earthTexture = textureResolver.apply("shared-earth", "shared/earthtile.png");
         JsonValue walls = level.get("walls");
         JsonValue wallPositions = walls.get("positions");
         for (int ii = 0; ii < wallPositions.size; ii++) {
             Surface wall = new Surface(wallPositions.get(ii).asFloatArray(), units, walls);
             wall.getObstacle().setName("wall" + ii);
-            wall.setTexture(texture);
+            wall.setTexture(earthTexture);
             spriteAdder.accept(wall);
         }
 
@@ -62,39 +104,59 @@ class LevelPopulation {
         for (int ii = 0; ii < platformPositions.size; ii++) {
             Surface platform = new Surface(platformPositions.get(ii).asFloatArray(), units, platforms);
             platform.getObstacle().setName("platform" + ii);
-            platform.setTexture(texture);
+            platform.setTexture(earthTexture);
             spriteAdder.accept(platform);
         }
 
         Texture floorTexture = textureResolver.apply("shared-floor", "shared/floortile.png");
         JsonValue floors = level.get("floors");
-        JsonValue floorPositions = floors.get("positions");
-        for (int ii = 0; ii < floorPositions.size; ii++) {
-            Surface floor = new Surface(floorPositions.get(ii).asFloatArray(), units, floors);
-            floor.getObstacle().setName("floor" + ii);
-            floor.setTexture(floorTexture);
-            spriteAdder.accept(floor);
+        if (floors != null) {
+            JsonValue renderedFloors = buildScaledTileSettings(floors, FLOOR_TILE_SCALE);
+            JsonValue floorPositions = floors.get("positions");
+            if (floorPositions != null) {
+                for (int ii = 0; ii < floorPositions.size; ii++) {
+                    Surface floor = new Surface(floorPositions.get(ii).asFloatArray(), units, renderedFloors);
+                    floor.getObstacle().setName("floor" + ii);
+                    floor.setTexture(floorTexture);
+                    spriteAdder.accept(floor);
+                }
+            }
+        }
+        if (currentLevel == 1) {
+            addTilemapCollisionFallback(level, floors, units);
         }
 
-        texture = textureResolver.apply("platform-traci", "platform/traci.png");
-        result.avatar = new Zuko(units, level.get("objectLocations").get("zuko"));
-        result.avatar.setTexture(texture);
-        result.avatar.setBaseTexture(texture);
+        Texture zukoTexture  = textureResolver.apply("platform-traci",  "platform/traci.png");
+        Texture walkSheet    = textureResolver.apply("platform-walk",   "platform/zukowalk.png");
+        Texture photoSheet   = textureResolver.apply("platform-camera", "platform/cameraflash.png");
+        Texture jumpSheet    = textureResolver.apply("platform-jump",   "platform/zukojump.png");
+
+        result.avatar = buildZuko(units, level.get("objectLocations").get("zuko"),
+                zukoTexture, walkSheet, photoSheet, jumpSheet, "avatar");
         spriteAdder.accept(result.avatar);
         result.avatar.createSensor();
-        Texture walkSheet = textureResolver.apply("platform-walk", "platform/zukowalk.png");
-        result.avatar.setWalkAnimation(walkSheet, 1, 6, 6);
-        Texture photoSheet = textureResolver.apply("platform-camera", "platform/cameraflash.png");
-        result.avatar.setPhotoAnimation(photoSheet, 1, 13, 13);
-        Texture jumpSheet = textureResolver.apply("platform-jump", "platform/zukojump.png");
-        result.avatar.setJumpAnimation(jumpSheet, 1, 7, 7);
 
-        float cloudSize = 1.5f;
-        float objectWidth = 1.5f;
+        JsonValue zukoSprites = objectLocations.get("zukosprite");
+        if (zukoSprites != null) {
+            for (int ii = 0; ii < zukoSprites.size; ii++) {
+                float[] pos = zukoSprites.get(ii).asFloatArray();
+
+                JsonValue syntheticZuko = buildSyntheticZukoJson(
+                        level.get("objectLocations").get("zuko"), pos[0], pos[1]);
+
+                Zuko extra = buildZuko(units, syntheticZuko,
+                        zukoTexture, walkSheet, photoSheet, jumpSheet,
+                        "zukosprite" + ii);
+                spriteAdder.accept(extra);
+                extra.createSensor();
+                result.extraZukos.add(extra);
+            }
+        }
+
+        float objectWidth = OBJECT_SIZE;
 
         Texture rockTexture = textureResolver.apply("platform-rock", "platform/rock.png");
         float rockHeight = objectWidth * ((float) rockTexture.getHeight() / rockTexture.getWidth());
-        JsonValue objectLocations = level.get("objectLocations");
         JsonValue rockPositions = objectLocations.get("rock");
         for (int ii = 0; ii < rockPositions.size; ii++) {
             float[] pos = rockPositions.get(ii).asFloatArray();
@@ -125,6 +187,7 @@ class LevelPopulation {
             spriteAdder.accept(result.ice);
         }
 
+        float cloudSize = OBJECT_SIZE;
         Texture cloudTexture = textureResolver.apply("platform-cloud", "platform/cloud.png");
         JsonValue cloudPositions = objectLocations.get("cloud");
         for (int ii = 0; ii < cloudPositions.size; ii++) {
@@ -142,5 +205,101 @@ class LevelPopulation {
         }
 
         return result;
+    }
+
+
+    private Zuko buildZuko(float units, JsonValue zukoJson,
+                           Texture zukoTexture, Texture walkSheet,
+                           Texture photoSheet, Texture jumpSheet,
+                           String name) {
+        Zuko zuko = new Zuko(units, zukoJson);
+        zuko.setTexture(zukoTexture);
+        zuko.setBaseTexture(zukoTexture);
+        zuko.getObstacle().setName(name);
+        zuko.setWalkAnimation(walkSheet,  1, 6, 6);
+        zuko.setPhotoAnimation(photoSheet, 1, 13, 13);
+        zuko.setJumpAnimation(jumpSheet,  1, 7, 7);
+        return zuko;
+    }
+
+    private void addTilemapCollisionFallback(JsonValue level, JsonValue floorSettings, float units) {
+        if (floorSettings == null) {
+            return;
+        }
+
+        JsonValue floorPositions = floorSettings.get("positions");
+        if (floorPositions != null && floorPositions.size > 0) {
+            return;
+        }
+
+        JsonValue tilemap = level.get("tilemap");
+        if (tilemap == null || tilemap.size == 0) {
+            return;
+        }
+
+        Map<Integer, List<Integer>> tilesByRow = new HashMap<>();
+        for (int ii = 0; ii < tilemap.size; ii++) {
+            JsonValue entry = tilemap.get(ii);
+            int tx = entry.getInt("tx");
+            int ty = entry.getInt("ty");
+            tilesByRow.computeIfAbsent(ty, ignored -> new ArrayList<>()).add(tx);
+        }
+
+        int colliderIndex = 0;
+        List<Integer> rows = new ArrayList<>(tilesByRow.keySet());
+        Collections.sort(rows);
+        for (int row : rows) {
+            List<Integer> cols = tilesByRow.get(row);
+            Collections.sort(cols);
+            int start = cols.get(0);
+            int previous = start;
+
+            for (int ii = 1; ii <= cols.size(); ii++) {
+                boolean contiguous = ii < cols.size() && cols.get(ii) == previous + 1;
+                if (contiguous) {
+                    previous = cols.get(ii);
+                    continue;
+                }
+
+                InvisibleSurface floor = new InvisibleSurface(new float[]{
+                        start, row,
+                        previous + 1.0f, row,
+                        previous + 1.0f, row + 1.0f,
+                        start, row + 1.0f
+                }, units, floorSettings);
+                floor.getObstacle().setName("tilefloor" + colliderIndex++);
+                spriteAdder.accept(floor);
+
+                if (ii < cols.size()) {
+                    start = cols.get(ii);
+                    previous = start;
+                }
+            }
+        }
+    }
+
+    /**
+     * Builds a synthetic JsonValue for an extra zukosprite by copying all
+     * physics constants from the canonical zuko node but overriding pos.
+     *
+     * The Zuko constructor reads: pos, inner, size, force, damping, density,
+     * friction, maxspeed, jump_force, jump_cool, shot_cool, sensor, debug.
+     * We clone the canonical node and patch pos so Zuko spawns at [x, y].
+     */
+    private JsonValue buildSyntheticZukoJson(JsonValue canonical, float x, float y) {
+        // Deep-copy by round-tripping through the JSON string representation.
+        JsonValue copy = new JsonReader().parse(canonical.toJson(JsonWriter.OutputType.json));
+
+        JsonValue pos = copy.get("pos");
+        pos.get(0).set(x, null);
+        pos.get(1).set(y, null);
+
+        return copy;
+    }
+
+    private JsonValue buildScaledTileSettings(JsonValue canonical, float scale) {
+        JsonValue copy = new JsonReader().parse(canonical.toJson(JsonWriter.OutputType.json));
+        copy.get("tile").set(copy.getFloat("tile") * scale, null);
+        return copy;
     }
 }

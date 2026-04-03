@@ -2,6 +2,7 @@ package edu.cornell.cis3152.physics.screen.levels;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Affine2;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
@@ -21,6 +22,11 @@ class LevelRenderer {
     private static final float STUCK_PICTURE_SIZE = 22.0f;
     private static final float STUCK_PICTURE_BORDER = 2.0f;
     private static final float STUCK_PICTURE_INNER_PADDING = 4.0f;
+    private static final float INVENTORY_BAR_WIDTH = 280.0f;
+    private static final float INVENTORY_BAR_HEIGHT = 56.0f;
+    private static final float INVENTORY_PADDING = 8.0f;
+    private static final float PAUSE_ICON_SIZE = 38.0f;
+    private static final float PAUSE_ICON_HOVER_SIZE = 46.0f;
 
     private final WorldState worldState;
     private final Texture slotTexture;
@@ -45,6 +51,10 @@ class LevelRenderer {
     }
 
     void draw(SpriteBatch batch, CanvasRender viewport, com.badlogic.gdx.graphics.OrthographicCamera camera, Zuko avatar) {
+        if (avatar == null) {
+            return;
+        }
+
         viewport.apply();
         batch.begin(camera);
         batch.setColor(worldState.getActivePicture() != null ? Color.LIME : Color.CORAL);
@@ -64,13 +74,13 @@ class LevelRenderer {
         viewport.apply();
         batch.begin(camera);
         batch.setColor(new Color(0.3f, 0.3f, 0.3f, 0.8f));
-        batch.draw(slotTexture, viewport.getWidth() / 2 - 200, 0, 400, 80);
+        batch.draw(slotTexture, viewport.getWidth() / 2 - INVENTORY_BAR_WIDTH / 2.0f, 0, INVENTORY_BAR_WIDTH, INVENTORY_BAR_HEIGHT);
         drawInventory(batch, viewport, avatar);
         batch.setColor(Color.WHITE);
 
         if (pauseIconTexture != null) {
-            float baseSize = 50f;
-            float iconSize = worldState.isPauseIconHovered() ? 60f : baseSize;
+            float baseSize = PAUSE_ICON_SIZE;
+            float iconSize = worldState.isPauseIconHovered() ? PAUSE_ICON_HOVER_SIZE : baseSize;
             float baseX = viewport.getWidth() - baseSize - 15f;
             float baseY = viewport.getHeight() - baseSize - 15f;
             float iconX = baseX - (iconSize - baseSize) / 2f;
@@ -83,10 +93,10 @@ class LevelRenderer {
     }
 
     int getClickedSlot(float mouseX, float mouseY, CanvasRender viewport, int inventorySize) {
-        float barWidth = 400f;
-        float barHeight = 80f;
+        float barWidth = INVENTORY_BAR_WIDTH;
+        float barHeight = INVENTORY_BAR_HEIGHT;
         float barX = viewport.getWidth() / 2 - barWidth / 2;
-        float padding = 10f;
+        float padding = INVENTORY_PADDING;
         float slotSize = (barWidth - padding * (inventorySize + 1)) / inventorySize;
         float startX = barX + padding;
 
@@ -198,16 +208,16 @@ class LevelRenderer {
     }
 
     private void drawInventory(SpriteBatch batch, CanvasRender viewport, Zuko avatar) {
-        float barWidth = 400f;
-        float barHeight = 80f;
+        float barWidth = INVENTORY_BAR_WIDTH;
+        float barHeight = INVENTORY_BAR_HEIGHT;
         float barX = viewport.getWidth() / 2 - barWidth / 2;
         float barY = 0f;
-        float padding = 10f;
+        float padding = INVENTORY_PADDING;
         int size = avatar.getPictureInventory().getSize();
         float slotSize = (barWidth - padding * (size + 1)) / size;
         float startX = barX + padding;
         float startY = barY + (barHeight - slotSize) / 2f;
-        float selectedRaise = 12f;
+        float selectedRaise = 8f;
 
         for (int ii = 0; ii < size; ii++) {
             float slotX = startX + ii * (slotSize + padding);
@@ -220,9 +230,22 @@ class LevelRenderer {
                 batch.setColor(picture.getColor());
                 batch.draw(slotTexture, slotX, slotY, slotSize, slotSize);
                 batch.setColor(Color.WHITE);
-                batch.draw(picture.getSubject().getTexture(), slotX + 5f, slotY + 5f, slotSize - 10f, slotSize - 10f);
+                batch.draw(picture.getSubject().getTexture(), slotX + 4f, slotY + 4f, slotSize - 8f, slotSize - 8f);
             }
         }
         batch.setColor(Color.WHITE);
+    }
+
+    void drawLevelTiles(SpriteBatch batch, LevelPopulation.Result levelData, float tileSize) {
+        if (levelData == null || levelData.tileRegions.isEmpty()) {
+            return;
+        }
+
+        batch.setColor(Color.WHITE);
+        for (int ii = 0; ii < levelData.tileRegions.size(); ii++) {
+            TextureRegion region = levelData.tileRegions.get(ii);
+            float[] position = levelData.tilePositions.get(ii);
+            batch.draw(region, position[0], position[1], tileSize, tileSize);
+        }
     }
 }

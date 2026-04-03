@@ -20,6 +20,7 @@ platform/pause_icon.png
 platform/pew.wav
 platform/plop.wav
 platform/rock.png
+platform/tileset.png
 platform/walltile.png
 platform/zuko.png
 platform/zuko2.png

@@ -42,6 +42,8 @@ import edu.cornell.gdiac.physics2.ObstacleSprite;
  * chance to define a response.
  */
 public class LevelBaseScene extends PhysicsScene implements ContactListener {
+    private static final float PAUSE_ICON_SIZE = 38.0f;
+
     private Texture backgroundTexture;
 
     private Texture slotTexture;
@@ -80,6 +82,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     private TextLayout cameraLabel;
     private Texture markerPixel;
     private LevelPopulation levelPopulation;
+    private LevelPopulation.Result levelData;
     private PhotoSystem photoSystem;
     private LevelRenderer renderer;
 
@@ -170,6 +173,9 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             batch.setColor(Color.WHITE);
             batch.draw(backgroundTexture, 0, 0, viewport.getWidth(), viewport.getHeight());
         }
+        if (renderer != null && levelData != null) {
+            renderer.drawLevelTiles(batch, levelData, height / bounds.height);
+        }
     }
 
     /**
@@ -219,12 +225,12 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         if (constants.get("level" + currentLevel) == null) {
             currentLevel = 1;
         }
-        LevelPopulation.Result result = levelPopulation.populate(currentLevel, units, worldState);
-        goalDoor = result.goalDoor;
-        avatar = result.avatar;
-        honey = result.honey;
-        ice = result.ice;
-        cloud = result.cloud;
+        levelData = levelPopulation.populate(currentLevel, units, worldState);
+        goalDoor = levelData.goalDoor;
+        avatar = levelData.avatar;
+        honey = levelData.honey;
+        ice = levelData.ice;
+        cloud = levelData.cloud;
     }
     
     /**
@@ -264,7 +270,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     @Override
     public void update(float dt) {
         viewport.screenToCanvas(Gdx.input.getX(), Gdx.input.getY(), worldState.getPauseMouseCache());
-        float iconSize = 50f;
+        float iconSize = PAUSE_ICON_SIZE;
         float iconX = viewport.getWidth() - iconSize - 15f;
         float iconY = viewport.getHeight() - iconSize - 15f;
         Vector2 pauseMouseCache = worldState.getPauseMouseCache();

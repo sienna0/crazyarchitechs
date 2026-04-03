@@ -19,7 +19,8 @@
         "platform-ice"      : "platform/ice.png",
         "platform-rock"     : "platform/rock.png",
         "platform-cloud"    : "platform/cloud.png",
-        "platform-pause"    : "platform/pause_icon.png"
+        "platform-pause"    : "platform/pause_icon.png",
+        "platform-tileset"  : "platform/tileset.png"
     },
     "jsons"  : {
         "platform-constants": "platform/constants.json"
