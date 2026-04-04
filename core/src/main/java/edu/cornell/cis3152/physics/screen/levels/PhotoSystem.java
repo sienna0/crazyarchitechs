@@ -101,7 +101,7 @@ class PhotoSystem {
             return;
         }
         if (input.didRightClick()) {
-            removePictureFromTarget(target);
+            removePictureFromTarget(target, avatar);
             return;
         }
         if (!input.didLeftClick()) {
@@ -242,10 +242,14 @@ class PhotoSystem {
             }
         }
 
+        if (avatar.getCurrentPlatform() == target) {
+            avatar.setCurrentPlatform(target);
+        }
+
         SoundEffectManager.getInstance().play("fire", fireSound, volume);
     }
 
-    private void removePictureFromTarget(GameObject target) {
+    private void removePictureFromTarget(GameObject target, Zuko avatar) {
         Picture attachedPicture = findPictureOnTarget(target);
         if (attachedPicture == null) {
             return;
@@ -253,6 +257,9 @@ class PhotoSystem {
 
         target.resetAttributes();
         attachedPicture.clearTarget();
+        if (avatar.getCurrentPlatform() == target) {
+            avatar.setCurrentPlatform(target);
+        }
         SoundEffectManager.getInstance().play("plop", plopSound, volume);
     }
 

@@ -11,9 +11,11 @@ import edu.cornell.cis3152.physics.world.*;
 import edu.cornell.gdiac.physics2.ObstacleSprite;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
@@ -22,6 +24,7 @@ class LevelPopulation {
     private static final int TILE_PX = 16;
     private static final float OBJECT_SIZE = 1.0f;
     private static final float FLOOR_TILE_SCALE = 2.0f;
+    private static final float TILE_WORLD_SIZE = 1.0f;
 
     static class Result {
         Door goalDoor;
@@ -122,9 +125,7 @@ class LevelPopulation {
                 }
             }
         }
-        if (currentLevel == 1) {
-            addTilemapCollisionFallback(level, floors, units);
-        }
+        addTilemapColliders(level, floors, units);
 
         Texture zukoTexture  = textureResolver.apply("platform-traci",  "platform/traci.png");
         Texture walkSheet    = textureResolver.apply("platform-walk",   "platform/zukowalk.png");
@@ -222,13 +223,8 @@ class LevelPopulation {
         return zuko;
     }
 
-    private void addTilemapCollisionFallback(JsonValue level, JsonValue floorSettings, float units) {
-        if (floorSettings == null) {
-            return;
-        }
-
-        JsonValue floorPositions = floorSettings.get("positions");
-        if (floorPositions != null && floorPositions.size > 0) {
+    private void addTilemapColliders(JsonValue level, JsonValue collisionSettings, float units) {
+        if (collisionSettings == null) {
             return;
         }
 
@@ -237,44 +233,24 @@ class LevelPopulation {
             return;
         }
 
-        Map<Integer, List<Integer>> tilesByRow = new HashMap<>();
+        Set<String> seenTiles = new HashSet<>();
         for (int ii = 0; ii < tilemap.size; ii++) {
             JsonValue entry = tilemap.get(ii);
             int tx = entry.getInt("tx");
             int ty = entry.getInt("ty");
-            tilesByRow.computeIfAbsent(ty, ignored -> new ArrayList<>()).add(tx);
-        }
-
-        int colliderIndex = 0;
-        List<Integer> rows = new ArrayList<>(tilesByRow.keySet());
-        Collections.sort(rows);
-        for (int row : rows) {
-            List<Integer> cols = tilesByRow.get(row);
-            Collections.sort(cols);
-            int start = cols.get(0);
-            int previous = start;
-
-            for (int ii = 1; ii <= cols.size(); ii++) {
-                boolean contiguous = ii < cols.size() && cols.get(ii) == previous + 1;
-                if (contiguous) {
-                    previous = cols.get(ii);
-                    continue;
-                }
-
-                InvisibleSurface floor = new InvisibleSurface(new float[]{
-                        start, row,
-                        previous + 1.0f, row,
-                        previous + 1.0f, row + 1.0f,
-                        start, row + 1.0f
-                }, units, floorSettings);
-                floor.getObstacle().setName("tilefloor" + colliderIndex++);
-                spriteAdder.accept(floor);
-
-                if (ii < cols.size()) {
-                    start = cols.get(ii);
-                    previous = start;
-                }
+            String key = tx + ":" + ty;
+            if (!seenTiles.add(key)) {
+                continue;
             }
+
+            InvisibleSurface tileCollider = new InvisibleSurface(new float[]{
+                    tx, ty,
+                    tx + TILE_WORLD_SIZE, ty,
+                    tx + TILE_WORLD_SIZE, ty + TILE_WORLD_SIZE,
+                    tx, ty + TILE_WORLD_SIZE
+            }, units, collisionSettings);
+            tileCollider.getObstacle().setName("tilecollider" + ii);
+            spriteAdder.accept(tileCollider);
         }
     }
 

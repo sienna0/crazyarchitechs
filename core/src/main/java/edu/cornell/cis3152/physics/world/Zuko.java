@@ -228,27 +228,14 @@ public class Zuko extends ObstacleSprite {
             return;
         }
 
-        Quality effectiveTexture = platform.getEffectiveSurfaceQuality();
-        // this controls whether or not we can jump on the current block
-        // onIce is because i think we need to make ice MORE slippery which involves increasing velocity on ice but
-        // TBD TODO
-        switch (effectiveTexture) {
-            case STICKY:
-                canJumpFull = false;
-                onIce = false;
-                // System.out.println("honey");
-                break;
-            case SLIPPERY:
-                canJumpFull = true;
-                onIce = true;
-                // System.out.println("ice");
-                break;
-            default:
-                canJumpFull = true;
-                onIce = false;
-                // System.out.println("nothing");
-                break;
-        }
+        boolean baseIsRock = platform.getObjectType() == Obj.HONEY;
+        boolean baseIsIce = platform.getObjectType() == Obj.ICE;
+        Quality pictureQuality = platform.getPictureQuality();
+        boolean hasRockPicture = pictureQuality == Quality.STICKY && platform.hasPicture();
+        boolean hasIcePicture = pictureQuality == Quality.SLIPPERY && platform.hasPicture();
+
+        canJumpFull = (!baseIsRock || hasIcePicture) && !hasRockPicture;
+        onIce = baseIsIce || hasIcePicture;
     }
 
     /**
