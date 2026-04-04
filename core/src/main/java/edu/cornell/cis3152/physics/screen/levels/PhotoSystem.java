@@ -7,6 +7,7 @@ import edu.cornell.cis3152.physics.InputController;
 import edu.cornell.cis3152.physics.screen.WorldState;
 import edu.cornell.cis3152.physics.world.GameObject;
 import edu.cornell.cis3152.physics.world.Picture;
+import edu.cornell.cis3152.physics.world.Quality;
 import edu.cornell.cis3152.physics.world.Zuko;
 import edu.cornell.gdiac.audio.SoundEffect;
 import edu.cornell.gdiac.audio.SoundEffectManager;
@@ -131,10 +132,20 @@ class PhotoSystem {
                 continue;
             }
 
-            float displacement = worldState.getCloudHomeY() - body.getPosition().y;
-            float damping = -liftSpringDamping * body.getLinearVelocity().y;
-            float springForce = (liftSpringStiffness * displacement) + damping;
-            body.applyForceToCenter(0.0f, body.getMass() * springForce, true);
+            Vector2 floatHome = gameObject.getFloatHome();
+            float displacementX = floatHome.x - body.getPosition().x;
+            float dampingX = -liftSpringDamping * body.getLinearVelocity().x;
+            float springForceX = (liftSpringStiffness * displacementX) + dampingX;
+
+            float displacementY = floatHome.y - body.getPosition().y;
+            float dampingY = -liftSpringDamping * body.getLinearVelocity().y;
+            float springForceY = (liftSpringStiffness * displacementY) + dampingY;
+
+            body.applyForceToCenter(
+                    body.getMass() * springForceX,
+                    body.getMass() * springForceY,
+                    true
+            );
             body.setAngularVelocity(0.0f);
         }
     }
@@ -231,6 +242,9 @@ class PhotoSystem {
             activePicture.getTarget().resetAttributes();
         }
         activePicture.setTarget(target, pictureUnits);
+        if (activePicture.getSubject().getQuality() == Quality.FLOAT) {
+            target.setFloatHome(target.getObstacle().getX(), worldState.getCloudHomeY());
+        }
 
         for (int ii = 0; ii < avatar.getPictureInventory().getSize(); ii++) {
             Picture picture = avatar.getPictureInventory().getPicture(ii);

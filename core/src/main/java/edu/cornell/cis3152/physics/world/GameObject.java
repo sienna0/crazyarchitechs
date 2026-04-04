@@ -1,6 +1,7 @@
 package edu.cornell.cis3152.physics.world;
 
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.utils.JsonValue;
@@ -24,6 +25,8 @@ public class GameObject extends ObstacleSprite {
     float weight;
 
     private BoxObstacle body;
+    /** Rest position for spring-based float motion */
+    private final Vector2 floatHome = new Vector2();
 
     private boolean hasPicture = false;
     // private boolean frozenByIcePicture = false;
@@ -79,6 +82,7 @@ public class GameObject extends ObstacleSprite {
         body.setName(object.name().toLowerCase());
         body.setSensor(sensor);
         obstacle = body;
+        floatHome.set(x, y);
 
         float drawW = w * units;
         float drawH = h * units;
@@ -103,6 +107,14 @@ public class GameObject extends ObstacleSprite {
 
     public boolean hasLiftPicture() {
         return hasPicture && gravityScale <= 0.0f;
+    }
+
+    public Vector2 getFloatHome() {
+        return floatHome;
+    }
+
+    public void setFloatHome(float x, float y) {
+        floatHome.set(x, y);
     }
 
     public boolean hasPicture() { return hasPicture; }
