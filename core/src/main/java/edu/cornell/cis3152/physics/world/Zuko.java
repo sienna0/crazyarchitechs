@@ -414,7 +414,7 @@ public class Zuko extends ObstacleSprite {
         obstacle.setFixedRotation(true);
         obstacle.setPhysicsUnits( units );
         obstacle.setUserData( this );
-        obstacle.setName("Zuko");
+        obstacle.setName("zuko");
 
         debug = ParserUtils.parseColor( debugInfo.get("avatar"),  Color.WHITE);
         sensorColor = ParserUtils.parseColor( debugInfo.get("sensor"),  Color.WHITE);

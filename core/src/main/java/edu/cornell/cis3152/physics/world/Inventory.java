@@ -4,7 +4,6 @@ package edu.cornell.cis3152.physics.world;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.JsonValue;
-import edu.cornell.cis3152.physics.InputController;
 import edu.cornell.gdiac.audio.SoundEffectManager;
 
 public class Inventory{

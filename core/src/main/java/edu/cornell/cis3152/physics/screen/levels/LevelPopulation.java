@@ -202,7 +202,6 @@ class LevelPopulation {
             );
             result.cloud.setTexture(cloudTexture);
             spriteAdder.accept(result.cloud);
-            worldState.setCloudHomeY(result.cloud.getObstacle().getY());
         }
 
         return result;

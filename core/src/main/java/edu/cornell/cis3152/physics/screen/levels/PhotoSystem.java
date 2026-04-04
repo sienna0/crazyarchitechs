@@ -80,8 +80,7 @@ class PhotoSystem {
     void handlePictureAction(InputController input,
                              GameObject target,
                              Zuko avatar,
-                             int clickedSlot,
-                             float pictureUnits) {
+                             int clickedSlot) {
         if (input.didLeftClick()) {
             if (clickedSlot >= 0) {
                 Picture slotPicture = avatar.getPictureInventory().getPicture(clickedSlot);
@@ -111,16 +110,17 @@ class PhotoSystem {
         if (worldState.getActivePicture() == null || worldState.getSelectedSlotIndex() == -1) {
             takePictureOfTarget(input, target, avatar);
         } else {
-            applyPictureToTarget(target, avatar, pictureUnits);
+            applyPictureToTarget(target, avatar);
         }
     }
 
-    void applyLiftSprings(PooledList<ObstacleSprite> sprites, GameObject cloud) {
+    void applyLiftSprings(PooledList<ObstacleSprite> sprites) {
         for (ObstacleSprite sprite : sprites) {
             if (!(sprite instanceof GameObject gameObject)) {
                 continue;
             }
-            boolean springActive = gameObject == cloud
+            boolean isCloud = gameObject.getObjectType() == edu.cornell.cis3152.physics.world.Obj.CLOUD;
+            boolean springActive = isCloud
                     ? gameObject.getGravityScale() <= 0.0f
                     : gameObject.hasLiftPicture();
             if (!springActive) {
@@ -217,7 +217,7 @@ class PhotoSystem {
         }
     }
 
-    private void applyPictureToTarget(GameObject target, Zuko avatar, float pictureUnits) {
+    private void applyPictureToTarget(GameObject target, Zuko avatar) {
         Picture activePicture = worldState.getActivePicture();
         if (activePicture == null) {
             return;
@@ -241,20 +241,16 @@ class PhotoSystem {
         if (activePicture.getTarget() != null) {
             activePicture.getTarget().resetAttributes();
         }
-        activePicture.setTarget(target, pictureUnits);
+        activePicture.setTarget(target);
         if (activePicture.getSubject().getQuality() == Quality.FLOAT) {
-            target.setFloatHome(target.getObstacle().getX(), worldState.getCloudHomeY());
+            GameObject subject = activePicture.getSubject();
+            target.setFloatHome(target.getObstacle().getX(), subject.getFloatHome().y);
         }
 
-        for (int ii = 0; ii < avatar.getPictureInventory().getSize(); ii++) {
-            Picture picture = avatar.getPictureInventory().getPicture(ii);
-            if (picture != null && picture.hasSubject() && picture.getSubject() == activePicture.getSubject()) {
-                picture.clearSubject();
-                worldState.setActivePicture(null);
-                worldState.setSelectedSlotIndex(-1);
-                break;
-            }
-        }
+        int slotIndex = worldState.getSelectedSlotIndex();
+        avatar.getPictureInventory().removePicture(slotIndex);
+        worldState.setActivePicture(null);
+        worldState.setSelectedSlotIndex(-1);
 
         if (avatar.getCurrentPlatform() == target) {
             avatar.setCurrentPlatform(target);

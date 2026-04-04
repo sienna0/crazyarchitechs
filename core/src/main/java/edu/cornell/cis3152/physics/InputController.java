@@ -372,7 +372,7 @@ public class InputController {
         therPressed  = (secondary && therPressed) || (Gdx.input.isKeyPressed(Input.Keys.NUM_2));
         texPressed  = (secondary && texPressed) || (Gdx.input.isKeyPressed(Input.Keys.NUM_3));
         camCyclePressed  = (secondary && camCyclePressed) || (Gdx.input.isKeyPressed(Input.Keys.C));
-        flicStickPressed  = (secondary && flicStickPrevious) || (Gdx.input.isKeyPressed(Input.Keys.I));
+        flicStickPressed  = (secondary && flicStickPressed) || (Gdx.input.isKeyPressed(Input.Keys.I));
 
         // Directional controls
         horizontal = (secondary ? horizontal : 0.0f);

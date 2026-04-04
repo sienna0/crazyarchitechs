@@ -2,12 +2,8 @@ package edu.cornell.cis3152.physics.world;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.math.Vector2;
 import edu.cornell.gdiac.graphics.SpriteMesh;
-import edu.cornell.gdiac.physics2.BoxObstacle;
 import edu.cornell.gdiac.physics2.ObstacleSprite;
-
-import static edu.cornell.cis3152.physics.world.Obj.HONEY;
 
 public class Picture extends ObstacleSprite {
     /** The GameObject subject of this picture */
@@ -25,9 +21,6 @@ public class Picture extends ObstacleSprite {
     /** The id of this picture. Also serves as its index position in the inventory. */
     private int id;
 
-
-    /** Cache offset for pictures on objects */
-    private final Vector2 offset = new Vector2();
 
     /** Texture of this picture */
     private Texture texture;
@@ -106,25 +99,9 @@ public class Picture extends ObstacleSprite {
      * @param target is the GameObject the picture is placed on
      * @param units are the physics units for the World
      */
-    // FIXME remove the units call, unneeded
-    //  and add the camera type as a parameter
-    public void setTarget(GameObject target, float units) {
+    public void setTarget(GameObject target) {
         this.target = target;
-        BoxObstacle original = (BoxObstacle) target.getObstacle();
-        BoxObstacle copy = new BoxObstacle(
-                original.getX(), original.getY(),
-                original.getWidth(), original.getHeight()
-        );
-        copy.setBodyType(original.getBodyType());
-        copy.setPhysicsUnits(original.getPhysicsUnits());
-        copy.setSensor(true);
-        copy.setUserData(this);
-        copy.setGravityScale(0.0f);
-        obstacle = copy;
-
-
         target.putPicture(subject);
-
     }
 
     /** Clears the object this picture is currently attached to. */
@@ -132,26 +109,6 @@ public class Picture extends ObstacleSprite {
         target = null;
     }
 
-    /**
-     * Overrides the update method to add extra functionality. In particular, this allows the
-     * picture to update its location, angle, and velocity in relation to its target without
-     * affecting the target's physics at all.
-     *
-     * @param dt is the delta time for game loop
-     */
-    @Override
-    public void update(float dt) {
-        super.update(dt);
-
-        float targetAngle = target.getObstacle().getBody().getAngle();
-
-        obstacle.getBody().setTransform(
-                target.getObstacle().getBody().getPosition().cpy().add(offset),
-                targetAngle
-        );
-        obstacle.getBody().setLinearVelocity(target.getObstacle().getBody().getLinearVelocity().cpy());
-        obstacle.getBody().setAngularVelocity(0);  // zero this out, setTransform handles rotation
-    }
 
     public void clearSubject() {
         this.subject = null;

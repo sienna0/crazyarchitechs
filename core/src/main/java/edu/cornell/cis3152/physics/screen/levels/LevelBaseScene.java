@@ -66,9 +66,6 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     //** Picture list */
     private WorldState worldState;
 
-    private GameObject honey;
-    private GameObject cloud;
-    private GameObject ice;
     // Levels
     private int currentLevel = 1;
     // Range Variables
@@ -228,9 +225,6 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         levelData = levelPopulation.populate(currentLevel, units, worldState);
         goalDoor = levelData.goalDoor;
         avatar = levelData.avatar;
-        honey = levelData.honey;
-        ice = levelData.ice;
-        cloud = levelData.cloud;
     }
     
     /**
@@ -300,13 +294,13 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
                 viewport,
                 avatar.getPictureInventory().getSize()
         );
-        photoSystem.handlePictureAction(input, target, avatar, clickedSlot, height / bounds.height);
+        photoSystem.handlePictureAction(input, target, avatar, clickedSlot);
 
         if (avatar.getCamera().isPictureTaken()) {
             avatar.getCamera().clearPictureTaken();
         }
 
-        photoSystem.applyLiftSprings(sprites, cloud);
+        photoSystem.applyLiftSprings(sprites);
         avatar.applyForce();
         if (avatar.isJumping()) {
             SoundEffectManager.getInstance().play("jump", jumpSound, volume);

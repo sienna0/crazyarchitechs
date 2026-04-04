@@ -101,6 +101,7 @@ public class Camera {
      *
      * @return true if Zuko has line of sight to the current target
      */
+    // TODO: implement world.rayCast() for true LOS
     public boolean hasLineOfSight(float targetX, float targetY, float zukoX, float zukoY, float maxDistance) {
         float dx = targetX - zukoX;
         float dy = targetY - zukoY;

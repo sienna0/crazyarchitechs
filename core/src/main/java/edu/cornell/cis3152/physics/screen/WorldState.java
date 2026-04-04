@@ -18,7 +18,6 @@ public class WorldState {
     private boolean showRange;
     private boolean pauseIconHovered;
     private boolean pauseIconWasHovered;
-    private float cloudHomeY;
 
     public void reset() {
         pictures.clear();
@@ -84,13 +83,5 @@ public class WorldState {
 
     public void setPauseIconWasHovered(boolean pauseIconWasHovered) {
         this.pauseIconWasHovered = pauseIconWasHovered;
-    }
-
-    public float getCloudHomeY() {
-        return cloudHomeY;
-    }
-
-    public void setCloudHomeY(float cloudHomeY) {
-        this.cloudHomeY = cloudHomeY;
     }
 }
