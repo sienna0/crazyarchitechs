@@ -250,6 +250,16 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     }
 
     @Override
+    public void postUpdate(float dt) {
+        for (ObstacleSprite sprite : sprites) {
+            if (sprite instanceof GameObject go) {
+                go.syncPhysics();
+            }
+        }
+        super.postUpdate(dt);
+    }
+
+    @Override
     public boolean preUpdate(float dt) {
         if (!super.preUpdate(dt)) {
             return false;

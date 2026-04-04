@@ -8,10 +8,6 @@ import com.badlogic.gdx.utils.JsonValue;
 import edu.cornell.gdiac.physics2.BoxObstacle;
 import edu.cornell.gdiac.physics2.ObstacleSprite;
 
-import java.util.HashMap;
-import java.util.Hashtable;
-
-import static edu.cornell.cis3152.physics.world.Obj.CLOUD;
 import static edu.cornell.cis3152.physics.world.Quality.*;
 
 public class GameObject extends ObstacleSprite {
@@ -29,7 +25,6 @@ public class GameObject extends ObstacleSprite {
     private final Vector2 floatHome = new Vector2();
 
     private boolean hasPicture = false;
-    // private boolean frozenByIcePicture = false;
 
     float gravityScale;
     /** This object's elasticity (rigid/bouncy) */
@@ -43,6 +38,15 @@ public class GameObject extends ObstacleSprite {
 
     Quality quality;
 
+    /** Strategy for this object type's photo effect */
+    private final ObjectEffect effect;
+
+    /**
+     * When true, staged field changes need to be flushed to the Box2D body.
+     * Set by ObjectEffect implementations; consumed by {@link #syncPhysics()}.
+     */
+    boolean pendingPhysicsSync = false;
+
     /** This object's texture */
     private Texture texture;
 
@@ -52,12 +56,19 @@ public class GameObject extends ObstacleSprite {
         switch(object) {
             case CLOUD:
                 this.quality = FLOAT;
+                this.effect = new CloudEffect();
                 break;
             case ICE:
                 this.quality = SLIPPERY;
+                this.effect = new IceEffect();
                 break;
             case HONEY:
                 this.quality = STICKY;
+                this.effect = new HoneyEffect();
+                break;
+            default:
+                this.quality = null;
+                this.effect = null;
                 break;
         }
         weight = data.getFloat("weight");
@@ -133,37 +144,61 @@ public class GameObject extends ObstacleSprite {
         return quality;
     }
 
-    public void putPicture(GameObject other) {
+    public void putPicture(GameObject source) {
         if (hasPicture) {
             return;
         }
         hasPicture = true;
-        pictureQuality = other.getQuality();
-        // determines quality to put on object and changes the parameters as expected
-        switch (pictureQuality) {
-            case FLOAT:
-                this.weight = other.getOriginalWeight();
-                this.gravityScale = other.getOriginalGravityScale();
-                this.body.setMass(weight);
-                this.body.setGravityScale(gravityScale);
-                applyRotationConstraint();
-                this.body.setAngularVelocity(0.0f);
-                break;
-            case SLIPPERY:
-                this.elasticity = other.getOriginalElasticity();
-                this.friction = other.getOriginalFriction();
-                this.body.setRestitution(elasticity);
-                this.body.setFriction(friction);
-                applyRotationConstraint();
-                break;
-            case STICKY:
-                this.elasticity = other.getOriginalElasticity();
-                this.friction = other.getOriginalFriction();
-                this.body.setRestitution(elasticity);
-                this.body.setFriction(friction);
-                applyRotationConstraint();
-                break;
+        ObjectEffect sourceEffect = source.getEffect();
+        if (sourceEffect != null) {
+            sourceEffect.apply(source, this);
         }
+    }
+
+    public ObjectEffect getEffect() {
+        return effect;
+    }
+
+    /**
+     * Flushes staged property changes to the Box2D body.
+     * Must be called from the physics scene's postUpdate(), never during world.step().
+     */
+    public void syncPhysics() {
+        if (!pendingPhysicsSync) {
+            return;
+        }
+        pendingPhysicsSync = false;
+
+        this.body.setBodyType(baseBodyType);
+        this.body.setMass(weight);
+        this.body.setGravityScale(gravityScale);
+        this.body.setRestitution(elasticity);
+        this.body.setFriction(friction);
+        applyRotationConstraint();
+        this.body.setAngularVelocity(0.0f);
+
+        Body physicsBody = this.body.getBody();
+        if (physicsBody != null) {
+            physicsBody.setType(baseBodyType);
+            physicsBody.setGravityScale(gravityScale);
+            physicsBody.setFixedRotation(shouldLockRotation());
+            physicsBody.setAwake(true);
+        }
+    }
+
+    /**
+     * Restores all properties to their JSON-defined originals and flags a physics sync.
+     * Called by ObjectEffect.remove() implementations.
+     */
+    void restoreOriginalProperties() {
+        hasPicture = false;
+        pictureQuality = null;
+        this.weight = data.getFloat("weight");
+        this.elasticity = data.getFloat("elasticity");
+        this.friction = data.getFloat("friction");
+        this.gravityScale = data.getFloat("gravityScale");
+        this.temp = data.getFloat("temp");
+        pendingPhysicsSync = true;
     }
 
     public void setTexture(Texture texture) {
@@ -191,32 +226,12 @@ public class GameObject extends ObstacleSprite {
         return friction;
     }
 
+    /**
+     * Resets all attributes to JSON defaults and flags a full physics sync.
+     * The actual Box2D body update happens in {@link #syncPhysics()}.
+     */
     public void resetAttributes() {
-        hasPicture = false;
-        // frozenByIcePicture = false;
-        this.weight = data.getFloat("weight");
-        this.elasticity = data.getFloat("elasticity");
-        this.friction = data.getFloat("friction");
-        this.gravityScale = data.getFloat("gravityScale");
-        this.temp = data.getFloat("temp");
-
-        this.body.setBodyType(baseBodyType);
-        this.body.setMass(weight);
-        this.body.setRestitution(elasticity);
-        this.body.setFriction(friction);
-        this.body.setGravityScale(gravityScale);
-        applyRotationConstraint();
-        this.body.setAngularVelocity(0.0f);
-
-        Body physicsBody = this.body.getBody();
-        if (physicsBody != null) {
-            physicsBody.setType(baseBodyType);
-            physicsBody.setLinearVelocity(0.0f, 0.0f);
-            physicsBody.setAngularVelocity(0.0f);
-            physicsBody.setGravityScale(gravityScale);
-            physicsBody.setFixedRotation(shouldLockRotation());
-            physicsBody.setAwake(true);
-        }
+        restoreOriginalProperties();
     }
 
     private boolean shouldLockRotation() {
