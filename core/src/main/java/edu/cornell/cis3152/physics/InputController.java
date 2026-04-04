@@ -76,22 +76,6 @@ public class InputController {
     private boolean dropPressed;
     private boolean dropPrevious;
 
-    /** Whether the regular camera button was pressed. */
-    private boolean regPressed;
-    private boolean regPrevious;
-
-    /** Whether the thermal camera button was pressed. */
-    private boolean therPressed;
-    private boolean therPrevious;
-
-    /** Whether the texture camera button was pressed. */
-    private boolean texPressed;
-    private boolean texPrevious;
-
-    /** Whether the cycle camera button was pressed. */
-    private boolean camCyclePressed;
-    private boolean camCyclePrevious;
-
     /** Whether the flic stick toggle button was pressed. */
     private boolean flicStickPressed;
     private boolean flicStickPrevious;
@@ -295,10 +279,6 @@ public class InputController {
         leftClickPrevious = leftClickPressed;
         rightClickPrevious = rightClickPressed;
         rangePrevious = rangePressed;
-        regPrevious = regPressed;
-        therPrevious = therPressed;
-        texPrevious = texPressed;
-        camCyclePrevious = camCyclePressed;
         flicStickPrevious = flicStickPressed;
 
 
@@ -368,10 +348,6 @@ public class InputController {
         prevPressed = (secondary && prevPressed) || (Gdx.input.isKeyPressed(Input.Keys.P));
         nextPressed = (secondary && nextPressed) || (Gdx.input.isKeyPressed(Input.Keys.N));
         exitPressed  = (secondary && exitPressed) || (Gdx.input.isKeyPressed(Input.Keys.ESCAPE));
-        regPressed  = (secondary && regPressed) || (Gdx.input.isKeyPressed(Input.Keys.NUM_1));
-        therPressed  = (secondary && therPressed) || (Gdx.input.isKeyPressed(Input.Keys.NUM_2));
-        texPressed  = (secondary && texPressed) || (Gdx.input.isKeyPressed(Input.Keys.NUM_3));
-        camCyclePressed  = (secondary && camCyclePressed) || (Gdx.input.isKeyPressed(Input.Keys.C));
         flicStickPressed  = (secondary && flicStickPressed) || (Gdx.input.isKeyPressed(Input.Keys.I));
 
         // Directional controls
@@ -454,22 +430,6 @@ public class InputController {
      */
     public boolean didToggleRange() {
         return rangePressed && ! rangePrevious;
-    }
-
-    public boolean didRegCamera() {
-        return regPressed && !regPrevious;
-    }
-
-    public boolean didTherCamera() {
-        return therPressed && !therPrevious;
-    }
-
-    public boolean didTexCamera() {
-        return texPressed && !texPrevious;
-    }
-
-    public boolean didCycleCamera() {
-        return camCyclePressed && !camCyclePrevious;
     }
 
     public boolean didFlicStickToggle() {
