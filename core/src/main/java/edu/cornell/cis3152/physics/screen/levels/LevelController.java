@@ -1,4 +1,5 @@
 package edu.cornell.cis3152.physics.screen.levels;
+import com.badlogic.gdx.utils.JsonValue;
 import edu.cornell.cis3152.physics.CanvasRender;
 import edu.cornell.cis3152.physics.screen.PhysicsScene;
 import edu.cornell.gdiac.assets.AssetDirectory;
@@ -28,7 +29,7 @@ public class LevelController {
     private PhysicsScene currentScene;
 
     /**
-     * Constructor
+     * Constructor. Discovers available levels by counting levelN keys in constants.
      */
     public LevelController(AssetDirectory assets, SpriteBatch batch, CanvasRender viewport) {
         this.assets = assets;
@@ -36,9 +37,18 @@ public class LevelController {
         this.viewport = viewport;
 
         currentLevel = 1;
-        totalLevels = 3;
+        totalLevels = countLevels(assets);
 
         loadLevel(currentLevel);
+    }
+
+    private static int countLevels(AssetDirectory assets) {
+        JsonValue constants = assets.getEntry("platform-constants", JsonValue.class);
+        int count = 0;
+        while (constants.get("level" + (count + 1)) != null) {
+            count++;
+        }
+        return Math.max(1, count);
     }
 
     /**
