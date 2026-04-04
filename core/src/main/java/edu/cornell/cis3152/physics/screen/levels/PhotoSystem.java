@@ -267,6 +267,9 @@ class PhotoSystem {
 
         target.resetAttributes();
         attachedPicture.clearTarget();
+        attachedPicture.clearSubject();
+        worldState.getPictures().removeValue(attachedPicture, true);
+
         if (avatar.getCurrentPlatform() == target) {
             avatar.setCurrentPlatform(target);
         }
