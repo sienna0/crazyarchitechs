@@ -31,12 +31,10 @@ class LevelPopulation {
         Zuko avatar;
         /** Extra Zuko-sprite objects placed via the editor's zukosprite tool. */
         List<Zuko> extraZukos = new ArrayList<>();
-        GameObject honey;
-        GameObject ice;
-        GameObject cloud;
+        List<GameObject> honeys = new ArrayList<>();
+        List<GameObject> ices = new ArrayList<>();
+        List<GameObject> clouds = new ArrayList<>();
 
-        // Tilemap — purely visual, drawn manually each frame.
-        // Parallel arrays: tileRegions[i] is drawn at tilePositions[i] (world units).
         List<TextureRegion> tileRegions    = new ArrayList<>();
         /** [x, y] screen-space position in pixels for each tile, in the same order as tileRegions. */
         List<float[]>       tilePositions  = new ArrayList<>();
@@ -161,15 +159,16 @@ class LevelPopulation {
         JsonValue rockPositions = objectLocations.get("rock");
         for (int ii = 0; ii < rockPositions.size; ii++) {
             float[] pos = rockPositions.get(ii).asFloatArray();
-            result.honey = new GameObject(
+            GameObject honey = new GameObject(
                     Obj.HONEY, constants.get("rock"), units,
                     pos[0], pos[1],
                     objectWidth, rockHeight,
                     BodyDef.BodyType.DynamicBody,
                     false
             );
-            result.honey.setTexture(rockTexture);
-            spriteAdder.accept(result.honey);
+            honey.setTexture(rockTexture);
+            spriteAdder.accept(honey);
+            result.honeys.add(honey);
         }
 
         Texture iceTexture = textureResolver.apply("platform-ice", "platform/ice.png");
@@ -177,15 +176,16 @@ class LevelPopulation {
         JsonValue icePositions = objectLocations.get("ice");
         for (int ii = 0; ii < icePositions.size; ii++) {
             float[] pos = icePositions.get(ii).asFloatArray();
-            result.ice = new GameObject(
+            GameObject ice = new GameObject(
                     Obj.ICE, constants.get("ice"), units,
                     pos[0], pos[1],
                     objectWidth, iceHeight,
                     BodyDef.BodyType.DynamicBody,
                     false
             );
-            result.ice.setTexture(iceTexture);
-            spriteAdder.accept(result.ice);
+            ice.setTexture(iceTexture);
+            spriteAdder.accept(ice);
+            result.ices.add(ice);
         }
 
         float cloudSize = OBJECT_SIZE;
@@ -193,15 +193,16 @@ class LevelPopulation {
         JsonValue cloudPositions = objectLocations.get("cloud");
         for (int ii = 0; ii < cloudPositions.size; ii++) {
             float[] pos = cloudPositions.get(ii).asFloatArray();
-            result.cloud = new GameObject(
+            GameObject cloud = new GameObject(
                     Obj.CLOUD, constants.get("cloud"), units,
                     pos[0], pos[1],
                     cloudSize, cloudSize,
                     BodyDef.BodyType.DynamicBody,
                     false
             );
-            result.cloud.setTexture(cloudTexture);
-            spriteAdder.accept(result.cloud);
+            cloud.setTexture(cloudTexture);
+            spriteAdder.accept(cloud);
+            result.clouds.add(cloud);
         }
 
         return result;
