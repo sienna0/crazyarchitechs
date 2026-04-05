@@ -31,7 +31,6 @@ import com.badlogic.gdx.math.Affine2;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.utils.ScreenUtils;
-import edu.cornell.cis3152.physics.AssetHead;
 import edu.cornell.cis3152.physics.CanvasRender;
 import edu.cornell.gdiac.assets.*;
 import edu.cornell.gdiac.graphics.SpriteBatch;
@@ -87,18 +86,6 @@ public class LoadingScene implements Screen, InputProcessor {
     private boolean active;
     /** Reusable pointer buffer */
     private final Vector2 pointer = new Vector2();
-
-    /** AssetHead for loading specific level assets */
-    private AssetHead assetHead;
-
-    /**
-     * Returns the AssetHead produced by this loading screen
-     *
-     * @return the asset head produced by this loading screen
-     */
-    public AssetHead getAssetHead() {
-        return assetHead;
-    }
 
     /**
      * Returns the budget for the asset loader.
@@ -199,7 +186,6 @@ public class LoadingScene implements Screen, InputProcessor {
         // Start loading the REAL assets
         assets = new AssetDirectory( file );
         assets.loadAssets();
-        assetHead = new AssetHead(assets);
         active = true;
     }
 

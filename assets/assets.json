@@ -17,7 +17,7 @@
         "platform-camera"   : "platform/cameraflash.png",
         "platform-jump"     : "platform/zukojump.png",
         "platform-ice"      : "platform/ice.png",
-        "platform-rock"     : "platform/rock.png",
+        "platform-honey"    : "platform/honey.png",
         "platform-cloud"    : "platform/cloud.png",
         "platform-pause"    : "platform/pause_icon.png",
         "platform-tileset"  : "platform/tileset.png"

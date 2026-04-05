@@ -21,11 +21,21 @@ import com.badlogic.gdx.utils.Array;
 import edu.cornell.gdiac.util.*;
 
 /**
- * Class for reading player input.
+ * Singleton that buffers input from the keyboard, mouse, and Xbox controller and exposes
+ * semantic game actions.
  *
- * This supports both a keyboard and X-Box controller. In previous solutions,
- * we only detected the X-Box controller on start-up. This class allows us to
- * hot-swap in a controller on the fly. Hello
+ * <p>Use {@link #getInstance()} for the shared instance. Call {@link #sync(Rectangle, Vector2, CanvasRender)}
+ * once per frame to sample all devices and update one-frame edge detection (comparing
+ * current and previous button state).
+ *
+ * <p>When a gamepad is connected, {@link #readGamepad(Rectangle, Vector2)} reads Xbox buttons
+ * and sticks (crosshair nudges use the left stick with momentum); {@link #readKeyboard(Rectangle, Vector2, CanvasRender, boolean)}
+ * still runs as a merge/backup. Otherwise only keyboard and mouse are used. The keyboard path
+ * maps the mouse through the viewport into world coordinates.
+ *
+ * <p>Edge-triggered helpers (true only on the frame the control first goes down) include
+ * {@link #didLeftClick()} and {@link #didRightClick()} for mouse buttons, {@link #didToggleRange()}
+ * for Tab, {@link #didFlicStickToggle()} for I, and {@link #didDropPhoto()} for Q.
  */
 public class InputController {
     // Sensitivity for moving crosshair with gameplay
@@ -76,22 +86,6 @@ public class InputController {
     private boolean dropPressed;
     private boolean dropPrevious;
 
-    /** Whether the regular camera button was pressed. */
-    private boolean regPressed;
-    private boolean regPrevious;
-
-    /** Whether the thermal camera button was pressed. */
-    private boolean therPressed;
-    private boolean therPrevious;
-
-    /** Whether the texture camera button was pressed. */
-    private boolean texPressed;
-    private boolean texPrevious;
-
-    /** Whether the cycle camera button was pressed. */
-    private boolean camCyclePressed;
-    private boolean camCyclePrevious;
-
     /** Whether the flic stick toggle button was pressed. */
     private boolean flicStickPressed;
     private boolean flicStickPrevious;
@@ -118,14 +112,8 @@ public class InputController {
     private boolean rangePressed;
     private boolean rangePrevious;
 
-    /** Timer for double click detection */
-    private float doubleClickTimer;
-
-    /** The maximum time between clicks for a double click */
-    private static final float doubleClickTime = 0.3f;
-
-    /** Whether a double click was detected*/
-    private boolean doubleClicked;
+    /** Slot selected via number keys 1-5 this frame, or -1 if none. */
+    private int slotSelectPressed = -1;
 
     /** An X-Box controller (if it is connected) */
     XBoxController xbox;
@@ -212,6 +200,11 @@ public class InputController {
         return resetPressed && !resetPrevious;
     }
 
+    /**
+     * Whether the drop-photo control was pressed this frame (Q), using one-frame edge detection.
+     *
+     * @return true only on the first frame the key is down after having been up
+     */
     public boolean didDropPhoto() {
         return dropPressed && !dropPrevious;
     }
@@ -272,14 +265,15 @@ public class InputController {
     }
 
     /**
-     * Syncs the keyboard to the current animation frame.
+     * Called once per frame to sample keyboard, mouse, and (if connected) Xbox input.
      *
-     * The method provides both the input bounds and the drawing scale. It needs
-     * the drawing scale to convert screen coordinates to world coordinates.
-     * The bounds are for the crosshair. They cannot go outside of this zone.
+     * <p>Copies prior-frame button state for edge detection, then reads the gamepad and/or
+     * keyboard paths so {@link #didLeftClick()}, {@link #didReset()}, and similar methods
+     * reflect the current frame.
      *
-     * @param bounds The input bounds for the crosshair.
-     * @param scale  The drawing scale
+     * @param bounds   rectangle that clamps the crosshair (mouse/gamepad aim)
+     * @param scale    drawing scale; combined with the viewport for screen-to-world conversion
+     * @param viewport used to convert mouse screen coordinates to canvas/world space
      */
     public void sync(Rectangle bounds, Vector2 scale, CanvasRender viewport) {
         // Copy state from last animation frame
@@ -295,10 +289,6 @@ public class InputController {
         leftClickPrevious = leftClickPressed;
         rightClickPrevious = rightClickPressed;
         rangePrevious = rangePressed;
-        regPrevious = regPressed;
-        therPrevious = therPressed;
-        texPrevious = texPressed;
-        camCyclePrevious = camCyclePressed;
         flicStickPrevious = flicStickPressed;
 
 
@@ -312,14 +302,14 @@ public class InputController {
     }
 
     /**
-     * Reads input from an X-Box controller connected to this computer.
+     * Reads Xbox controller buttons, triggers, and sticks for this frame.
      *
-     * The method provides both the input bounds and the drawing scale. It needs
-     * the drawing scale to convert screen coordinates to world coordinates. The
-     * bounds are for the crosshair. They cannot go outside of this zone.
+     * <p>Updates movement axes, action buttons, and crosshair motion from the sticks
+     * (with momentum), then clamps the crosshair to {@code bounds}. {@code scale} scales
+     * stick deltas into world space.
      *
-     * @param bounds The input bounds for the crosshair.
-     * @param scale  The drawing scale
+     * @param bounds crosshair clamp rectangle
+     * @param scale  inverse scale applied to stick deltas for world-space movement
      */
     private void readGamepad(Rectangle bounds, Vector2 scale) {
         resetPressed = xbox.getStart();
@@ -350,13 +340,17 @@ public class InputController {
     }
 
     /**
-     * Reads input from the keyboard.
+     * Reads keyboard keys and mouse buttons for this frame, and positions the crosshair from the mouse.
      *
-     * This controller reads from the keyboard regardless of whether or not an
-     * X-Box controller is connected. However, if a controller is connected,
-     * this method gives priority to the X-Box controller.
+     * <p>When {@code secondary} is true (gamepad also active), each key/button state is OR'd with
+     * values already set by the gamepad so held gamepad actions are preserved. Mouse position is
+     * converted from screen space to canvas coordinates via {@code viewport}, then scaled by
+     * {@code scale} into world space; the result is clamped to {@code bounds}.
      *
-     * @param secondary true if the keyboard should give priority to a gamepad
+     * @param bounds    crosshair clamp rectangle
+     * @param scale     drawing scale for screen-to-world conversion after {@code viewport}
+     * @param viewport  maps mouse screen coordinates to canvas space
+     * @param secondary if true, merge with existing gamepad-derived state instead of replacing it
      */
     private void readKeyboard(Rectangle bounds, Vector2 scale, CanvasRender viewport, boolean secondary) {
         // Give priority to gamepad results
@@ -368,11 +362,7 @@ public class InputController {
         prevPressed = (secondary && prevPressed) || (Gdx.input.isKeyPressed(Input.Keys.P));
         nextPressed = (secondary && nextPressed) || (Gdx.input.isKeyPressed(Input.Keys.N));
         exitPressed  = (secondary && exitPressed) || (Gdx.input.isKeyPressed(Input.Keys.ESCAPE));
-        regPressed  = (secondary && regPressed) || (Gdx.input.isKeyPressed(Input.Keys.NUM_1));
-        therPressed  = (secondary && therPressed) || (Gdx.input.isKeyPressed(Input.Keys.NUM_2));
-        texPressed  = (secondary && texPressed) || (Gdx.input.isKeyPressed(Input.Keys.NUM_3));
-        camCyclePressed  = (secondary && camCyclePressed) || (Gdx.input.isKeyPressed(Input.Keys.C));
-        flicStickPressed  = (secondary && flicStickPrevious) || (Gdx.input.isKeyPressed(Input.Keys.I));
+        flicStickPressed  = (secondary && flicStickPressed) || (Gdx.input.isKeyPressed(Input.Keys.I));
 
         // Directional controls
         horizontal = (secondary ? horizontal : 0.0f);
@@ -394,30 +384,18 @@ public class InputController {
         //Range Control
         rangePressed = (secondary && rangePressed) || (Gdx.input.isKeyPressed(Input.Keys.TAB));
 
+        // Inventory slot selection via number keys (1-5 map to slots 0-4)
+        slotSelectPressed = -1;
+        if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_1)) slotSelectPressed = 0;
+        else if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_2)) slotSelectPressed = 1;
+        else if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_3)) slotSelectPressed = 2;
+        else if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_4)) slotSelectPressed = 3;
+        else if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_5)) slotSelectPressed = 4;
+
         // Mouse results
         tertiaryPressed = Gdx.input.isButtonPressed(Input.Buttons.LEFT);
         leftClickPressed = Gdx.input.isButtonPressed(Input.Buttons.LEFT);
         rightClickPressed = Gdx.input.isButtonPressed(Input.Buttons.RIGHT);
-        doubleClicked = false;
-        if (leftClickPressed && !leftClickPrevious) {
-            if (doubleClickTimer > 0) {
-                doubleClicked = true;
-                doubleClickTimer = 0;
-            } else {
-                doubleClickTimer = doubleClickTime;
-            }
-        }
-        if (rightClickPressed && !rightClickPrevious) {
-            if (doubleClickTimer > 0) {
-                doubleClicked = true;
-                doubleClickTimer = 0;
-            } else {
-                doubleClickTimer = doubleClickTime;
-            }
-        }
-        if (doubleClickTimer > 0) {
-            doubleClickTimer -= Gdx.graphics.getDeltaTime();
-        }
         viewport.screenToCanvas(Gdx.input.getX(), Gdx.input.getY(), crosshair);
         crosshair.scl(1/scale.x,1/scale.y);
         clampPosition(bounds);
@@ -435,44 +413,47 @@ public class InputController {
     }
 
     /**
-     * Returns true if a left click was detected.
+     * One-frame edge detection for the primary (left) mouse button: true only when the button
+     * transitions from up to down this frame.
      *
-     * @return true if a left click was detected.
+     * @return true on the first frame the left button is pressed
      */
     public boolean didLeftClick() {
         return leftClickPressed && !leftClickPrevious;
     }
 
+    /**
+     * One-frame edge detection for the secondary (right) mouse button.
+     *
+     * @return true on the first frame the right button is pressed
+     */
     public boolean didRightClick() {
         return rightClickPressed && !rightClickPrevious;
     }
 
-     /**
-     * Returns true if range toggle was detected.
+    /**
+     * One-frame edge detection for the range toggle (Tab key).
      *
-     * @return true if range toggle was detected (on and off button).
+     * @return true on the first frame Tab is pressed after being released
      */
     public boolean didToggleRange() {
         return rangePressed && ! rangePrevious;
     }
 
-    public boolean didRegCamera() {
-        return regPressed && !regPrevious;
-    }
-
-    public boolean didTherCamera() {
-        return therPressed && !therPrevious;
-    }
-
-    public boolean didTexCamera() {
-        return texPressed && !texPrevious;
-    }
-
-    public boolean didCycleCamera() {
-        return camCyclePressed && !camCyclePrevious;
-    }
-
+    /**
+     * One-frame edge detection for the flic-stick toggle (I key).
+     *
+     * @return true on the first frame I is pressed after being released
+     */
     public boolean didFlicStickToggle() {
         return flicStickPressed && !flicStickPrevious;
+    }
+
+    /**
+     * Returns the inventory slot selected via number keys this frame (0-4),
+     * or -1 if no number key was pressed.
+     */
+    public int getSlotSelect() {
+        return slotSelectPressed;
     }
 }

@@ -17,6 +17,9 @@ import edu.cornell.gdiac.util.PooledList;
 
 /**
  * Handles photo interactions and highlight targeting.
+ *
+ * <p>Encapsulates taking pictures, sticking them onto targets, removing them, range/highlight
+ * feedback, and lift spring forces so {@link LevelBaseScene} stays a thin orchestration layer.
  */
 class PhotoSystem {
     private final WorldState worldState;
@@ -26,7 +29,7 @@ class PhotoSystem {
     private final SoundEffect fireSound;
     private final SoundEffect plopSound;
 
-    private float STICK_PICTURE_DISTANCE = 9.0f; //I know you wanted it to be 3 times less than take picture but, if you mistakenly take a picture of the rock, you would not be able to reach the cloud unless it is 2 times less
+    private float STICK_PICTURE_DISTANCE = 9.0f;
     private float TAKE_PICTURE_DISTANCE = 9.0f;
 
     public PhotoSystem (WorldState worldState,
@@ -45,6 +48,10 @@ class PhotoSystem {
         this.plopSound = plopSound;
     }
 
+    /**
+     * Keyboard shortcuts: drop/delete the active photo from inventory (Q) and toggle whether
+     * photo range is drawn (Tab).
+     */
     public void handlePictureShortcuts(InputController input, Zuko avatar) {
         if (input.didDropPhoto() && worldState.getActivePicture() != null) {
             Picture picture = avatar.getPictureInventory().getPicture(worldState.getSelectedSlotIndex());
@@ -58,13 +65,37 @@ class PhotoSystem {
         if (input.didToggleRange()) {
             worldState.setShowRange(!worldState.isShowRange());
         }
+
+        // Number keys 1-5 select/deselect inventory slots
+        int slot = input.getSlotSelect();
+        if (slot >= 0 && slot < avatar.getPictureInventory().getSize()) {
+            Picture slotPicture = avatar.getPictureInventory().getPicture(slot);
+            if (slotPicture != null && slotPicture.hasSubject()) {
+                if (slot == worldState.getSelectedSlotIndex()) {
+                    worldState.setSelectedSlotIndex(-1);
+                    worldState.setActivePicture(null);
+                } else {
+                    worldState.setSelectedSlotIndex(slot);
+                    worldState.setActivePicture(slotPicture);
+                }
+            }
+        }
     }
 
+    /**
+     * Maps horizontal input to movement force and primary action to jump for the avatar.
+     */
     public void updateAvatarMovement(InputController input, Zuko avatar) {
         avatar.setMovement(input.getHorizontal() * avatar.getForce());
         avatar.setJumping(input.didPrimary());
     }
 
+    /**
+     * Hit-tests the crosshair against non-avatar sprites and stores the result on the avatar
+     * as the current interaction target.
+     *
+     * @return the {@link GameObject} under the cursor, or {@code null}
+     */
     public GameObject resolveCurrentTarget(InputController input, Zuko avatar, PooledList<ObstacleSprite> sprites) {
         Vector2 mouse = input.getCrossHair();
         GameObject target = findObjectUnderMouse(mouse.x, mouse.y, avatar, sprites);
@@ -72,16 +103,25 @@ class PhotoSystem {
         return target;
     }
 
+    /**
+     * Clears and rebuilds {@link WorldState}'s highlight list: objects within line-of-sight
+     * and photo range of Zuko (take vs stick range depends on whether a picture is active).
+     */
     void updateHighlights(Zuko avatar, PooledList<ObstacleSprite> sprites) {
         worldState.getHighlighted().clear();
         findObjectNearZuko(avatar, sprites);
     }
 
+    /**
+     * Per-frame picture UI and world actions: inventory slot clicks select/clear the active
+     * picture; right-click on a target {@linkplain #removePictureFromTarget unsticks};
+     * left-click with no active picture {@linkplain #takePictureOfTarget takes} a new one,
+     * otherwise {@linkplain #applyPictureToTarget sticks} the active picture onto the target.
+     */
     void handlePictureAction(InputController input,
                              GameObject target,
                              Zuko avatar,
-                             int clickedSlot,
-                             float pictureUnits) {
+                             int clickedSlot) {
         if (input.didLeftClick()) {
             if (clickedSlot >= 0) {
                 Picture slotPicture = avatar.getPictureInventory().getPicture(clickedSlot);
@@ -111,16 +151,21 @@ class PhotoSystem {
         if (worldState.getActivePicture() == null || worldState.getSelectedSlotIndex() == -1) {
             takePictureOfTarget(input, target, avatar);
         } else {
-            applyPictureToTarget(target, avatar, pictureUnits);
+            applyPictureToTarget(target, avatar);
         }
     }
 
-    void applyLiftSprings(PooledList<ObstacleSprite> sprites, GameObject cloud) {
+    /**
+     * Applies spring-damper forces toward each eligible object's float home: clouds with
+     * non-positive gravity scale, or any object currently affected by a lift-type picture.
+     */
+    void applyLiftSprings(PooledList<ObstacleSprite> sprites) {
         for (ObstacleSprite sprite : sprites) {
             if (!(sprite instanceof GameObject gameObject)) {
                 continue;
             }
-            boolean springActive = gameObject == cloud
+            boolean isCloud = gameObject.getObjectType() == edu.cornell.cis3152.physics.world.Obj.CLOUD;
+            boolean springActive = isCloud
                     ? gameObject.getGravityScale() <= 0.0f
                     : gameObject.hasLiftPicture();
             if (!springActive) {
@@ -150,6 +195,10 @@ class PhotoSystem {
         }
     }
 
+    /**
+     * Sprite AABB test in physics-unit space: returns the topmost scanned {@link GameObject}
+     * whose mesh bounds contain the crosshair (avatar excluded).
+     */
     private GameObject findObjectUnderMouse(float mouseX, float mouseY, Zuko avatar, PooledList<ObstacleSprite> sprites) {
         for (ObstacleSprite sprite : sprites) {
             if (sprite == avatar || !(sprite instanceof GameObject go)) {
@@ -175,6 +224,11 @@ class PhotoSystem {
         return null;
     }
 
+    /**
+     * If in range, film is available, and the camera allows a shot: records a new {@link Picture}
+     * of the target, adds it to {@link WorldState} and the inventory, plays audio, and starts
+     * the take-photo facing animation from mouse vs avatar position.
+     */
     private void takePictureOfTarget(InputController input, GameObject target, Zuko avatar) {
         if (!avatar.getCamera().canTakePicture(
                 target.getObstacle().getX(),
@@ -198,6 +252,11 @@ class PhotoSystem {
         SoundEffectManager.getInstance().play("plop", plopSound, Math.min(1.0f, volume * 1.75f));
     }
 
+    /**
+     * Populates highlights for every non-avatar object within line-of-sight and the current
+     * photo range (stick distance when a picture is selected, take distance otherwise),
+     * skipping when the player cannot take a new photo and no slot is selected.
+     */
     private void findObjectNearZuko(Zuko avatar, PooledList<ObstacleSprite> sprites) {
         Picture activePicture = worldState.getActivePicture();
         if (avatar.getPictureInventory().getUnusedPicture() == null && worldState.getSelectedSlotIndex() == -1) {
@@ -217,7 +276,12 @@ class PhotoSystem {
         }
     }
 
-    private void applyPictureToTarget(GameObject target, Zuko avatar, float pictureUnits) {
+    /**
+     * Sticks the active inventory picture onto {@code target}: clears any previous target's
+     * attributes, transfers float-home behavior for float-quality subjects, removes the
+     * picture from the hotbar, and plays the stick sound.
+     */
+    private void applyPictureToTarget(GameObject target, Zuko avatar) {
         Picture activePicture = worldState.getActivePicture();
         if (activePicture == null) {
             return;
@@ -241,20 +305,16 @@ class PhotoSystem {
         if (activePicture.getTarget() != null) {
             activePicture.getTarget().resetAttributes();
         }
-        activePicture.setTarget(target, pictureUnits);
+        activePicture.setTarget(target);
         if (activePicture.getSubject().getQuality() == Quality.FLOAT) {
-            target.setFloatHome(target.getObstacle().getX(), worldState.getCloudHomeY());
+            GameObject subject = activePicture.getSubject();
+            target.setFloatHome(target.getObstacle().getX(), subject.getFloatHome().y);
         }
 
-        for (int ii = 0; ii < avatar.getPictureInventory().getSize(); ii++) {
-            Picture picture = avatar.getPictureInventory().getPicture(ii);
-            if (picture != null && picture.hasSubject() && picture.getSubject() == activePicture.getSubject()) {
-                picture.clearSubject();
-                worldState.setActivePicture(null);
-                worldState.setSelectedSlotIndex(-1);
-                break;
-            }
-        }
+        int slotIndex = worldState.getSelectedSlotIndex();
+        avatar.getPictureInventory().removePicture(slotIndex);
+        worldState.setActivePicture(null);
+        worldState.setSelectedSlotIndex(-1);
 
         if (avatar.getCurrentPlatform() == target) {
             avatar.setCurrentPlatform(target);
@@ -263,6 +323,10 @@ class PhotoSystem {
         SoundEffectManager.getInstance().play("fire", fireSound, volume);
     }
 
+    /**
+     * Right-click unstick: finds a picture stuck on {@code target}, resets the object's
+     * attributes, clears picture subject/target, removes it from the world list, and plays audio.
+     */
     private void removePictureFromTarget(GameObject target, Zuko avatar) {
         Picture attachedPicture = findPictureOnTarget(target);
         if (attachedPicture == null) {
@@ -271,12 +335,19 @@ class PhotoSystem {
 
         target.resetAttributes();
         attachedPicture.clearTarget();
+        attachedPicture.clearSubject();
+        worldState.getPictures().removeValue(attachedPicture, true);
+
         if (avatar.getCurrentPlatform() == target) {
             avatar.setCurrentPlatform(target);
         }
         SoundEffectManager.getInstance().play("plop", plopSound, volume);
     }
 
+    /**
+     * Linear search in {@link WorldState#getPictures()} for a picture whose stuck target is
+     * {@code target}.
+     */
     private Picture findPictureOnTarget(GameObject target) {
         for (Picture picture : worldState.getPictures()) {
             if (picture.getTarget() == target) {

@@ -2,13 +2,19 @@ package edu.cornell.cis3152.physics.world;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.math.Vector2;
 import edu.cornell.gdiac.graphics.SpriteMesh;
-import edu.cornell.gdiac.physics2.BoxObstacle;
 import edu.cornell.gdiac.physics2.ObstacleSprite;
 
-import static edu.cornell.cis3152.physics.world.Obj.HONEY;
-
+/**
+ * One slot in Zuko's photo inventory. A picture has a {@link #subject} (what was
+ * photographed) and optionally a {@link #target} (the surface it is stuck to).
+ *
+ * <p>When {@link #setTarget(GameObject)} is used, the subject's {@link ObjectEffect}
+ * is applied to the target via {@link GameObject#putPicture(GameObject)}.</p>
+ *
+ * <p>Extends {@link ObstacleSprite} only for mesh/texture storage for HUD rendering;
+ * instances are not added to the physics world.</p>
+ */
 public class Picture extends ObstacleSprite {
     /** The GameObject subject of this picture */
     GameObject subject;
@@ -26,16 +32,15 @@ public class Picture extends ObstacleSprite {
     private int id;
 
 
-    /** Cache offset for pictures on objects */
-    private final Vector2 offset = new Vector2();
-
     /** Texture of this picture */
     private Texture texture;
 
     private Quality subjectQuality;
 
     /**
-     * Constructor for a blank Picture instance with no subject yet
+     * Empty inventory slot: no subject, identified by {@code id} (inventory index).
+     *
+     * @param id slot index / picture id
      */
     public Picture(int id){
         hasSubject = false;
@@ -43,9 +48,11 @@ public class Picture extends ObstacleSprite {
     }
 
     /**
-     * Constructor for a Picture instance when initialized with a subject.
+     * Snapshot of {@code subject}: copies its {@link SpriteMesh} at half scale and keeps
+     * its texture for Polaroid-style display. {@link #id} is set to {@code -1} until placed
+     * in the inventory.
      *
-     * @param subject is the GameObject which is the subject of the picture
+     * @param subject the object being photographed
      */
     public Picture(GameObject subject) {
         this.subject = subject;
@@ -100,65 +107,38 @@ public class Picture extends ObstacleSprite {
     public GameObject getTarget(){return target;}
 
     /**
-     * Sets the target the picture will be placed on. Must be called before adding the picture
-     * to the World.
+     * Records {@code target} and applies this picture's {@link #subject} onto it through
+     * {@link GameObject#putPicture(GameObject)} (transferring the subject's effect).
      *
-     * @param target is the GameObject the picture is placed on
-     * @param units are the physics units for the World
+     * @param target surface receiving the stuck picture
      */
-    // FIXME remove the units call, unneeded
-    //  and add the camera type as a parameter
-    public void setTarget(GameObject target, float units) {
+    public void setTarget(GameObject target) {
         this.target = target;
-        BoxObstacle original = (BoxObstacle) target.getObstacle();
-        BoxObstacle copy = new BoxObstacle(
-                original.getX(), original.getY(),
-                original.getWidth(), original.getHeight()
-        );
-        copy.setBodyType(original.getBodyType());
-        copy.setPhysicsUnits(original.getPhysicsUnits());
-        copy.setSensor(true);
-        copy.setUserData(this);
-        copy.setGravityScale(0.0f);
-        obstacle = copy;
-
-
         target.putPicture(subject);
-
     }
 
-    /** Clears the object this picture is currently attached to. */
+    /**
+     * Clears {@link #target} only; does not call {@link GameObject#resetAttributes()} or
+     * otherwise restore the former target—callers must handle physics/state cleanup.
+     */
     public void clearTarget() {
         target = null;
     }
 
+
     /**
-     * Overrides the update method to add extra functionality. In particular, this allows the
-     * picture to update its location, angle, and velocity in relation to its target without
-     * affecting the target's physics at all.
-     *
-     * @param dt is the delta time for game loop
+     * Drops the subject reference and type flags so this picture becomes a blank slot;
+     * does not clear {@link #target} or undo effects already applied to a surface.
      */
-    @Override
-    public void update(float dt) {
-        super.update(dt);
-
-        float targetAngle = target.getObstacle().getBody().getAngle();
-
-        obstacle.getBody().setTransform(
-                target.getObstacle().getBody().getPosition().cpy().add(offset),
-                targetAngle
-        );
-        obstacle.getBody().setLinearVelocity(target.getObstacle().getBody().getLinearVelocity().cpy());
-        obstacle.getBody().setAngularVelocity(0);  // zero this out, setTransform handles rotation
-    }
-
     public void clearSubject() {
         this.subject = null;
         this.subjectType = null;
         hasSubject = false;
     }
 
+    /**
+     * Tint used when drawing this picture in the HUD or overlays (Polaroid accent).
+     */
     public Color getColor() {
         Color lightGreen = new Color(0.47f,0.75f,0.33f,1);
         return lightGreen;

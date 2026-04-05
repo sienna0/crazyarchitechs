@@ -16,15 +16,19 @@ import edu.cornell.gdiac.math.PathFactory;
 import edu.cornell.gdiac.physics2.Obstacle;
 
 /**
- * Renders gameplay HUD and overlays.
+ * Responsible for all non-physics rendering: HUD inventory bar, placed-picture Polaroid overlays,
+ * highlight outlines, range indicators, pause icon, and level tile backgrounds.
+ * <p>
+ * Uses screen-space coordinates for HUD elements.
  */
 class LevelRenderer {
     private static final float STUCK_PICTURE_SIZE = 22.0f;
     private static final float STUCK_PICTURE_BORDER = 2.0f;
     private static final float STUCK_PICTURE_INNER_PADDING = 4.0f;
-    private static final float INVENTORY_BAR_WIDTH = 280.0f;
     private static final float INVENTORY_BAR_HEIGHT = 56.0f;
     private static final float INVENTORY_PADDING = 8.0f;
+    /** Slot size is capped so the HUD stays reasonable with few inventory slots. */
+    private static final float MAX_SLOT_SIZE = 40.0f;
     private static final float PAUSE_ICON_SIZE = 38.0f;
     private static final float PAUSE_ICON_HOVER_SIZE = 46.0f;
 
@@ -50,6 +54,9 @@ class LevelRenderer {
         this.takeDistance = takeDistance;
     }
 
+    /**
+     * Main draw entry — renders highlights, range, placed pictures, inventory bar, and pause icon.
+     */
     void draw(SpriteBatch batch, CanvasRender viewport, com.badlogic.gdx.graphics.OrthographicCamera camera, Zuko avatar) {
         if (avatar == null) {
             return;
@@ -73,8 +80,11 @@ class LevelRenderer {
 
         viewport.apply();
         batch.begin(camera);
+        int invSize = avatar.getPictureInventory().getSize();
+        float slotSz = Math.min(MAX_SLOT_SIZE, INVENTORY_BAR_HEIGHT - 2 * INVENTORY_PADDING);
+        float dynBarWidth = invSize * slotSz + (invSize + 1) * INVENTORY_PADDING;
         batch.setColor(new Color(0.3f, 0.3f, 0.3f, 0.8f));
-        batch.draw(slotTexture, viewport.getWidth() / 2 - INVENTORY_BAR_WIDTH / 2.0f, 0, INVENTORY_BAR_WIDTH, INVENTORY_BAR_HEIGHT);
+        batch.draw(slotTexture, viewport.getWidth() / 2 - dynBarWidth / 2.0f, 0, dynBarWidth, INVENTORY_BAR_HEIGHT);
         drawInventory(batch, viewport, avatar);
         batch.setColor(Color.WHITE);
 
@@ -92,12 +102,15 @@ class LevelRenderer {
         viewport.reset();
     }
 
+    /**
+     * Hit-tests a mouse position against the inventory bar slots; returns slot index or {@code -1}.
+     */
     int getClickedSlot(float mouseX, float mouseY, CanvasRender viewport, int inventorySize) {
-        float barWidth = INVENTORY_BAR_WIDTH;
-        float barHeight = INVENTORY_BAR_HEIGHT;
-        float barX = viewport.getWidth() / 2 - barWidth / 2;
         float padding = INVENTORY_PADDING;
-        float slotSize = (barWidth - padding * (inventorySize + 1)) / inventorySize;
+        float barHeight = INVENTORY_BAR_HEIGHT;
+        float slotSize = Math.min(MAX_SLOT_SIZE, barHeight - 2 * padding);
+        float barWidth = inventorySize * slotSize + (inventorySize + 1) * padding;
+        float barX = viewport.getWidth() / 2 - barWidth / 2;
         float startX = barX + padding;
 
         for (int ii = 0; ii < inventorySize; ii++) {
@@ -109,6 +122,9 @@ class LevelRenderer {
         return -1;
     }
 
+    /**
+     * Draws a thick colored outline around a highlighted object.
+     */
     private void drawHighlight(SpriteBatch batch, GameObject go) {
         Obstacle obj = go.getObstacle();
         float units = obj.getPhysicsUnits();
@@ -134,6 +150,9 @@ class LevelRenderer {
         }
     }
 
+    /**
+     * Draws dashed circles showing take and stick ranges around Zuko.
+     */
     private void drawRanges(SpriteBatch batch, Zuko avatar) {
         Obstacle obj = avatar.getObstacle();
         Vector2 position = obj.getPosition();
@@ -160,6 +179,9 @@ class LevelRenderer {
         }
     }
 
+    /**
+     * Renders Polaroid-style overlays on objects that have pictures stuck to them.
+     */
     private void drawPlacedPictures(SpriteBatch batch) {
         for (Picture picture : worldState.getPictures()) {
             if (picture.getTarget() == null) {
@@ -201,20 +223,26 @@ class LevelRenderer {
         }
     }
 
+    /**
+     * Helper — draws a single colored square layer for the Polaroid effect.
+     */
     private void drawStuckPictureLayer(SpriteBatch batch, float centerX, float centerY, float size, Color color, float rotation) {
         batch.setColor(color);
         batch.draw(markerPixel, centerX - (size * 0.5f), centerY - (size * 0.5f), size * 0.5f, size * 0.5f,
-                size, size, 1.0f, 1.0f, rotation, 0, 0, 1, 1, false, false);
+                size, size, 1.0f, 1.0f, rotation, 0, 0, 1, 1,                 false, false);
     }
 
+    /**
+     * Draws the bottom HUD bar with picture slots.
+     */
     private void drawInventory(SpriteBatch batch, CanvasRender viewport, Zuko avatar) {
-        float barWidth = INVENTORY_BAR_WIDTH;
         float barHeight = INVENTORY_BAR_HEIGHT;
-        float barX = viewport.getWidth() / 2 - barWidth / 2;
         float barY = 0f;
         float padding = INVENTORY_PADDING;
         int size = avatar.getPictureInventory().getSize();
-        float slotSize = (barWidth - padding * (size + 1)) / size;
+        float slotSize = Math.min(MAX_SLOT_SIZE, barHeight - 2 * padding);
+        float barWidth = size * slotSize + (size + 1) * padding;
+        float barX = viewport.getWidth() / 2 - barWidth / 2;
         float startX = barX + padding;
         float startY = barY + (barHeight - slotSize) / 2f;
         float selectedRaise = 8f;
@@ -236,6 +264,9 @@ class LevelRenderer {
         batch.setColor(Color.WHITE);
     }
 
+    /**
+     * Renders the tilemap background tiles.
+     */
     void drawLevelTiles(SpriteBatch batch, LevelPopulation.Result levelData, float tileSize) {
         if (levelData == null || levelData.tileRegions.isEmpty()) {
             return;

@@ -2,41 +2,43 @@ package edu.cornell.cis3152.physics.world;
 
 import com.badlogic.gdx.utils.JsonValue;
 
+/**
+ * Zuko's Polaroid camera. Manages film count, shot cooldown, and
+ * line-of-sight range for taking photos of interactive objects.
+ *
+ * All tuning values are read from the Zuko JSON block so that each
+ * level can define its own camera constraints.
+ */
 public class Camera {
-    // should work via cam = new Camera(smth) cam.setType(thermal or smth) cam.takePicture
-    //    Camera Variables
-    /**
-     * Current number of photos Zuko can take
-     */
+
+    /** Remaining photos Zuko can take this level. */
     private int filmCount;
-
-    /**
-     * Frames remaining until next photo can be taken
-     */
+    /** Frames remaining until the next photo is allowed. */
     private int pictureCooldown;
-
-    /**
-     * Max cooldown frames until next picture can be taken
-     */
-    private int pictureLimit;
-
-    /**
-     * Maximum range for photos
-     */
-    private float maxSightDistance;
-
-
-    /**
-     * Whether I just took a photo - used for Sound
-     */
+    /** Cooldown duration in frames after each photo. */
+    private final int pictureLimit;
+    /** Maximum Euclidean distance for photographing an object. */
+    private final float maxSightDistance;
+    /** One-frame flag consumed by the scene to play the shutter sound. */
     private boolean pictureTaken;
 
     /**
-     * Returns true if Zuko can take a picture.
-     * Zuko can take a picture if he has film remaining, picture cooldown has expired, there is a current target,
-     * and he has a line of sight to the target
+     * Creates a camera with settings from the Zuko JSON node.
      *
-     * @return true if Zuko can take a picture
+     * @param data the Zuko JSON node (expects "film_count", "picture_cooldown",
+     *             "max_sight_distance")
+     */
+    public Camera(JsonValue data) {
+        this.filmCount = data.getInt("film_count", 10);
+        this.pictureLimit = data.getInt("picture_cooldown", 10);
+        this.maxSightDistance = data.getFloat("max_sight_distance", 9.0f);
+        this.pictureCooldown = 0;
+        this.pictureTaken = false;
+    }
+
+    /**
+     * Returns true if Zuko can currently take a photo of the target.
+     * Requires film remaining, cooldown expired, and target within range.
      */
     public boolean canTakePicture(float targetX, float targetY, float zukoX, float zukoY) {
         return filmCount > 0
@@ -44,87 +46,42 @@ public class Camera {
                 && hasLineOfSight(targetX, targetY, zukoX, zukoY, maxSightDistance);
     }
 
-    /**
-     * Takes a picture of the current target.
-     * Decrements the film count, sets the picture cooldown
-     * Flags that a picture was taken for sound purposes - It seems we might not be adding this for now
-     */
+    /** Consumes one film, starts the cooldown, and flags the shutter sound. */
     public void takePicture() {
         filmCount--;
         pictureCooldown = pictureLimit;
         pictureTaken = true;
     }
 
-    /**
-     * Returns tre if a picture was just taken this frame.
-     * This is used to trigger the camera shutter sound.
-     *
-     * @return true if a picture was just taken
-     */
+    /** Returns true during the single frame after a photo was taken (for sound). */
     public boolean isPictureTaken() {
         return pictureTaken;
     }
 
-    /**
-     * Clears the picture taken flag.
-     * This should be called after the picture taken flag has been handled.
-     *
-     */
+    /** Clears the one-frame picture-taken flag after the scene has handled it. */
     public void clearPictureTaken() {
         pictureTaken = false;
     }
 
-    /**
-     * Returns the current number of photos Zuko can take.
-     *
-     * @return the current film count
-     */
-    public int getFilmCount() {
-        return filmCount;
-    }
+    public int getFilmCount() { return filmCount; }
+
+    public void setFilmCount(int value) { filmCount = value; }
 
     /**
-     * Sets the current number of photos Zuko can take
-     * Added this just in case each level has a different limit
+     * Checks whether the target position is within range of Zuko.
+     * Currently uses Euclidean distance only.
      *
-     * @param value the new film count
+     * @return true if the target is within maxDistance units of Zuko
      */
-    public void setFilmCount(int value) {
-        filmCount = value;
-    }
-
-    /**
-     * Returns true if Zuko has line of sight to the current target.
-     * Line of sight is determined by the Euclidean distance between Zuko and target.
-     * If the target is within maxSightDistance, Zuko has line of sight
-     * No use for current's target x and y position, will be using mouse position
-     *
-     * @return true if Zuko has line of sight to the current target
-     */
-    public boolean hasLineOfSight(float targetX, float targetY, float zukoX, float zukoY, float maxDistance) {
+    // TODO: implement world.rayCast() for true LOS
+    public boolean hasLineOfSight(float targetX, float targetY,
+                                  float zukoX, float zukoY, float maxDistance) {
         float dx = targetX - zukoX;
         float dy = targetY - zukoY;
-        float d = (dx * dx) + (dy * dy);
-
-        return d <= (maxDistance * maxDistance);
+        return (dx * dx + dy * dy) <= (maxDistance * maxDistance);
     }
 
-    public Camera() {
-        filmCount = 10;
-        pictureLimit = 10;
-        pictureCooldown = 0;
-        pictureTaken = false;
-        maxSightDistance = 9.0f;
-
-    }
-
-    /**
-     * Updates the camera's state (NOT GAME LOGIC).
-     *
-     * We use this method to reset cooldowns.
-     *
-     * @param dt  Number of seconds since last animation frame
-     */
+    /** Ticks down the cooldown timer each frame. */
     public void update(float dt) {
         if (pictureCooldown > 0) {
             pictureCooldown--;

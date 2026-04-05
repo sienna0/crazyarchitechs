@@ -69,9 +69,9 @@ public class PauseMenuScene implements Screen {
     private static final String[] CONTROLS = {
             "A / D  —  Move",
             "W  —  Jump",
-            "LEFT CLICK  —  Take / Stick picture",
-            "1 / 2 / 3  —  Camera type",
-            "C  —  Cycle camera",
+            "LEFT CLICK  —  Take picture",
+            "RIGHT CLICK  —  Remove picture",
+            "CLICK INVENTORY  —  Select & stick photo",
             "TAB  —  Toggle range",
             "Q  —  Drop photo",
             "P  —  Pause"

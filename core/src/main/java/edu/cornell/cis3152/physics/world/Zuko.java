@@ -17,19 +17,17 @@ import edu.cornell.gdiac.physics2.*;
 // TODO split animation and movement?
 
 /**
- * Zuko's avatar for the platform game.
+ * The player-controlled frog avatar. She walks, jumps, and takes photos using her
+ * {@link Camera} and {@link Inventory}.
  *
- * An ObstacleSprite is a sprite (specifically a textured mesh) that is
- * connected to a obstacle. It is designed to be the same size as the
- * physics object, and it tracks the physics object, matching its position
- * and angle at all times.
+ * <p>Manages animation state (walk while moving on ground, jump sheet, photo sheet),
+ * horizontal movement via Box2D forces, and which {@link GameObject}—if any—the foot
+ * sensor reports as the current platform. Platform type and any picture stuck on it
+ * affect jump height (honey reduces unless countered) and horizontal control (ice is slippery).</p>
  *
- * Note that unlike a traditional ObstacleSprite, this attaches some additional
- * information to the obstacle. In particular, we add a sensor fixture. This
-  * sensor is used to prevent double-jumping. However, we only have one mesh,
- * the mesh for Zuko. The sensor is invisible and only shows up in debug mode.
- * While we could have made the fixture a separate obstacle, we want it to be a
- * simple fixture so that we can attach it to the obstacle WITHOUT using joints.
+ * <p>Like any {@link ObstacleSprite}, the visible mesh tracks the physics obstacle.
+ * A separate thin sensor fixture under the feet detects ground contact for jumping;
+ * it is not its own obstacle and is drawn only in debug mode.</p>
  */
 public class Zuko extends ObstacleSprite {
 
@@ -216,9 +214,11 @@ public class Zuko extends ObstacleSprite {
     }
 
     /**
-     * Sets the object type Zuko is currently standing on.
+     * Updates ground-contact context: {@code null} restores full jumps and clears ice.
+     * Otherwise recomputes {@link #canJumpFull} and {@link #onIce} from the platform's
+     * base {@link Obj} type and whether a honey/ice picture is applied.
      *
-     * @param platform the supporting object type, or null if airborne/non-object terrain
+     * @param platform the object under the foot sensor, or null if not on a {@link GameObject}
      */
     public void setCurrentPlatform(GameObject platform) {
         currentPlatform = platform;
@@ -228,13 +228,13 @@ public class Zuko extends ObstacleSprite {
             return;
         }
 
-        boolean baseIsRock = platform.getObjectType() == Obj.HONEY;
+        boolean baseIsHoney = platform.getObjectType() == Obj.HONEY;
         boolean baseIsIce = platform.getObjectType() == Obj.ICE;
         Quality pictureQuality = platform.getPictureQuality();
-        boolean hasRockPicture = pictureQuality == Quality.STICKY && platform.hasPicture();
+        boolean hasHoneyPicture = pictureQuality == Quality.STICKY && platform.hasPicture();
         boolean hasIcePicture = pictureQuality == Quality.SLIPPERY && platform.hasPicture();
 
-        canJumpFull = (!baseIsRock || hasIcePicture) && !hasRockPicture;
+        canJumpFull = (!baseIsHoney || hasIcePicture) && !hasHoneyPicture;
         onIce = baseIsIce || hasIcePicture;
     }
 
@@ -414,7 +414,7 @@ public class Zuko extends ObstacleSprite {
         obstacle.setFixedRotation(true);
         obstacle.setPhysicsUnits( units );
         obstacle.setUserData( this );
-        obstacle.setName("Zuko");
+        obstacle.setName("zuko");
 
         debug = ParserUtils.parseColor( debugInfo.get("avatar"),  Color.WHITE);
         sensorColor = ParserUtils.parseColor( debugInfo.get("sensor"),  Color.WHITE);
@@ -447,22 +447,14 @@ public class Zuko extends ObstacleSprite {
         // see this when you enable debug mode.
         mesh.set(-size/2.0f,-size/2.0f,size,size);
 
-        camera = new Camera();
+        camera = new Camera(data);
     }
 
     /**
-     * Creates the sensor for Zuko.
-     *
-     * We only allow the Zuko to jump when she's on the ground. Double jumping
-     * is not allowed.
-     *
-     * To determine whether Zuko is on the ground we create a thin sensor under
-     * her feet, which reports collisions with the world but has no collision
-     * response. This sensor is just a FIXTURE, it is not an obstacle. We will
-     * talk about the different between these later.
-     *
-     * Note this method is not part of the constructor. It can only be called
-     * once the physics obstacle has been activated.
+     * After the capsule body exists in the world, adds a thin sensor fixture under the feet,
+     * named {@link #sensorName}, so contact callbacks can set grounded state without physical
+     * response. Also builds {@link #sensorOutline} for debug drawing. Must not run until
+     * {@link #obstacle} is activated.
      */
     public void createSensor() {
         Vector2 sensorCenter = new Vector2(0, -height / 2);
@@ -491,9 +483,10 @@ public class Zuko extends ObstacleSprite {
     }
 
     /**
-     * Applies the force to the body of Zuko
-     *
-     * This method should be called after the force attribute is set.
+     * Integrates one movement step on the Box2D body: horizontal damping when input is idle,
+     * otherwise drive with {@link #getMovement()}; caps horizontal speed unless {@link #onIce}
+     * (ice allows exceeding {@link #maxspeed}); applies {@link #currentJumpForce} as an upward
+     * impulse when {@link #isJumping()} is true. No-op if the obstacle is not active.
      */
     public void applyForce() {
         if (!obstacle.isActive()) {
@@ -528,11 +521,12 @@ public class Zuko extends ObstacleSprite {
 
 
     /**
-     * Updates the object's physics state (NOT GAME LOGIC).
+     * Per-frame tick: adjusts jump cooldown, advances exactly one animation channel with
+     * priority photo &gt; jump &gt; walk (walk only when grounded and moving), resets finished
+     * sheets to frame 0 and restores {@link #baseTexture} when appropriate, then updates
+     * the {@link Camera}.
      *
-     * We use this method to reset cooldowns.
-     *
-     * @param dt    Number of seconds since last animation frame
+     * @param dt seconds since the last frame
      */
     @Override
     public void update(float dt) {
@@ -582,13 +576,11 @@ public class Zuko extends ObstacleSprite {
     }
 
     /**
-     * Draws the physics object.
+     * Chooses the active sprite sheet (photo, jump, walk, or static {@link #baseTexture})
+     * consistent with {@link #update(float)}, applies a horizontal flip affine when
+     * {@link #faceRight} is false, then delegates to {@code ObstacleSprite.draw}.
      *
-     * This method is overridden from ObstacleSprite. We need to flip the
-     * texture back-and-forth depending on her facing. We do that by creating
-     * a reflection affine transform.
-     *
-     * @param batch The game canvas to draw to
+     * @param batch destination batch
      */
     @Override
     public void draw(SpriteBatch batch) {
