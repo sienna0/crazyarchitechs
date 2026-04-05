@@ -6,7 +6,12 @@ import edu.cornell.cis3152.physics.world.GameObject;
 import edu.cornell.cis3152.physics.world.Picture;
 
 /**
- * Mutable gameplay state shared by {@code LevelBaseScene} helpers.
+ * Central mutable bag for UI and photo-placement state shared by {@link edu.cornell.cis3152.physics.screen.levels.LevelBaseScene},
+ * {@link edu.cornell.cis3152.physics.screen.levels.PhotoSystem}, and {@link edu.cornell.cis3152.physics.screen.levels.LevelRenderer}.
+ *
+ * <p>Holds the active picture selection, placed pictures, highlighted {@link GameObject}s,
+ * camera-range overlay toggle, and pause-button hover bookkeeping. {@link #reset()} clears
+ * everything when switching levels so each load starts from a clean slate.</p>
  */
 public class WorldState {
     private final Array<Picture> pictures = new Array<>();
@@ -19,6 +24,10 @@ public class WorldState {
     private boolean pauseIconHovered;
     private boolean pauseIconWasHovered;
 
+    /**
+     * Clears placed pictures, highlights, selection, range UI, and pause-hover flags so a
+     * newly loaded level does not inherit the previous level's transient state.
+     */
     public void reset() {
         pictures.clear();
         highlighted.clear();

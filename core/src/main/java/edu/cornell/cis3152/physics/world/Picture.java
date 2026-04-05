@@ -5,6 +5,16 @@ import com.badlogic.gdx.graphics.Texture;
 import edu.cornell.gdiac.graphics.SpriteMesh;
 import edu.cornell.gdiac.physics2.ObstacleSprite;
 
+/**
+ * One slot in Zuko's photo inventory. A picture has a {@link #subject} (what was
+ * photographed) and optionally a {@link #target} (the surface it is stuck to).
+ *
+ * <p>When {@link #setTarget(GameObject)} is used, the subject's {@link ObjectEffect}
+ * is applied to the target via {@link GameObject#putPicture(GameObject)}.</p>
+ *
+ * <p>Extends {@link ObstacleSprite} only for mesh/texture storage for HUD rendering;
+ * instances are not added to the physics world.</p>
+ */
 public class Picture extends ObstacleSprite {
     /** The GameObject subject of this picture */
     GameObject subject;
@@ -28,7 +38,9 @@ public class Picture extends ObstacleSprite {
     private Quality subjectQuality;
 
     /**
-     * Constructor for a blank Picture instance with no subject yet
+     * Empty inventory slot: no subject, identified by {@code id} (inventory index).
+     *
+     * @param id slot index / picture id
      */
     public Picture(int id){
         hasSubject = false;
@@ -36,9 +48,11 @@ public class Picture extends ObstacleSprite {
     }
 
     /**
-     * Constructor for a Picture instance when initialized with a subject.
+     * Snapshot of {@code subject}: copies its {@link SpriteMesh} at half scale and keeps
+     * its texture for Polaroid-style display. {@link #id} is set to {@code -1} until placed
+     * in the inventory.
      *
-     * @param subject is the GameObject which is the subject of the picture
+     * @param subject the object being photographed
      */
     public Picture(GameObject subject) {
         this.subject = subject;
@@ -93,29 +107,38 @@ public class Picture extends ObstacleSprite {
     public GameObject getTarget(){return target;}
 
     /**
-     * Sets the target the picture will be placed on. Must be called before adding the picture
-     * to the World.
+     * Records {@code target} and applies this picture's {@link #subject} onto it through
+     * {@link GameObject#putPicture(GameObject)} (transferring the subject's effect).
      *
-     * @param target is the GameObject the picture is placed on
-     * @param units are the physics units for the World
+     * @param target surface receiving the stuck picture
      */
     public void setTarget(GameObject target) {
         this.target = target;
         target.putPicture(subject);
     }
 
-    /** Clears the object this picture is currently attached to. */
+    /**
+     * Clears {@link #target} only; does not call {@link GameObject#resetAttributes()} or
+     * otherwise restore the former target—callers must handle physics/state cleanup.
+     */
     public void clearTarget() {
         target = null;
     }
 
 
+    /**
+     * Drops the subject reference and type flags so this picture becomes a blank slot;
+     * does not clear {@link #target} or undo effects already applied to a surface.
+     */
     public void clearSubject() {
         this.subject = null;
         this.subjectType = null;
         hasSubject = false;
     }
 
+    /**
+     * Tint used when drawing this picture in the HUD or overlays (Polaroid accent).
+     */
     public Color getColor() {
         Color lightGreen = new Color(0.47f,0.75f,0.33f,1);
         return lightGreen;

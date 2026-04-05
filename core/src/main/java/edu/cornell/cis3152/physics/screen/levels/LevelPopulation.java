@@ -16,6 +16,12 @@ import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
+/**
+ * Builds all physics objects, terrain, and tiles for a given level number from JSON data.
+ * <p>
+ * Receives a {@code textureResolver} and {@code spriteAdder} callback so it can load textures
+ * and add sprites to the scene without depending on the scene directly.
+ */
 class LevelPopulation {
 
     private static final int TILE_PX = 16;
@@ -23,6 +29,9 @@ class LevelPopulation {
     private static final float FLOOR_TILE_SCALE = 2.0f;
     private static final float TILE_WORLD_SIZE = 1.0f;
 
+    /**
+     * Holds references to the populated level's key objects (avatar, goal door, object lists, tile data).
+     */
     static class Result {
         Door goalDoor;
         Zuko avatar;
@@ -51,6 +60,10 @@ class LevelPopulation {
         this.spriteAdder = spriteAdder;
     }
 
+    /**
+     * Entry point — reads {@code levelN} JSON, creates goal, walls, platforms, floors, tilemap,
+     * Zuko, extra zukosprites, honey/ice/cloud objects, and tile colliders. Returns a {@link Result}.
+     */
     Result populate(int currentLevel, float units, WorldState worldState) {
         Result result = new Result();
 
@@ -205,7 +218,9 @@ class LevelPopulation {
         return result;
     }
 
-
+    /**
+     * Factory method that creates a {@link Zuko} instance and assigns all animation sheets.
+     */
     private Zuko buildZuko(float units, JsonValue zukoJson,
                            Texture zukoTexture, Texture walkSheet,
                            Texture photoSheet, Texture jumpSheet,
@@ -220,6 +235,9 @@ class LevelPopulation {
         return zuko;
     }
 
+    /**
+     * Generates {@link InvisibleSurface} colliders for each tilemap cell.
+     */
     private void addTilemapColliders(JsonValue level, JsonValue collisionSettings, float units) {
         if (collisionSettings == null) {
             return;
@@ -252,12 +270,11 @@ class LevelPopulation {
     }
 
     /**
-     * Builds a synthetic JsonValue for an extra zukosprite by copying all
-     * physics constants from the canonical zuko node but overriding pos.
-     *
+     * Deep-copies the canonical Zuko JSON and overrides {@code pos} for extra zukosprites.
+     * <p>
      * The Zuko constructor reads: pos, inner, size, force, damping, density,
      * friction, maxspeed, jump_force, jump_cool, shot_cool, sensor, debug.
-     * We clone the canonical node and patch pos so Zuko spawns at [x, y].
+     * The canonical node is cloned and {@code pos} is patched so Zuko spawns at {@code (x, y)}.
      */
     private JsonValue buildSyntheticZukoJson(JsonValue canonical, float x, float y) {
         // Deep-copy by round-tripping through the JSON string representation.
@@ -270,6 +287,9 @@ class LevelPopulation {
         return copy;
     }
 
+    /**
+     * Deep-copies surface settings and scales the {@code tile} value.
+     */
     private JsonValue buildScaledTileSettings(JsonValue canonical, float scale) {
         JsonValue copy = new JsonReader().parse(canonical.toJson(JsonWriter.OutputType.json));
         copy.get("tile").set(copy.getFloat("tile") * scale, null);

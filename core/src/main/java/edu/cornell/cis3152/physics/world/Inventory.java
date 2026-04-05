@@ -1,143 +1,122 @@
 package edu.cornell.cis3152.physics.world;
 
-
-import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.JsonValue;
-import edu.cornell.gdiac.audio.SoundEffectManager;
 
-public class Inventory{
+/**
+ * Zuko's photo inventory. Holds a fixed number of {@link Picture} slots
+ * that can be filled by photographing objects and emptied by sticking
+ * or dropping photos.
+ *
+ * The slot count is read from the Zuko JSON block ("inventory_size"),
+ * defaulting to 5 if the key is absent.
+ */
+public class Inventory {
 
-    /** The primary array backing of the inventory. Requires that pictures are not moved around. */
-    //FIXME Because this will always be small, it may be worth making this private and then only
-    // passing copies
-    private Array<Picture> pictureInventory;
+    /** Ordered array of picture slots; index == slot position in the HUD. */
+    private final Array<Picture> pictureInventory;
 
-    /** The size of this level's inventory */
-    int size;
+    /** Number of slots in this level's inventory. */
+    private final int size;
 
-    /** The current Picture index*/
+    /** Index of the currently selected slot (for keyboard cycling). */
     private int currPicIndex;
 
     /**
-     * Initializes a new Inventory instance.
+     * Creates an inventory sized from the Zuko JSON data.
      *
-     * @param data is the JSON data for the current level
+     * @param data the Zuko JSON node (expects "inventory_size")
      */
-    public Inventory (JsonValue data){
-
-        // Pretend the json data gives this here
-        //this.size = data.get("inventory size")
-        size = 5;
-        currPicIndex = 0;
+    public Inventory(JsonValue data) {
+        this.size = data.getInt("inventory_size", 5);
+        this.currPicIndex = 0;
         this.pictureInventory = new Array<>(size);
         pictureInventory.ordered = true;
         populateInventory();
     }
-    // PUBLIC ACCESSOR METHODS
-    public int getCurrPicIndex(){return currPicIndex;}
 
-    public void nextCurrPic(){currPicIndex = (currPicIndex + 1) % size;}
+    public int getCurrPicIndex() { return currPicIndex; }
+
+    /** Advances the keyboard-cycling index by one slot, wrapping around. */
+    public void nextCurrPic() { currPicIndex = (currPicIndex + 1) % size; }
 
     /**
-     * Returns the currently selected picture in inventory
-     *
-     * Use this for cycling through the pictures
-     *
-     * @return Picture instance if found, null otherwise
+     * Returns the picture at the current cycling index, or null if empty.
      */
-    public Picture getCurrPicture(){
-        for (Picture pic : pictureInventory){
-            if (pic.getId() == currPicIndex) {return pic;}
+    public Picture getCurrPicture() {
+        for (Picture pic : pictureInventory) {
+            if (pic.getId() == currPicIndex) { return pic; }
         }
         return null;
     }
 
     /**
-     * Returns the picture in inventory with given id
+     * Returns the picture in a specific slot, or null if the index is out of range.
      *
-     * Use this for directly clicking on a picture in UI
-     *
-     * @param id is the id of the desired picture
-     * @return Picture instance if found, null otherwise
+     * @param id slot index (0-based)
      */
-    public Picture getPicture(int id){
-        if (id < 0 || id >= pictureInventory.size){return null;}
+    public Picture getPicture(int id) {
+        if (id < 0 || id >= pictureInventory.size) { return null; }
         return pictureInventory.get(id);
     }
 
-    /**
-     * Returns if there's an available picture to use
-     *
-     * @return true if unused picture exists else false
-     */
-    public boolean isAvailablePicture(){
-        for (Picture pic : pictureInventory){
-            if (!pic.hasSubject) {return true;}
+    /** Returns true if at least one slot has no subject (available for a new photo). */
+    public boolean isAvailablePicture() {
+        for (Picture pic : pictureInventory) {
+            if (!pic.hasSubject) { return true; }
         }
         return false;
     }
 
-    /**
-     * Returns an available Picture, false otherwise
-     *
-     * @return int of an available picture, or -2 if none
-     */
-    public Picture getUnusedPicture(){
-        for (Picture pic : pictureInventory){
-            if (!pic.hasSubject) {return pic;}
+    /** Returns the first unused picture slot, or null if all slots are full. */
+    public Picture getUnusedPicture() {
+        for (Picture pic : pictureInventory) {
+            if (!pic.hasSubject) { return pic; }
         }
         return null;
     }
 
-    /**
-     * Returns if a GameObject has a picture placed on it
-     *
-     * @param go is a GameObject
-     * @return true if thi
-     */
-    public boolean hasPicture(GameObject go){
-        for (Picture pic : pictureInventory){
-            if (pic.getTarget() != null && pic.getTarget() == go) {return true;}
+    /** Returns true if any picture in the inventory is currently stuck on the given object. */
+    public boolean hasPicture(GameObject go) {
+        for (Picture pic : pictureInventory) {
+            if (pic.getTarget() != null && pic.getTarget() == go) { return true; }
         }
         return false;
     }
 
+    public int getSize() { return size; }
 
-
-
-    // PRIVATE HELPER METHODS
     /**
-     * Initializes the inventory with new Picture objects
+     * Places a picture into the first available slot.
+     * Does nothing if the inventory is full.
      */
-    private void populateInventory(){
-        for (int i = 0; i < size; i++){
-            pictureInventory.add(new Picture(i));
-        }
-    }
-
-    public int getSize(){
-        return size;
-    }
-
-    public void addPicture(Picture picture){
+    public void addPicture(Picture picture) {
         for (int i = 0; i < pictureInventory.size; i++) {
             if (!pictureInventory.get(i).hasSubject) {
                 picture.setId(i);
-                pictureInventory.set(i,  picture);
+                pictureInventory.set(i, picture);
                 return;
             }
         }
     }
 
-    public void removePicture(int index){
-        if (index >= 0 && index < pictureInventory.size){
+    /** Clears a slot by replacing it with a blank picture. */
+    public void removePicture(int index) {
+        if (index >= 0 && index < pictureInventory.size) {
             pictureInventory.set(index, new Picture(index));
         }
     }
 
+    /** Resets all slots to blank pictures. */
     public void reset() {
         pictureInventory.clear();
         populateInventory();
+    }
+
+    /** Fills every slot with a blank {@link Picture}. */
+    private void populateInventory() {
+        for (int i = 0; i < size; i++) {
+            pictureInventory.add(new Picture(i));
+        }
     }
 }

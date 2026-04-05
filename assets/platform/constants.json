@@ -1072,7 +1072,11 @@
           "avatar": "#ffff00ff",
           "sensor": "#ff0000ff",
           "tolerance": 0.05
-        }
+        },
+        "inventory_size": 5,
+        "film_count": 10,
+        "picture_cooldown": 10,
+        "max_sight_distance": 9.0
       },
       "honey": [
         [
@@ -2285,7 +2289,11 @@
           "avatar": "#ffff00ff",
           "sensor": "#ff0000ff",
           "tolerance": 0.05
-        }
+        },
+        "inventory_size": 5,
+        "film_count": 10,
+        "picture_cooldown": 10,
+        "max_sight_distance": 9.0
       },
       "honey": [
         [
@@ -2519,7 +2527,11 @@
           "avatar": "#ffff00ff",
           "sensor": "#ff0000ff",
           "tolerance": 0.05
-        }
+        },
+        "inventory_size": 5,
+        "film_count": 10,
+        "picture_cooldown": 10,
+        "max_sight_distance": 9.0
       },
       "honey": [
         [
@@ -2528,5 +2540,11 @@
         ]
       ]
     }
+  },
+  "gameplay": {
+    "take_picture_distance": 9.0,
+    "stick_picture_distance": 9.0,
+    "lift_spring_stiffness": 6.0,
+    "lift_spring_damping": 3.5
   }
 }

@@ -36,7 +36,6 @@ import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.utils.ScreenUtils;
 import edu.cornell.cis3152.physics.InputController;
 import edu.cornell.cis3152.physics.CanvasRender;
-import edu.cornell.cis3152.physics.world.ObstacleGroup;
 import edu.cornell.gdiac.assets.AssetDirectory;
 import edu.cornell.gdiac.graphics.SpriteBatch;
 import edu.cornell.gdiac.util.*;
@@ -332,18 +331,6 @@ public abstract class PhysicsScene implements Screen {
         sprite.getObstacle().activatePhysics(world);
     }
 
-    /**
-     * Immediately adds a sprite group to the physics world
-     *
-     * param group  The sprite group to add
-     */
-    protected void addSpriteGroup(ObstacleGroup group) {
-        for(ObstacleSprite sprite : group.getSprites()) {
-            assert inBounds( sprite ) : "Sprite is not in bounds";
-            sprites.add( sprite );
-        }
-        group.activatePhysics(world);
-    }
 
     /**
      * Returns true if the sprite is in bounds.

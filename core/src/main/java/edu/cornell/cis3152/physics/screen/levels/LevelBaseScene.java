@@ -1,14 +1,8 @@
 /*
- * PlatformScene.java
+ * LevelBaseScene.java — Frogtographer
  *
- * This is the game scene (player mode) specific to the platforming mini-game.
- * You SHOULD NOT need to modify this file. However, you may learn valuable
- * lessons for the rest of the lab by looking at it.
- *
- * Based on the original PhysicsDemo Lab by Don Holden, 2007
- *
- * Author: Walker M. White
- * Version: 2/8/2025
+ * Main gameplay scene for a single level: physics world, avatar, photos, and win/lose.
+ * Extends the shared physics screen stack; based on the original PhysicsDemo Lab (Don Holden, 2007).
  */
 package edu.cornell.cis3152.physics.screen.levels;
 
@@ -32,12 +26,23 @@ import edu.cornell.gdiac.graphics.SpriteBatch;
 import edu.cornell.gdiac.physics2.ObstacleSprite;
 
 /**
- * The game scene for the platformer game.
+ * Primary gameplay scene for Frogtographer: one level at a time inside a Box2D world.
  *
- * Look at the method {@link #populateLevel} for how we initialize the scene.
- * Beyond that, a lot of work is done in the method for the ContactListener
- * interface. That is the method that is called upon collisions, giving us a
- * chance to define a response.
+ * <p>Extends {@link PhysicsScene} and implements {@link ContactListener} so collisions drive
+ * ground contact and goal-door completion. On {@link #reset()} or {@link #setLevel(int)},
+ * the scene clears bodies and sprites, repopulates geometry through {@link LevelPopulation},
+ * and wires {@link PhotoSystem} (photo mechanics) and {@link LevelRenderer} (HUD and tiles).
+ *
+ * <p>{@link #update(float)} runs each frame: pause UI, input, photo highlights/actions,
+ * lift springs, and avatar forces. After the world steps, {@link #postUpdate(float)} flushes
+ * deferred Box2D changes via {@link GameObject#syncPhysics()}.
+ *
+ * <p>Gameplay tuning (stick/take distances, lift spring stiffness/damping, etc.) is read once
+ * from the {@code gameplay} section of the platform constants JSON when photo/render
+ * subsystems are first created.
+ *
+ * @see #beginContact(Contact)
+ * @see #endContact(Contact)
  */
 public class LevelBaseScene extends PhysicsScene implements ContactListener {
     private static final float PAUSE_ICON_SIZE = 38.0f;
@@ -61,16 +66,11 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     /** Reference to the goalDoor (for collision detection) */
     private Door goalDoor;
 
-    //** Picture list */
+    /** Shared picture inventory, highlights, and pause UI state for this level. */
     private WorldState worldState;
 
-    // Levels
+    /** Which level is currently loaded (1-based). */
     private int currentLevel = 1;
-    // Range Variables
-    private float STICK_PICTURE_DISTANCE = 9.0f;
-    private float TAKE_PICTURE_DISTANCE = 9.0f;
-    private static final float LIFT_SPRING_STIFFNESS = 6.0f;
-    private static final float LIFT_SPRING_DAMPING = 3.5f;
     /** Mark set to handle more sophisticated collision callbacks */
     protected ObjectSet<Fixture> sensorFixtures;
 
@@ -80,6 +80,12 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     private PhotoSystem photoSystem;
     private LevelRenderer renderer;
 
+    /**
+     * Lazily creates sound handles, textures, {@link WorldState}, contact tracking,
+     * {@link LevelPopulation}, {@link PhotoSystem}, and {@link LevelRenderer}.
+     * Reads {@code gameplay} JSON fields (e.g. stick/take distances, lift spring constants)
+     * when constructing the photo and render helpers.
+     */
     private void ensureInitialized() {
         if (worldState == null) {
             worldState = new WorldState();
@@ -114,25 +120,19 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             levelPopulation = new LevelPopulation(constants, this::requireTexture, this::addSprite);
         }
         if (photoSystem == null) {
+            JsonValue gp = constants.get("gameplay");
+            float stickDist = gp != null ? gp.getFloat("stick_picture_distance", 9.0f) : 9.0f;
+            float takeDist  = gp != null ? gp.getFloat("take_picture_distance", 9.0f) : 9.0f;
+            float springK   = gp != null ? gp.getFloat("lift_spring_stiffness", 6.0f) : 6.0f;
+            float springD   = gp != null ? gp.getFloat("lift_spring_damping", 3.5f) : 3.5f;
+
             photoSystem = new PhotoSystem(
-                    worldState,
-                    STICK_PICTURE_DISTANCE,
-                    TAKE_PICTURE_DISTANCE,
-                    LIFT_SPRING_STIFFNESS,
-                    LIFT_SPRING_DAMPING,
-                    volume,
-                    fireSound,
-                    plopSound
+                    worldState, stickDist, takeDist, springK, springD,
+                    volume, fireSound, plopSound
             );
-        }
-        if (renderer == null) {
             renderer = new LevelRenderer(
-                    worldState,
-                    slotTexture,
-                    pauseIconTexture,
-                    markerPixel,
-                    STICK_PICTURE_DISTANCE,
-                    TAKE_PICTURE_DISTANCE
+                    worldState, slotTexture, pauseIconTexture, markerPixel,
+                    stickDist, takeDist
             );
         }
     }
@@ -173,9 +173,9 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     }
 
     /**
-     * Resets the status of the game so that we can play again.
-     *
-     * This method disposes of the world and creates a new one.
+     * Tears down the current level: deactivates and clears sprites, destroys all Box2D bodies,
+     * resets {@link WorldState}, then repopulates the level (same or new geometry after
+     * {@link #setLevel(int)}).
      */
     public void reset() {
         ensureInitialized();
@@ -212,7 +212,8 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     }
 
     /**
-     * Lays out the game geography.
+     * Delegates to {@link LevelPopulation#populate} to build walls, tiles, objects, avatar,
+     * and goal door for {@link #currentLevel}, updating {@link #goalDoor} and {@link #avatar}.
      */
     private void populateLevel() {
         float units = height/(bounds.height);
@@ -225,7 +226,10 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     }
     
     /**
-     * Switches level geometry from one level to the next
+     * Switches to another level number (falls back to level 1 if undefined in constants),
+     * then {@link #reset()} to rebuild the world.
+     *
+     * @param level 1-based level index from JSON ({@code levelN} keys)
      */
     public void setLevel(int level)
     {
@@ -246,6 +250,10 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         renderer.draw(batch, viewport, camera, avatar);
     }
 
+    /**
+     * After {@code world.step()}, applies any Box2D property changes that were deferred during
+     * the step (body type, filters, etc.) by calling {@link GameObject#syncPhysics()} on each sprite.
+     */
     @Override
     public void postUpdate(float dt) {
         for (ObstacleSprite sprite : sprites) {
@@ -268,6 +276,11 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         return true;
     }
 
+    /**
+     * Main per-frame gameplay: pause icon hit-testing and sound, then photo highlights,
+     * keyboard shortcuts, movement, mouse target and inventory slot clicks, picture actions,
+     * lift springs, avatar forces, and jump audio/animation.
+     */
     @Override
     public void update(float dt) {
         viewport.screenToCanvas(Gdx.input.getX(), Gdx.input.getY(), worldState.getPauseMouseCache());
@@ -316,7 +329,8 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     }
 
     /**
-     * Callback method for the start of a collision
+     * Box2D contact start: registers ground support when Zuko's foot sensor touches a surface,
+     * and marks the level complete when the avatar collides with the goal door.
      */
     public void beginContact(Contact contact) {
         Fixture fix1 = contact.getFixtureA();
@@ -352,7 +366,8 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     }
 
     /**
-     * Callback method for when two objects cease to touch.
+     * Box2D contact end: removes ground contacts for the foot sensor; when no supports remain,
+     * clears grounded state, otherwise picks another active support via {@link #refreshCurrentSupport()}.
      */
     public void endContact(Contact contact) {
         Fixture fix1 = contact.getFixtureA();
@@ -381,8 +396,9 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     }
 
     /**
-     * Chooses one of the active sensor contacts as the current supporting obstacle
-     * This is for texture blocks that edit movement
+     * After a support fixture ends, reassigns {@link Zuko#setCurrentPlatform(GameObject)} from
+     * the remaining entries in {@link #sensorFixtures} so movement modifiers on the standing
+     * surface stay correct when overlapping several bodies.
      */
     private void refreshCurrentSupport() {
         for (Fixture fixture : sensorFixtures) {
@@ -396,7 +412,8 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     }
 
     /**
-     * Returns the GameObject type associated with a support fixture
+     * Resolves the {@link GameObject} under a support fixture from the fixture's body user data,
+     * or {@code null} if the body is not a game object.
      */
     private GameObject getSupportObj(Fixture fixture) {
         Object userData = fixture.getBody().getUserData();

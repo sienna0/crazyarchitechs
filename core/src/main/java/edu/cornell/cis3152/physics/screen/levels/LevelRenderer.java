@@ -16,7 +16,10 @@ import edu.cornell.gdiac.math.PathFactory;
 import edu.cornell.gdiac.physics2.Obstacle;
 
 /**
- * Renders gameplay HUD and overlays.
+ * Responsible for all non-physics rendering: HUD inventory bar, placed-picture Polaroid overlays,
+ * highlight outlines, range indicators, pause icon, and level tile backgrounds.
+ * <p>
+ * Uses screen-space coordinates for HUD elements.
  */
 class LevelRenderer {
     private static final float STUCK_PICTURE_SIZE = 22.0f;
@@ -50,6 +53,9 @@ class LevelRenderer {
         this.takeDistance = takeDistance;
     }
 
+    /**
+     * Main draw entry — renders highlights, range, placed pictures, inventory bar, and pause icon.
+     */
     void draw(SpriteBatch batch, CanvasRender viewport, com.badlogic.gdx.graphics.OrthographicCamera camera, Zuko avatar) {
         if (avatar == null) {
             return;
@@ -92,6 +98,9 @@ class LevelRenderer {
         viewport.reset();
     }
 
+    /**
+     * Hit-tests a mouse position against the inventory bar slots; returns slot index or {@code -1}.
+     */
     int getClickedSlot(float mouseX, float mouseY, CanvasRender viewport, int inventorySize) {
         float barWidth = INVENTORY_BAR_WIDTH;
         float barHeight = INVENTORY_BAR_HEIGHT;
@@ -109,6 +118,9 @@ class LevelRenderer {
         return -1;
     }
 
+    /**
+     * Draws a thick colored outline around a highlighted object.
+     */
     private void drawHighlight(SpriteBatch batch, GameObject go) {
         Obstacle obj = go.getObstacle();
         float units = obj.getPhysicsUnits();
@@ -134,6 +146,9 @@ class LevelRenderer {
         }
     }
 
+    /**
+     * Draws dashed circles showing take and stick ranges around Zuko.
+     */
     private void drawRanges(SpriteBatch batch, Zuko avatar) {
         Obstacle obj = avatar.getObstacle();
         Vector2 position = obj.getPosition();
@@ -160,6 +175,9 @@ class LevelRenderer {
         }
     }
 
+    /**
+     * Renders Polaroid-style overlays on objects that have pictures stuck to them.
+     */
     private void drawPlacedPictures(SpriteBatch batch) {
         for (Picture picture : worldState.getPictures()) {
             if (picture.getTarget() == null) {
@@ -201,12 +219,18 @@ class LevelRenderer {
         }
     }
 
+    /**
+     * Helper — draws a single colored square layer for the Polaroid effect.
+     */
     private void drawStuckPictureLayer(SpriteBatch batch, float centerX, float centerY, float size, Color color, float rotation) {
         batch.setColor(color);
         batch.draw(markerPixel, centerX - (size * 0.5f), centerY - (size * 0.5f), size * 0.5f, size * 0.5f,
-                size, size, 1.0f, 1.0f, rotation, 0, 0, 1, 1, false, false);
+                size, size, 1.0f, 1.0f, rotation, 0, 0, 1, 1,                 false, false);
     }
 
+    /**
+     * Draws the bottom HUD bar with picture slots.
+     */
     private void drawInventory(SpriteBatch batch, CanvasRender viewport, Zuko avatar) {
         float barWidth = INVENTORY_BAR_WIDTH;
         float barHeight = INVENTORY_BAR_HEIGHT;
@@ -236,6 +260,9 @@ class LevelRenderer {
         batch.setColor(Color.WHITE);
     }
 
+    /**
+     * Renders the tilemap background tiles.
+     */
     void drawLevelTiles(SpriteBatch batch, LevelPopulation.Result levelData, float tileSize) {
         if (levelData == null || levelData.tileRegions.isEmpty()) {
             return;

@@ -10,6 +10,20 @@ import edu.cornell.gdiac.physics2.ObstacleSprite;
 
 import static edu.cornell.cis3152.physics.world.Quality.*;
 
+/**
+ * A photographable physics object in the level: honey, ice, or cloud.
+ *
+ * <p>Extends {@link ObstacleSprite} with photo-related state ({@link #hasPicture},
+ * {@link #pictureQuality}) and an {@link ObjectEffect} strategy for how being
+ * photographed or receiving a picture changes behavior.</p>
+ *
+ * <p>Mutable gameplay fields (mass, friction, gravity, etc.) are staged on this object
+ * and flushed to Box2D in {@link #syncPhysics()}, which must run from the scene's
+ * {@code postUpdate()} after {@code world.step()}—never during the step.</p>
+ *
+ * <p>The initializing {@link JsonValue} is retained so {@link #restoreOriginalProperties()}
+ * can reset all properties to level defaults after a picture is removed.</p>
+ */
 public class GameObject extends ObstacleSprite {
     /** The initializing values for this object */
     private final JsonValue data;
@@ -50,6 +64,15 @@ public class GameObject extends ObstacleSprite {
     /** This object's texture */
     private Texture texture;
 
+    /**
+     * Initializes object type, intrinsic {@link Quality}, the matching {@link ObjectEffect}
+     * strategy, and reads physics constants (weight, elasticity, friction, temperature,
+     * gravity scale) from JSON. Does not create a Box2D body; use the full constructor
+     * for that.
+     *
+     * @param object level object kind (honey, ice, cloud, …)
+     * @param data   JSON defaults and constants for this object
+     */
     public GameObject(Obj object, JsonValue data) {
         this.data = data;
         this.object = object;
@@ -78,6 +101,19 @@ public class GameObject extends ObstacleSprite {
         gravityScale = data.getFloat("gravityScale");
     }
 
+    /**
+     * Full construction: delegates to {@link #GameObject(Obj, JsonValue)}, then creates the
+     * {@link BoxObstacle}, attaches it as this sprite's obstacle, configures body/sensor
+     * flags from parameters, and sizes the draw mesh to match physics units.
+     *
+     * @param object   level object kind
+     * @param data     JSON defaults and constants
+     * @param units    world pixels per physics unit
+     * @param x,y      body center position in physics space
+     * @param w,h      half-extents (or equivalent) for the box obstacle
+     * @param bodyType static/kinematic/dynamic Box2D type
+     * @param sensor   whether the fixture is a sensor
+     */
     public GameObject(Obj object, JsonValue data, float units, float x, float y, float w,
                       float h, BodyDef.BodyType bodyType, boolean sensor) {
         this(object, data);
@@ -133,8 +169,9 @@ public class GameObject extends ObstacleSprite {
     public Quality getPictureQuality() { return pictureQuality; }
 
     /**
-     * Returns the surface quality that should affect contact behavior.
-     *
+     * Surface quality used for Zuko's movement (e.g. jump reduction on sticky surfaces).
+     * If a non-float picture quality is applied, that overrides the base type quality;
+     * otherwise the intrinsic {@link #quality} applies.
      */
     public Quality getEffectiveSurfaceQuality() {
         // this is for the jump reduction for texture qualities only
@@ -144,6 +181,13 @@ public class GameObject extends ObstacleSprite {
         return quality;
     }
 
+    /**
+     * Marks this object as bearing a picture and applies the {@code source}'s
+     * {@link ObjectEffect} onto this instance (mutating staged fields; Box2D is updated
+     * later via {@link #syncPhysics()}). No-op if a picture is already applied.
+     *
+     * @param source the photographed object whose effect should transfer here
+     */
     public void putPicture(GameObject source) {
         if (hasPicture) {
             return;
@@ -160,8 +204,10 @@ public class GameObject extends ObstacleSprite {
     }
 
     /**
-     * Flushes staged property changes to the Box2D body.
-     * Must be called from the physics scene's postUpdate(), never during world.step().
+     * Pushes staged mass, friction, restitution, gravity, body type, and rotation
+     * constraints from this object onto the live {@link BoxObstacle} / {@link Body}.
+     * Must only be called from the scene's {@code postUpdate()}, never during
+     * {@code world.step()}.
      */
     public void syncPhysics() {
         if (!pendingPhysicsSync) {
@@ -187,8 +233,9 @@ public class GameObject extends ObstacleSprite {
     }
 
     /**
-     * Restores all properties to their JSON-defined originals and flags a physics sync.
-     * Called by ObjectEffect.remove() implementations.
+     * Resets picture flag, picture quality, and all physics fields to values read from
+     * the stored JSON, then sets {@link #pendingPhysicsSync}. Invoked when a picture is
+     * removed (e.g. from {@link ObjectEffect} teardown) so the body returns to level defaults.
      */
     void restoreOriginalProperties() {
         hasPicture = false;
@@ -227,13 +274,17 @@ public class GameObject extends ObstacleSprite {
     }
 
     /**
-     * Resets all attributes to JSON defaults and flags a full physics sync.
-     * The actual Box2D body update happens in {@link #syncPhysics()}.
+     * Public entry point for {@link #restoreOriginalProperties()}; use when gameplay
+     * needs to clear applied-picture state. Box2D catches up in {@link #syncPhysics()}.
      */
     public void resetAttributes() {
         restoreOriginalProperties();
     }
 
+    /**
+     * Floating objects ({@code gravityScale <= 0}) keep fixed rotation so they do not
+     * spin from contacts or impulses.
+     */
     private boolean shouldLockRotation() {
         return gravityScale <= 0.0f;
     }
