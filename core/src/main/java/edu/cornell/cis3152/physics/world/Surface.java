@@ -1,20 +1,4 @@
-/*
- * Surface.java
- *
- * This class is a ObstacleSprite referencing either a wall or a platform. All
- * it does is override the constructor. We do this for organizational purposes.
- * Otherwise we have to put a lot of initialization code in the scene, and that
- * just makes the scene too long and unreadable.
- *
- * Note that we have similar classes in the other scenes (rocket and ragdoll).
- * We do this because we want to keep each mini-game self-contained.
- *
- * Based on the original PhysicsDemo Lab by Don Holden, 2007
- *
- * Author:  Walker M. White
- * Version: 2/8/2025
- */
- package edu.cornell.cis3152.physics.world;
+package edu.cornell.cis3152.physics.world;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.physics.box2d.BodyDef;

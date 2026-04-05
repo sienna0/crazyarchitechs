@@ -102,7 +102,6 @@ class LevelPopulation {
             }
         }
 
-        // ── Walls ────────────────────────────────────────────────────────────
         Texture earthTexture = textureResolver.apply("shared-earth", "shared/earthtile.png");
         JsonValue walls = level.get("walls");
         JsonValue wallPositions = walls.get("positions");

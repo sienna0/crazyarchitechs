@@ -423,7 +423,17 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     /** Unused ContactListener method */
     public void postSolve(Contact contact, ContactImpulse impulse) {}
     /** Unused ContactListener method */
-    public void preSolve(Contact contact, Manifold oldManifold) {}
+    public void preSolve(Contact contact, Manifold oldManifold) {
+        Fixture fixtureA = contact.getFixtureA();
+        Fixture fixtureB = contact.getFixtureB();
+
+        Object userDataA = fixtureA.getBody().getUserData();
+        Object userDataB = fixtureB.getBody().getUserData();
+        if (userDataA instanceof GameObject || userDataB instanceof GameObject) {
+            contact.resetFriction();
+            contact.ResetRestitution();
+        }
+    }
 
     public void pause() {
         SoundEffectManager sounds = SoundEffectManager.getInstance();

@@ -1,27 +1,4 @@
-/*
- * PhysicsScene.java
- *
- * This lab is composed of three minigames. Instead of repeating physics code
- * over-and-over, we pull it out into a common subclass. However, in most cases
- * you would just combine this class with your game scene (e.g. RocketScene,
- * RagdollScene, or PlatformScene). Unless your game has a lot of minigames
- * (unlikely) you should not need to architect your code this way.
- *
- * For the most part, this class is like CollisionController from previous labs.
- * It handles the physics, while gameplay is handled in the specific minigame
- * subclass. With that said, there is not much to do for collisions; Box2d takes
- * care of all of that for us. This controller invokes Box2d and then performs
- * any after the fact modifications to the data. These modifications are then
- * interpretted by the subclasses to create gameplay.
- *
- * If you study this class and the GDIAC API package, you should be able to
- * understand how the Physics engine works.
- *
- * Based on the original PhysicsDemo Lab by Don Holden, 2007
- *
- * Author:  Walker M. White
- * Version: 2/8/2025
- */
+
 package edu.cornell.cis3152.physics.screen;
 
 import java.util.Iterator;

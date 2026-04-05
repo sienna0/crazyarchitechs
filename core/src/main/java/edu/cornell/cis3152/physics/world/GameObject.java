@@ -61,7 +61,6 @@ public class GameObject extends ObstacleSprite {
      * Set by ObjectEffect implementations; consumed by {@link #syncPhysics()}.
      */
     boolean pendingPhysicsSync = false;
-    boolean pendingHorizontalStop = false;
 
     /** This object's texture */
     private Texture texture;
@@ -125,7 +124,9 @@ public class GameObject extends ObstacleSprite {
         body.setBodyType(bodyType);
         body.setPhysicsUnits(units);
         body.setUserData(this);
+        body.setMass(weight);
         body.setFriction(friction);
+        body.setRestitution(elasticity);
         body.setGravityScale(gravityScale);
         body.setFixedRotation(shouldLockRotation());
         body.setName(object.name().toLowerCase());
@@ -220,25 +221,23 @@ public class GameObject extends ObstacleSprite {
         pendingPhysicsSync = false;
 
         this.body.setBodyType(baseBodyType);
-        this.body.setMass(weight);
         this.body.setGravityScale(gravityScale);
         this.body.setRestitution(elasticity);
         this.body.setFriction(friction);
         applyRotationConstraint();
         this.body.setAngularVelocity(0.0f);
 
+        System.out.println("here: friction: " + this.body.getFriction());
+
         Body physicsBody = this.body.getBody();
         if (physicsBody != null) {
+            System.out.println("here");
             physicsBody.setType(baseBodyType);
             physicsBody.setGravityScale(gravityScale);
             physicsBody.setFixedRotation(shouldLockRotation());
             for (Fixture fixture : physicsBody.getFixtureList()) {
                 fixture.setFriction(friction);
                 fixture.setRestitution(elasticity);
-            }
-            if (pendingHorizontalStop) {
-                physicsBody.setLinearVelocity(0.0f, physicsBody.getLinearVelocity().y);
-                pendingHorizontalStop = false;
             }
             physicsBody.setAwake(true);
         }
@@ -258,7 +257,6 @@ public class GameObject extends ObstacleSprite {
         this.gravityScale = data.getFloat("gravityScale");
         this.temp = data.getFloat("temp");
         pendingPhysicsSync = true;
-        pendingHorizontalStop = false;
     }
 
     public void setTexture(Texture texture) {
