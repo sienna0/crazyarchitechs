@@ -25,9 +25,10 @@ class LevelRenderer {
     private static final float STUCK_PICTURE_SIZE = 22.0f;
     private static final float STUCK_PICTURE_BORDER = 2.0f;
     private static final float STUCK_PICTURE_INNER_PADDING = 4.0f;
-    private static final float INVENTORY_BAR_WIDTH = 280.0f;
     private static final float INVENTORY_BAR_HEIGHT = 56.0f;
     private static final float INVENTORY_PADDING = 8.0f;
+    /** Slot size is capped so the HUD stays reasonable with few inventory slots. */
+    private static final float MAX_SLOT_SIZE = 40.0f;
     private static final float PAUSE_ICON_SIZE = 38.0f;
     private static final float PAUSE_ICON_HOVER_SIZE = 46.0f;
 
@@ -79,8 +80,11 @@ class LevelRenderer {
 
         viewport.apply();
         batch.begin(camera);
+        int invSize = avatar.getPictureInventory().getSize();
+        float slotSz = Math.min(MAX_SLOT_SIZE, INVENTORY_BAR_HEIGHT - 2 * INVENTORY_PADDING);
+        float dynBarWidth = invSize * slotSz + (invSize + 1) * INVENTORY_PADDING;
         batch.setColor(new Color(0.3f, 0.3f, 0.3f, 0.8f));
-        batch.draw(slotTexture, viewport.getWidth() / 2 - INVENTORY_BAR_WIDTH / 2.0f, 0, INVENTORY_BAR_WIDTH, INVENTORY_BAR_HEIGHT);
+        batch.draw(slotTexture, viewport.getWidth() / 2 - dynBarWidth / 2.0f, 0, dynBarWidth, INVENTORY_BAR_HEIGHT);
         drawInventory(batch, viewport, avatar);
         batch.setColor(Color.WHITE);
 
@@ -102,11 +106,11 @@ class LevelRenderer {
      * Hit-tests a mouse position against the inventory bar slots; returns slot index or {@code -1}.
      */
     int getClickedSlot(float mouseX, float mouseY, CanvasRender viewport, int inventorySize) {
-        float barWidth = INVENTORY_BAR_WIDTH;
-        float barHeight = INVENTORY_BAR_HEIGHT;
-        float barX = viewport.getWidth() / 2 - barWidth / 2;
         float padding = INVENTORY_PADDING;
-        float slotSize = (barWidth - padding * (inventorySize + 1)) / inventorySize;
+        float barHeight = INVENTORY_BAR_HEIGHT;
+        float slotSize = Math.min(MAX_SLOT_SIZE, barHeight - 2 * padding);
+        float barWidth = inventorySize * slotSize + (inventorySize + 1) * padding;
+        float barX = viewport.getWidth() / 2 - barWidth / 2;
         float startX = barX + padding;
 
         for (int ii = 0; ii < inventorySize; ii++) {
@@ -232,13 +236,13 @@ class LevelRenderer {
      * Draws the bottom HUD bar with picture slots.
      */
     private void drawInventory(SpriteBatch batch, CanvasRender viewport, Zuko avatar) {
-        float barWidth = INVENTORY_BAR_WIDTH;
         float barHeight = INVENTORY_BAR_HEIGHT;
-        float barX = viewport.getWidth() / 2 - barWidth / 2;
         float barY = 0f;
         float padding = INVENTORY_PADDING;
         int size = avatar.getPictureInventory().getSize();
-        float slotSize = (barWidth - padding * (size + 1)) / size;
+        float slotSize = Math.min(MAX_SLOT_SIZE, barHeight - 2 * padding);
+        float barWidth = size * slotSize + (size + 1) * padding;
+        float barX = viewport.getWidth() / 2 - barWidth / 2;
         float startX = barX + padding;
         float startY = barY + (barHeight - slotSize) / 2f;
         float selectedRaise = 8f;
