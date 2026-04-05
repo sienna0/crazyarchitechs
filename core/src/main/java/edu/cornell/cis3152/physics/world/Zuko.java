@@ -392,12 +392,12 @@ public class Zuko extends ObstacleSprite {
      * @param units     The physics units
      * @param data      The physics constants for Zuko
      */
-    public Zuko(float units, JsonValue data) {
+    public Zuko(float units, JsonValue data, float xStartingPos, float yStartingPos) {
         this.data = data;
         JsonValue debugInfo = data.get("debug");
 
-        float x = data.get("pos").getFloat(0);
-        float y = data.get("pos").getFloat(1);
+        float x = xStartingPos;
+        float y = yStartingPos;
         float s = data.getFloat( "size" );
         float size = s*units;
 

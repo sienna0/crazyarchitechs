@@ -140,7 +140,9 @@ class LevelPopulation {
         Texture photoSheet   = textureResolver.apply("platform-camera", "platform/cameraflash.png");
         Texture jumpSheet    = textureResolver.apply("platform-jump",   "platform/zukojump.png");
 
-        result.avatar = buildZuko(units, level.get("objectLocations").get("zuko"),
+
+        JsonValue posJson = level.get("objectLocations").get("zukoPos");
+        result.avatar = buildZuko(units, constants.get("zuko"), posJson.get("pos").getFloat(0), posJson.get("pos").getFloat(1),
                 zukoTexture, walkSheet, photoSheet, jumpSheet, "avatar");
         spriteAdder.accept(result.avatar);
         result.avatar.createSensor();
@@ -151,9 +153,9 @@ class LevelPopulation {
                 float[] pos = zukoSprites.get(ii).asFloatArray();
 
                 JsonValue syntheticZuko = buildSyntheticZukoJson(
-                        level.get("objectLocations").get("zuko"), pos[0], pos[1]);
+                        level.get("objectLocations").get("zukoPos"), pos[0], pos[1]);
 
-                Zuko extra = buildZuko(units, syntheticZuko,
+                Zuko extra = buildZuko(units, syntheticZuko,pos[0], pos[1],
                         zukoTexture, walkSheet, photoSheet, jumpSheet,
                         "zukosprite" + ii);
                 spriteAdder.accept(extra);
@@ -221,11 +223,11 @@ class LevelPopulation {
     /**
      * Factory method that creates a {@link Zuko} instance and assigns all animation sheets.
      */
-    private Zuko buildZuko(float units, JsonValue zukoJson,
+    private Zuko buildZuko(float units, JsonValue zukoJson, float xStartingPos, float yStartingPos,
                            Texture zukoTexture, Texture walkSheet,
                            Texture photoSheet, Texture jumpSheet,
                            String name) {
-        Zuko zuko = new Zuko(units, zukoJson);
+        Zuko zuko = new Zuko(units, zukoJson, xStartingPos, yStartingPos);
         zuko.setTexture(zukoTexture);
         zuko.setBaseTexture(zukoTexture);
         zuko.getObstacle().setName(name);
