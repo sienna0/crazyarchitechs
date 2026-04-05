@@ -1073,7 +1073,7 @@
           "sensor": "#ff0000ff",
           "tolerance": 0.05
         },
-        "inventory_size": 5,
+        "inventory_size": 1,
         "film_count": 10,
         "picture_cooldown": 10,
         "max_sight_distance": 9.0

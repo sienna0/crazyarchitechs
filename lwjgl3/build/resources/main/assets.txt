@@ -12,6 +12,7 @@ platform/cloud.png
 platform/constants.json
 platform/constants1.json
 platform/constants2.json
+platform/honey.png
 platform/hover.wav
 platform/ice.png
 platform/jump.wav

@@ -65,6 +65,21 @@ class PhotoSystem {
         if (input.didToggleRange()) {
             worldState.setShowRange(!worldState.isShowRange());
         }
+
+        // Number keys 1-5 select/deselect inventory slots
+        int slot = input.getSlotSelect();
+        if (slot >= 0 && slot < avatar.getPictureInventory().getSize()) {
+            Picture slotPicture = avatar.getPictureInventory().getPicture(slot);
+            if (slotPicture != null && slotPicture.hasSubject()) {
+                if (slot == worldState.getSelectedSlotIndex()) {
+                    worldState.setSelectedSlotIndex(-1);
+                    worldState.setActivePicture(null);
+                } else {
+                    worldState.setSelectedSlotIndex(slot);
+                    worldState.setActivePicture(slotPicture);
+                }
+            }
+        }
     }
 
     /**

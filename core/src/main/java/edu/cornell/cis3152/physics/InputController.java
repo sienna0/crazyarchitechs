@@ -112,6 +112,9 @@ public class InputController {
     private boolean rangePressed;
     private boolean rangePrevious;
 
+    /** Slot selected via number keys 1-5 this frame, or -1 if none. */
+    private int slotSelectPressed = -1;
+
     /** An X-Box controller (if it is connected) */
     XBoxController xbox;
 
@@ -381,6 +384,14 @@ public class InputController {
         //Range Control
         rangePressed = (secondary && rangePressed) || (Gdx.input.isKeyPressed(Input.Keys.TAB));
 
+        // Inventory slot selection via number keys (1-5 map to slots 0-4)
+        slotSelectPressed = -1;
+        if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_1)) slotSelectPressed = 0;
+        else if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_2)) slotSelectPressed = 1;
+        else if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_3)) slotSelectPressed = 2;
+        else if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_4)) slotSelectPressed = 3;
+        else if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_5)) slotSelectPressed = 4;
+
         // Mouse results
         tertiaryPressed = Gdx.input.isButtonPressed(Input.Buttons.LEFT);
         leftClickPressed = Gdx.input.isButtonPressed(Input.Buttons.LEFT);
@@ -436,5 +447,13 @@ public class InputController {
      */
     public boolean didFlicStickToggle() {
         return flicStickPressed && !flicStickPrevious;
+    }
+
+    /**
+     * Returns the inventory slot selected via number keys this frame (0-4),
+     * or -1 if no number key was pressed.
+     */
+    public int getSlotSelect() {
+        return slotSelectPressed;
     }
 }
