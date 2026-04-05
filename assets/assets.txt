@@ -28,6 +28,7 @@ platform/zuko2.png
 platform/zuko3.png
 platform/zukojump.png
 platform/zukojump1.png
+platform/zukotonguechunk.png
 platform/zukowalk.png
 shared/RetroGame.ttf
 shared/background.png
