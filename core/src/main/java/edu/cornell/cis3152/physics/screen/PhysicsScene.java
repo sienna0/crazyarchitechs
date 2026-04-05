@@ -62,6 +62,10 @@ public abstract class PhysicsScene implements Screen {
     public static final int EXIT_NEXT = 1;
     /** Exit code for jumping back to previous level */
     public static final int EXIT_PREV = 2;
+    /** Exit code for jumping back to previous level */
+    public static final int EXIT_WIN = 3;
+    /** Exit code for jumping back to previous level */
+    public static final int EXIT_LOSE = 4;
     /** How many frames after winning/losing do we continue? */
     public static final int EXIT_COUNT = 180;
 
@@ -399,10 +403,11 @@ public abstract class PhysicsScene implements Screen {
             countdown--;
         } else if (countdown == 0) {
             if (failed) {
-                reset();
+                pause();
+                listener.exitScreen(this, EXIT_LOSE);
             } else if (complete) {
                 pause();
-                listener.exitScreen(this, EXIT_NEXT);
+                listener.exitScreen(this, EXIT_WIN);
                 return false;
             }
         }
@@ -497,11 +502,11 @@ public abstract class PhysicsScene implements Screen {
         }
 
         // Draw a final message
-        if (complete && !failed) {
-            batch.drawText(goodMessage, width/2, height/2);
-        } else if (failed) {
-            batch.drawText(badMessage, width/2, height/2);
-        }
+//        if (complete && !failed) {
+//            batch.drawText(goodMessage, width/2, height/2);
+//        } else if (failed) {
+//            batch.drawText(badMessage, width/2, height/2);
+//        }
 
         batch.end();
         viewport.reset();

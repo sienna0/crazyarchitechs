@@ -4,13 +4,11 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import edu.cornell.cis3152.physics.screen.PhysicsScene;
-import edu.cornell.cis3152.physics.screen.LevelSelectScene;
+import edu.cornell.cis3152.physics.screen.*;
 import edu.cornell.cis3152.physics.screen.levels.LevelController;
 import edu.cornell.gdiac.assets.AssetDirectory;
 import edu.cornell.gdiac.graphics.SpriteBatch;
 import edu.cornell.gdiac.util.ScreenListener;
-import edu.cornell.cis3152.physics.screen.PauseMenuScene;
 
 /**
  * A simple example gameplay screen.
@@ -31,7 +29,8 @@ public class GameMode implements Screen, ScreenListener {
     private LevelController levelController;
     private LevelSelectScene levelSelectScene;
     private PauseMenuScene pauseMenuScene;
-
+    private WinScene winScene;
+    private LoseScene loseScene;
 
     private int width;
     private int height;
@@ -39,6 +38,8 @@ public class GameMode implements Screen, ScreenListener {
     private boolean active;
     private boolean showingLevelSelect;
     private boolean paused;
+    private boolean showingWin;
+    private boolean showingLose;
 
 //    private float playerX;
 ////    private float playerY;
@@ -58,6 +59,8 @@ public class GameMode implements Screen, ScreenListener {
         this.levelController = new LevelController(assets, batch, viewport);
         this.levelSelectScene = new LevelSelectScene(assets, batch, viewport, levelController.getTotalLevels());
         pauseMenuScene = new PauseMenuScene(assets, batch, viewport);
+        winScene = new WinScene(assets, batch, viewport);
+        loseScene = new LoseScene(assets, batch, viewport);
 
         camera = new OrthographicCamera();
         resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -96,7 +99,14 @@ public class GameMode implements Screen, ScreenListener {
         } else if (exitCode == PhysicsScene.EXIT_QUIT) {
             showingLevelSelect = true;
             levelSelectScene.show();
+        } else if (exitCode == PhysicsScene.EXIT_WIN) {
+            showingWin = true;
+            winScene.show();
+        } else if (exitCode == PhysicsScene.EXIT_LOSE) {
+            showingLose = true;
+            loseScene.show();
         }
+
     }
 
     /**
@@ -152,6 +162,34 @@ public class GameMode implements Screen, ScreenListener {
                     levelSelectScene.show();
                 }
             }
+            if (showingWin) {
+                int choice = winScene.consumeChoice();
+                if (choice == WinScene.NEXT_LEVEL) {
+                    showingWin = false;
+                    winScene.hide();
+                    levelController.nextLevel();
+                    levelController.setScreenListener(this);
+                } else if (choice == WinScene.QUIT) {
+                    showingWin = false;
+                    winScene.hide();
+                    showingLevelSelect = true;
+                    levelSelectScene.show();
+                }
+            }
+            if (showingLose) {
+                int choice = loseScene.consumeChoice();
+                if (choice == LoseScene.RETRY) {
+                    showingLose = false;
+                    loseScene.hide();
+                    levelController.loadLevel(levelController.getCurrentLevel());
+                    levelController.setScreenListener(this);
+                } else if (choice == LoseScene.QUIT) {
+                    showingLose = false;
+                    loseScene.hide();
+                    showingLevelSelect = true;
+                    levelSelectScene.show();
+                }
+            }
         }
     }
 
@@ -168,6 +206,12 @@ public class GameMode implements Screen, ScreenListener {
             }
             if (paused) {
                 pauseMenuScene.render(Gdx.graphics.getDeltaTime());
+            }
+            if (showingWin) {
+                winScene.render(Gdx.graphics.getDeltaTime());
+            }
+            if (showingLose) {
+                loseScene.render(Gdx.graphics.getDeltaTime());
             }
         }
     }
@@ -244,6 +288,14 @@ public class GameMode implements Screen, ScreenListener {
         if (levelSelectScene != null) {
             levelSelectScene.dispose();
             levelSelectScene = null;
+        }
+        if (winScene != null) {
+            winScene.dispose();
+            winScene = null;
+        }
+        if (loseScene != null) {
+            loseScene.dispose();
+            loseScene = null;
         }
     }
 }
