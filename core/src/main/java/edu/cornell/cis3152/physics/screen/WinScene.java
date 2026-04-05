@@ -86,12 +86,12 @@ public class WinScene  implements Screen {
         titleLayout = new TextLayout();
         titleLayout.setFont(font);
         titleLayout.setAlignment(TextAlign.middleCenter);
-        titleLayout.setColor(new Color(0.95f, 0.85f, 0.20f, 1f)); // gold title
+        titleLayout.setColor(new Color(0.95f, 0.85f, 0.20f, 1f));
 
         punLayout = new TextLayout();
         punLayout.setFont(font);
         punLayout.setAlignment(TextAlign.middleCenter);
-        punLayout.setColor(new Color(0.72f, 0.95f, 0.52f, 1f)); // bright frog green
+        punLayout.setColor(new Color(0.72f, 0.95f, 0.52f, 1f));
 
         optionLayout = new TextLayout();
         optionLayout.setFont(font);
