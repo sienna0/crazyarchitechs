@@ -4,6 +4,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
+import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.utils.JsonValue;
 import edu.cornell.gdiac.physics2.BoxObstacle;
 import edu.cornell.gdiac.physics2.ObstacleSprite;
@@ -60,6 +61,7 @@ public class GameObject extends ObstacleSprite {
      * Set by ObjectEffect implementations; consumed by {@link #syncPhysics()}.
      */
     boolean pendingPhysicsSync = false;
+    boolean pendingHorizontalStop = false;
 
     /** This object's texture */
     private Texture texture;
@@ -195,7 +197,9 @@ public class GameObject extends ObstacleSprite {
         hasPicture = true;
         ObjectEffect sourceEffect = source.getEffect();
         if (sourceEffect != null) {
+            System.out.println("in here: putting " + source.getName() + " on " + this.getName());
             sourceEffect.apply(source, this);
+            System.out.println("friction: " + this.getFriction());
         }
     }
 
@@ -228,6 +232,14 @@ public class GameObject extends ObstacleSprite {
             physicsBody.setType(baseBodyType);
             physicsBody.setGravityScale(gravityScale);
             physicsBody.setFixedRotation(shouldLockRotation());
+            for (Fixture fixture : physicsBody.getFixtureList()) {
+                fixture.setFriction(friction);
+                fixture.setRestitution(elasticity);
+            }
+            if (pendingHorizontalStop) {
+                physicsBody.setLinearVelocity(0.0f, physicsBody.getLinearVelocity().y);
+                pendingHorizontalStop = false;
+            }
             physicsBody.setAwake(true);
         }
     }
@@ -246,6 +258,7 @@ public class GameObject extends ObstacleSprite {
         this.gravityScale = data.getFloat("gravityScale");
         this.temp = data.getFloat("temp");
         pendingPhysicsSync = true;
+        pendingHorizontalStop = false;
     }
 
     public void setTexture(Texture texture) {

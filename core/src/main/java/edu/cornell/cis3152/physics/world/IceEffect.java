@@ -12,6 +12,9 @@ public class IceEffect implements ObjectEffect {
         target.friction = source.getOriginalFriction();
         target.pictureQuality = Quality.SLIPPERY;
         target.pendingPhysicsSync = true;
+
+        target.getObstacle().setRestitution(target.elasticity);
+        target.getObstacle().setFriction(target.friction);
     }
 
     @Override

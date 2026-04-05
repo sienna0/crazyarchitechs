@@ -235,7 +235,7 @@ public class Zuko extends ObstacleSprite {
         boolean hasIcePicture = pictureQuality == Quality.SLIPPERY && platform.hasPicture();
 
         canJumpFull = (!baseIsHoney || hasIcePicture) && !hasHoneyPicture;
-        onIce = baseIsIce || hasIcePicture;
+        onIce = (baseIsIce && !hasHoneyPicture) || hasIcePicture;
     }
 
     /**
@@ -493,6 +493,8 @@ public class Zuko extends ObstacleSprite {
             return;
         }
 
+        float maxspeed = canJumpFull ? getMaxSpeed() : getMaxSpeed()/2;
+
         Vector2 pos = obstacle.getPosition();
         float vx = obstacle.getVX();
         Body body = obstacle.getBody();
@@ -505,8 +507,8 @@ public class Zuko extends ObstacleSprite {
 
         // TODO add an even higher velocity for ice maybe?
         // Velocity too high, clamp it
-        if (!onIce && Math.abs(vx) >= getMaxSpeed()) {
-            obstacle.setVX(Math.signum(vx)*getMaxSpeed());
+        if (!onIce && Math.abs(vx) >= maxspeed) {
+            obstacle.setVX(Math.signum(vx)*maxspeed);
         } else {
             forceCache.set(getMovement(),0);
             body.applyForce(forceCache,pos,true);
