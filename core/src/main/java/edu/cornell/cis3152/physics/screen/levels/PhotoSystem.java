@@ -26,7 +26,7 @@ class PhotoSystem {
     private final SoundEffect fireSound;
     private final SoundEffect plopSound;
 
-    private float STICK_PICTURE_DISTANCE = 9.0f; //I know you wanted it to be 3 times less than take picture but, if you mistakenly take a picture of the rock, you would not be able to reach the cloud unless it is 2 times less
+    private float STICK_PICTURE_DISTANCE = 9.0f;
     private float TAKE_PICTURE_DISTANCE = 9.0f;
 
     public PhotoSystem (WorldState worldState,

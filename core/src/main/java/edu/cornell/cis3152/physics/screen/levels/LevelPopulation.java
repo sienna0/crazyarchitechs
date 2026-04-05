@@ -151,21 +151,19 @@ class LevelPopulation {
 
         float objectWidth = OBJECT_SIZE;
 
-        // The level editor uses "rock" as the key name, but the game's Obj enum
-        // maps this to HONEY (sticky quality). The visual asset is rock.png.
-        Texture rockTexture = textureResolver.apply("platform-rock", "platform/rock.png");
-        float rockHeight = objectWidth * ((float) rockTexture.getHeight() / rockTexture.getWidth());
-        JsonValue rockPositions = objectLocations.get("rock");
-        for (int ii = 0; ii < rockPositions.size; ii++) {
-            float[] pos = rockPositions.get(ii).asFloatArray();
+        Texture honeyTexture = textureResolver.apply("platform-honey", "platform/honey.png");
+        float honeyHeight = objectWidth * ((float) honeyTexture.getHeight() / honeyTexture.getWidth());
+        JsonValue honeyPositions = objectLocations.get("honey");
+        for (int ii = 0; ii < honeyPositions.size; ii++) {
+            float[] pos = honeyPositions.get(ii).asFloatArray();
             GameObject honey = new GameObject(
-                    Obj.HONEY, constants.get("rock"), units,
+                    Obj.HONEY, constants.get("honey"), units,
                     pos[0], pos[1],
-                    objectWidth, rockHeight,
+                    objectWidth, honeyHeight,
                     BodyDef.BodyType.DynamicBody,
                     false
             );
-            honey.setTexture(rockTexture);
+            honey.setTexture(honeyTexture);
             spriteAdder.accept(honey);
             result.honeys.add(honey);
         }

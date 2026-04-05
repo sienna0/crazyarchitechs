@@ -228,13 +228,13 @@ public class Zuko extends ObstacleSprite {
             return;
         }
 
-        boolean baseIsRock = platform.getObjectType() == Obj.HONEY;
+        boolean baseIsHoney = platform.getObjectType() == Obj.HONEY;
         boolean baseIsIce = platform.getObjectType() == Obj.ICE;
         Quality pictureQuality = platform.getPictureQuality();
-        boolean hasRockPicture = pictureQuality == Quality.STICKY && platform.hasPicture();
+        boolean hasHoneyPicture = pictureQuality == Quality.STICKY && platform.hasPicture();
         boolean hasIcePicture = pictureQuality == Quality.SLIPPERY && platform.hasPicture();
 
-        canJumpFull = (!baseIsRock || hasIcePicture) && !hasRockPicture;
+        canJumpFull = (!baseIsHoney || hasIcePicture) && !hasHoneyPicture;
         onIce = baseIsIce || hasIcePicture;
     }
 
