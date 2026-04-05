@@ -151,6 +151,8 @@ class LevelPopulation {
 
         float objectWidth = OBJECT_SIZE;
 
+        // The level editor uses "rock" as the key name, but the game's Obj enum
+        // maps this to HONEY (sticky quality). The visual asset is rock.png.
         Texture rockTexture = textureResolver.apply("platform-rock", "platform/rock.png");
         float rockHeight = objectWidth * ((float) rockTexture.getHeight() / rockTexture.getWidth());
         JsonValue rockPositions = objectLocations.get("rock");
