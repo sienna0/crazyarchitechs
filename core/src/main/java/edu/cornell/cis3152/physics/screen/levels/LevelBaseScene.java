@@ -302,7 +302,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         }
 
         InputController input = InputController.getInstance();
-        photoSystem.updateHighlights(avatar, sprites);
+        photoSystem.updateHighlights(avatar, sprites, world);
         photoSystem.handlePictureShortcuts(input, avatar);
         photoSystem.updateAvatarMovement(input, avatar);
 
@@ -314,7 +314,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
                 viewport,
                 avatar.getPictureInventory().getSize()
         );
-        photoSystem.handlePictureAction(input, target, avatar, clickedSlot);
+        photoSystem.handlePictureAction(input, target, avatar, clickedSlot, world);
 
         if (avatar.getCamera().isPictureTaken()) {
             avatar.getCamera().clearPictureTaken();
