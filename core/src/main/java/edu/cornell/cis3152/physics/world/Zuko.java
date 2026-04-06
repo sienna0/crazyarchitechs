@@ -13,6 +13,8 @@ import edu.cornell.gdiac.math.Path2;
 import edu.cornell.gdiac.math.PathFactory;
 import edu.cornell.gdiac.physics2.*;
 
+import java.awt.geom.AffineTransform;
+
 // TODO i do think we should refactor this file.. it's getting quite long
 // TODO split animation and movement?
 
@@ -115,6 +117,24 @@ public class Zuko extends ObstacleSprite {
     private float walkAnimationTime = 0f;
     /** The duration of each walk frame */
     private float walkFrameDuration = 0.07f;
+
+    /** The Texture of one segment of Zuko's tongue */
+    private Texture tongueSegment;
+    /** The progress of the tongue to the target. 0 = fully retracted, 1 = fully extended */
+    private float tongueProgress = 0f;
+    /** The speed of the tongue */
+    private float tongueSpeed = 8.0f;
+    /** The sticking target */
+    private Vector2 tongueTarget = new Vector2();
+//    /** The offset of the tongue on Zuko's sprite */
+//    private Vector2 tongueMouthOffset = new Vector2(0.1f, 0f);
+    /** The state of Zuko's tongue. 0 = idle, 1 = extending, 2 = retracting */
+    private float tongueState = 0f;
+    /** The Affine2 for drawing the tongue */
+    private final Affine2 tongueTransform = new Affine2();
+    /** Distance from tongue to target */
+    private float tongueTotalDist = 0f;
+
 
     private Texture baseTexture;
 
@@ -361,6 +381,24 @@ public class Zuko extends ObstacleSprite {
     }
 
     /**
+     * Starts Zuko's tongue animation when a photo is being stuck
+     */
+    public void startTongueAnimation(float targetX, float targetY) {
+        faceRight = targetX > obstacle.getX();
+        float u = obstacle.getPhysicsUnits();
+        tongueTarget.set(targetX * u, targetY * u);
+
+        float mx = obstacle.getX() * u;
+        float my = obstacle.getY() * u;
+        float dx = tongueTarget.x - mx;
+        float dy = tongueTarget.y - my;
+        tongueTotalDist = (float) Math.sqrt(dx * dx + dy * dy);
+
+        tongueProgress = 0f;
+        tongueState = 1f;
+    }
+
+    /**
      * Sets the jump animation SpriteSheet for Zuko
      * @param sheet
      * @param rows
@@ -378,6 +416,13 @@ public class Zuko extends ObstacleSprite {
      */
     public void setWalkAnimation(Texture sheet, int rows, int cols, int size) {
         walkSheet = new SpriteSheet(sheet, rows, cols, size);
+    }
+
+    /**
+     * Sets the tongue segment texture
+     */
+    public void setTongueSegment(Texture texture) {
+        this.tongueSegment = texture;
     }
 
 
@@ -570,6 +615,20 @@ public class Zuko extends ObstacleSprite {
             walkSheet.setFrame(0);
         }
 
+        if (tongueState == 1f) {
+            tongueProgress += dt * tongueSpeed;
+            if (tongueProgress >= 1f) {
+                tongueProgress = 1f;
+                tongueState = 2f;
+            }
+        } else if (tongueState == 2f) {
+            tongueProgress -= dt * tongueSpeed;
+            if (tongueProgress <= 0f) {
+                tongueProgress = 0f;
+                tongueState = 0f;
+            }
+        }
+
         camera.update(dt);
 
         super.update(dt);
@@ -600,6 +659,37 @@ public class Zuko extends ObstacleSprite {
         }
 
         super.draw(batch,flipCache);
+
+        drawTongue(batch);
+    }
+
+    /**
+     * Separate draw method for the tongue. Draws incrementally based on progress.
+     */
+    private void drawTongue(SpriteBatch batch) {
+        if (tongueState != 0f && tongueSegment != null) {
+            float u = obstacle.getPhysicsUnits();
+            float mx = obstacle.getX() * u + (faceRight ? 0.3f : -0.3f);
+            float my = obstacle.getY() * u - 0.2f;
+
+            float tipX = mx + (tongueTarget.x - mx) * tongueProgress;
+            float tipY = my + (tongueTarget.y - my) * tongueProgress;
+
+            float totalDist = tongueTotalDist * tongueProgress;
+            float segSize = tongueSegment.getWidth();
+            int numSegs = Math.max(1, (int) (totalDist / 3f) + 1);
+
+            float angle = (float)(Math.atan2(tipY - my, tipX - mx) * 180f / Math.PI);
+
+            for (int i = 0; i < numSegs; i++) {
+                float t = (float) i / numSegs;
+                float sx = mx + (tipX - mx) * t;
+                float sy = my + (tipY - my) * t;
+
+                tongueTransform.setToTrnRotScl(sx, sy, angle, 1f, 1f);
+                batch.draw(tongueSegment, tongueTransform);
+            }
+        }
     }
 
     /**

@@ -139,11 +139,12 @@ class LevelPopulation {
         Texture walkSheet    = textureResolver.apply("platform-walk",   "platform/zukowalk.png");
         Texture photoSheet   = textureResolver.apply("platform-camera", "platform/cameraflash.png");
         Texture jumpSheet    = textureResolver.apply("platform-jump",   "platform/zukojump.png");
+        Texture tongueTexture =  textureResolver.apply("platform-tongue",   "platform/zukotonguechunk.png");
 
 
         JsonValue posJson = level.get("objectLocations").get("zukoPos");
         result.avatar = buildZuko(units, constants.get("zuko"), posJson.get("pos").getFloat(0), posJson.get("pos").getFloat(1),
-                zukoTexture, walkSheet, photoSheet, jumpSheet, "avatar");
+                zukoTexture, walkSheet, photoSheet, jumpSheet, tongueTexture, "avatar");
         spriteAdder.accept(result.avatar);
         result.avatar.createSensor();
 
@@ -156,7 +157,7 @@ class LevelPopulation {
                         level.get("objectLocations").get("zukoPos"), pos[0], pos[1]);
 
                 Zuko extra = buildZuko(units, syntheticZuko,pos[0], pos[1],
-                        zukoTexture, walkSheet, photoSheet, jumpSheet,
+                        zukoTexture, walkSheet, photoSheet, jumpSheet, tongueTexture,
                         "zukosprite" + ii);
                 spriteAdder.accept(extra);
                 extra.createSensor();
@@ -225,7 +226,7 @@ class LevelPopulation {
      */
     private Zuko buildZuko(float units, JsonValue zukoJson, float xStartingPos, float yStartingPos,
                            Texture zukoTexture, Texture walkSheet,
-                           Texture photoSheet, Texture jumpSheet,
+                           Texture photoSheet, Texture jumpSheet, Texture tongueTexture,
                            String name) {
         Zuko zuko = new Zuko(units, zukoJson, xStartingPos, yStartingPos);
         zuko.setTexture(zukoTexture);
@@ -234,6 +235,7 @@ class LevelPopulation {
         zuko.setWalkAnimation(walkSheet,  1, 6, 6);
         zuko.setPhotoAnimation(photoSheet, 1, 13, 13);
         zuko.setJumpAnimation(jumpSheet,  1, 7, 7);
+        zuko.setTongueSegment(tongueTexture);
         return zuko;
     }
 

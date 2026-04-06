@@ -16,6 +16,7 @@
         "platform-walk"     : "platform/zukowalk.png",
         "platform-camera"   : "platform/cameraflash.png",
         "platform-jump"     : "platform/zukojump.png",
+        "platform-tongue"   : "platform/zukotonguechunk.png",
         "platform-ice"      : "platform/ice.png",
         "platform-honey"    : "platform/honey.png",
         "platform-cloud"    : "platform/cloud.png",

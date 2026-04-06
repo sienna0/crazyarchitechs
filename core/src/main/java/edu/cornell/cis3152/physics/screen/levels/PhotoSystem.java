@@ -320,6 +320,7 @@ class PhotoSystem {
             avatar.setCurrentPlatform(target);
         }
 
+        avatar.startTongueAnimation(target.getObstacle().getX(), target.getObstacle().getY());
         SoundEffectManager.getInstance().play("fire", fireSound, volume);
     }
 
