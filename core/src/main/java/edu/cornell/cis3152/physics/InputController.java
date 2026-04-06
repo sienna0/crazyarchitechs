@@ -1,17 +1,3 @@
-/*
- * InputController.java
- *
- * This class buffers in input from the devices and converts it into its
- * semantic meaning. If your game had an option that allows the player to
- * remap the control keys, you would store this information in this class.
- * That way, the main GameEngine does not have to keep track of the current
- * key mapping.
- *
- * Based on the original PhysicsDemo Lab by Don Holden, 2007
- *
- * Author:  Walker M. White
- * Version: 2/8/2025
- */
 package edu.cornell.cis3152.physics;
 
 import com.badlogic.gdx.*;

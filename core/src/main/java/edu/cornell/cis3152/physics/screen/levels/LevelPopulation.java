@@ -102,25 +102,6 @@ class LevelPopulation {
             }
         }
 
-        Texture earthTexture = textureResolver.apply("shared-earth", "shared/earthtile.png");
-        JsonValue walls = level.get("walls");
-        JsonValue wallPositions = walls.get("positions");
-        for (int ii = 0; ii < wallPositions.size; ii++) {
-            Surface wall = new Surface(wallPositions.get(ii).asFloatArray(), units, walls);
-            wall.getObstacle().setName("wall" + ii);
-            wall.setTexture(earthTexture);
-            spriteAdder.accept(wall);
-        }
-
-        JsonValue platforms = level.get("platforms");
-        JsonValue platformPositions = platforms.get("positions");
-        for (int ii = 0; ii < platformPositions.size; ii++) {
-            Surface platform = new Surface(platformPositions.get(ii).asFloatArray(), units, platforms);
-            platform.getObstacle().setName("platform" + ii);
-            platform.setTexture(earthTexture);
-            spriteAdder.accept(platform);
-        }
-
         Texture floorTexture = textureResolver.apply("shared-floor", "shared/floortile.png");
         JsonValue floors = level.get("floors");
         if (floors != null) {

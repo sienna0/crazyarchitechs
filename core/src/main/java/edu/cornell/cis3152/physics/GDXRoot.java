@@ -11,7 +11,7 @@
  * Author:  Walker M. White
  * Version: 2/8/2025
  */
- package edu.cornell.cis3152.physics;
+package edu.cornell.cis3152.physics;
 
 import com.badlogic.gdx.*;
 import edu.cornell.cis3152.physics.screen.LoadingScene;
