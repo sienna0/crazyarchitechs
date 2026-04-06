@@ -3,6 +3,8 @@ package edu.cornell.cis3152.physics.screen.levels;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
+import com.badlogic.gdx.physics.box2d.Fixture;
+import com.badlogic.gdx.physics.box2d.World;
 import edu.cornell.cis3152.physics.InputController;
 import edu.cornell.cis3152.physics.screen.WorldState;
 import edu.cornell.cis3152.physics.world.GameObject;
@@ -107,9 +109,9 @@ class PhotoSystem {
      * Clears and rebuilds {@link WorldState}'s highlight list: objects within line-of-sight
      * and photo range of Zuko (take vs stick range depends on whether a picture is active).
      */
-    void updateHighlights(Zuko avatar, PooledList<ObstacleSprite> sprites) {
+    void updateHighlights(Zuko avatar, PooledList<ObstacleSprite> sprites, World world) {
         worldState.getHighlighted().clear();
-        findObjectNearZuko(avatar, sprites);
+        findObjectNearZuko(avatar, sprites, world);
     }
 
     /**
@@ -121,7 +123,8 @@ class PhotoSystem {
     void handlePictureAction(InputController input,
                              GameObject target,
                              Zuko avatar,
-                             int clickedSlot) {
+                             int clickedSlot,
+                             World world) {
         if (input.didLeftClick()) {
             if (clickedSlot >= 0) {
                 Picture slotPicture = avatar.getPictureInventory().getPicture(clickedSlot);
@@ -149,9 +152,9 @@ class PhotoSystem {
             return;
         }
         if (worldState.getActivePicture() == null || worldState.getSelectedSlotIndex() == -1) {
-            takePictureOfTarget(input, target, avatar);
+            takePictureOfTarget(input, target, avatar, world);
         } else {
-            applyPictureToTarget(target, avatar);
+            applyPictureToTarget(target, avatar, world);
         }
     }
 
@@ -229,12 +232,15 @@ class PhotoSystem {
      * of the target, adds it to {@link WorldState} and the inventory, plays audio, and starts
      * the take-photo facing animation from mouse vs avatar position.
      */
-    private void takePictureOfTarget(InputController input, GameObject target, Zuko avatar) {
+    private void takePictureOfTarget(InputController input, GameObject target, Zuko avatar, World world) {
         if (!avatar.getCamera().canTakePicture(
                 target.getObstacle().getX(),
                 target.getObstacle().getY(),
                 avatar.getObstacle().getX(),
                 avatar.getObstacle().getY())) {
+            return;
+        }
+        if (!hasFullLineOfSight(target, avatar, world, TAKE_PICTURE_DISTANCE)) {
             return;
         }
         if (avatar.getPictureInventory().getUnusedPicture() == null) {
@@ -257,7 +263,7 @@ class PhotoSystem {
      * photo range (stick distance when a picture is selected, take distance otherwise),
      * skipping when the player cannot take a new photo and no slot is selected.
      */
-    private void findObjectNearZuko(Zuko avatar, PooledList<ObstacleSprite> sprites) {
+    private void findObjectNearZuko(Zuko avatar, PooledList<ObstacleSprite> sprites, World world) {
         Picture activePicture = worldState.getActivePicture();
         if (avatar.getPictureInventory().getUnusedPicture() == null && worldState.getSelectedSlotIndex() == -1) {
             return;
@@ -267,9 +273,7 @@ class PhotoSystem {
         for (ObstacleSprite sprite : sprites) {
             if (sprite == avatar) continue;
             if (!(sprite instanceof GameObject go)) continue;
-            float x = go.getObstacle().getX();
-            float y = go.getObstacle().getY();
-            if (avatar.getCamera().hasLineOfSight(x, y, avatar.getObstacle().getX(), avatar.getObstacle().getY(), range)) {
+            if (hasFullLineOfSight(go, avatar, world, range)) {
                 worldState.addHighlight(go);
             }
 
@@ -281,7 +285,7 @@ class PhotoSystem {
      * attributes, transfers float-home behavior for float-quality subjects, removes the
      * picture from the hotbar, and plays the stick sound.
      */
-    private void applyPictureToTarget(GameObject target, Zuko avatar) {
+    private void applyPictureToTarget(GameObject target, Zuko avatar, World world) {
         Picture activePicture = worldState.getActivePicture();
         if (activePicture == null) {
             return;
@@ -293,12 +297,7 @@ class PhotoSystem {
         if (activePicture.getSubject() == target) {
             return;
         }
-        if (!avatar.getCamera().hasLineOfSight(
-                target.getObstacle().getX(),
-                target.getObstacle().getY(),
-                avatar.getObstacle().getX(),
-                avatar.getObstacle().getY(),
-                STICK_PICTURE_DISTANCE)) {
+        if (!hasFullLineOfSight(target, avatar, world, STICK_PICTURE_DISTANCE)) {
             return;
         }
 
@@ -356,5 +355,78 @@ class PhotoSystem {
             }
         }
         return null;
+    }
+
+    /**
+     * A target is photographable only if every sampled point on it is both in range and hit
+     * first by the raycast before any wall, invisible collider, or other object.
+     */
+    private boolean hasFullLineOfSight(GameObject target, Zuko avatar, World world, float maxDistance) {
+        if (target == null || world == null) {
+            return false;
+        }
+
+        for (Vector2 sample : getVisibilitySamples(target)) {
+            if (!isSampleVisible(target, avatar, world, sample, maxDistance)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private Vector2[] getVisibilitySamples(GameObject target) {
+        Rectangle bounds = target.getMesh().computeBounds();
+        float units = target.getObstacle().getPhysicsUnits();
+        float centerX = target.getObstacle().getX();
+        float centerY = target.getObstacle().getY();
+        float halfWidth = (bounds.width / units) * 0.5f;
+        float halfHeight = (bounds.height / units) * 0.5f;
+        float sampleOffsetX = Math.max(halfWidth * 0.5f, 0.05f);
+        float sampleOffsetY = Math.max(halfHeight * 0.5f, 0.05f);
+
+        return new Vector2[] {
+                new Vector2(centerX, centerY),
+                new Vector2(centerX - sampleOffsetX, centerY - sampleOffsetY),
+                new Vector2(centerX - sampleOffsetX, centerY + sampleOffsetY),
+                new Vector2(centerX + sampleOffsetX, centerY - sampleOffsetY),
+                new Vector2(centerX + sampleOffsetX, centerY + sampleOffsetY)
+        };
+    }
+
+    private boolean isSampleVisible(GameObject target, Zuko avatar, World world, Vector2 sample, float maxDistance) {
+        float originX = avatar.getObstacle().getX();
+        float originY = avatar.getObstacle().getY();
+        float dx = sample.x - originX;
+        float dy = sample.y - originY;
+        if ((dx * dx + dy * dy) > (maxDistance * maxDistance)) {
+            return false;
+        }
+
+        RaycastHit hit = new RaycastHit();
+        world.rayCast((fixture, point, normal, fraction) -> {
+            if (shouldIgnoreRaycastFixture(fixture, avatar)) {
+                return -1.0f;
+            }
+            if (fraction < hit.fraction) {
+                hit.fixture = fixture;
+                hit.fraction = fraction;
+            }
+            return 1.0f;
+        }, originX, originY, sample.x, sample.y);
+
+        return hit.fixture != null && hit.fixture.getBody().getUserData() == target;
+    }
+
+    private boolean shouldIgnoreRaycastFixture(Fixture fixture, Zuko avatar) {
+        if (fixture == null || fixture.isSensor()) {
+            return true;
+        }
+        Object owner = fixture.getBody().getUserData();
+        return owner == avatar;
+    }
+
+    private static final class RaycastHit {
+        private Fixture fixture;
+        private float fraction = Float.MAX_VALUE;
     }
 }

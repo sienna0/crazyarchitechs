@@ -12,6 +12,9 @@ public class HoneyEffect implements ObjectEffect {
         target.friction = source.getOriginalFriction();
         target.pictureQuality = Quality.STICKY;
         target.pendingPhysicsSync = true;
+
+        target.getObstacle().setRestitution(target.elasticity);
+        target.getObstacle().setFriction(target.friction);
     }
 
     @Override

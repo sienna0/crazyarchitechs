@@ -4,6 +4,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
+import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.utils.JsonValue;
 import edu.cornell.gdiac.physics2.BoxObstacle;
 import edu.cornell.gdiac.physics2.ObstacleSprite;
@@ -123,7 +124,9 @@ public class GameObject extends ObstacleSprite {
         body.setBodyType(bodyType);
         body.setPhysicsUnits(units);
         body.setUserData(this);
+        body.setMass(weight);
         body.setFriction(friction);
+        body.setRestitution(elasticity);
         body.setGravityScale(gravityScale);
         body.setFixedRotation(shouldLockRotation());
         body.setName(object.name().toLowerCase());
@@ -195,7 +198,9 @@ public class GameObject extends ObstacleSprite {
         hasPicture = true;
         ObjectEffect sourceEffect = source.getEffect();
         if (sourceEffect != null) {
+            System.out.println("in here: putting " + source.getName() + " on " + this.getName());
             sourceEffect.apply(source, this);
+            System.out.println("friction: " + this.getFriction());
         }
     }
 
@@ -216,18 +221,24 @@ public class GameObject extends ObstacleSprite {
         pendingPhysicsSync = false;
 
         this.body.setBodyType(baseBodyType);
-        this.body.setMass(weight);
         this.body.setGravityScale(gravityScale);
         this.body.setRestitution(elasticity);
         this.body.setFriction(friction);
         applyRotationConstraint();
         this.body.setAngularVelocity(0.0f);
 
+        System.out.println("here: friction: " + this.body.getFriction());
+
         Body physicsBody = this.body.getBody();
         if (physicsBody != null) {
+            System.out.println("here");
             physicsBody.setType(baseBodyType);
             physicsBody.setGravityScale(gravityScale);
             physicsBody.setFixedRotation(shouldLockRotation());
+            for (Fixture fixture : physicsBody.getFixtureList()) {
+                fixture.setFriction(friction);
+                fixture.setRestitution(elasticity);
+            }
             physicsBody.setAwake(true);
         }
     }

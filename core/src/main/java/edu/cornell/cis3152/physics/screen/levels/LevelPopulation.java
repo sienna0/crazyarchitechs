@@ -10,9 +10,12 @@ import edu.cornell.cis3152.physics.screen.WorldState;
 import edu.cornell.cis3152.physics.world.*;
 import edu.cornell.gdiac.physics2.ObstacleSprite;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
@@ -99,7 +102,6 @@ class LevelPopulation {
             }
         }
 
-        // ── Walls ────────────────────────────────────────────────────────────
         Texture earthTexture = textureResolver.apply("shared-earth", "shared/earthtile.png");
         JsonValue walls = level.get("walls");
         JsonValue wallPositions = walls.get("positions");
@@ -240,7 +242,8 @@ class LevelPopulation {
     }
 
     /**
-     * Generates {@link InvisibleSurface} colliders for each tilemap cell.
+     * Generates {@link InvisibleSurface} colliders for contiguous horizontal tile runs.
+     * Merging adjacent cells avoids Box2D seam catches that can snag low-friction objects.
      */
     private void addTilemapColliders(JsonValue level, JsonValue collisionSettings, float units) {
         if (collisionSettings == null) {
@@ -252,6 +255,7 @@ class LevelPopulation {
             return;
         }
 
+        Map<Integer, TreeSet<Integer>> rows = new HashMap<>();
         Set<String> seenTiles = new HashSet<>();
         for (int ii = 0; ii < tilemap.size; ii++) {
             JsonValue entry = tilemap.get(ii);
@@ -261,16 +265,40 @@ class LevelPopulation {
             if (!seenTiles.add(key)) {
                 continue;
             }
-
-            InvisibleSurface tileCollider = new InvisibleSurface(new float[]{
-                    tx, ty,
-                    tx + TILE_WORLD_SIZE, ty,
-                    tx + TILE_WORLD_SIZE, ty + TILE_WORLD_SIZE,
-                    tx, ty + TILE_WORLD_SIZE
-            }, units, collisionSettings);
-            tileCollider.getObstacle().setName("tilecollider" + ii);
-            spriteAdder.accept(tileCollider);
+            rows.computeIfAbsent(ty, ignored -> new TreeSet<>()).add(tx);
         }
+
+        int colliderIndex = 0;
+        for (Map.Entry<Integer, TreeSet<Integer>> rowEntry : rows.entrySet()) {
+            int ty = rowEntry.getKey();
+            TreeSet<Integer> xs = rowEntry.getValue();
+            Integer runStart = null;
+            Integer previous = null;
+            for (Integer tx : xs) {
+                if (runStart == null) {
+                    runStart = tx;
+                } else if (previous != null && tx != previous + 1) {
+                    createTileCollider(runStart, previous + 1, ty, units, collisionSettings, colliderIndex++);
+                    runStart = tx;
+                }
+                previous = tx;
+            }
+            if (runStart != null && previous != null) {
+                createTileCollider(runStart, previous + 1, ty, units, collisionSettings, colliderIndex++);
+            }
+        }
+    }
+
+    private void createTileCollider(int startX, int endExclusiveX, int y, float units,
+                                    JsonValue collisionSettings, int colliderIndex) {
+        InvisibleSurface tileCollider = new InvisibleSurface(new float[]{
+                startX, y,
+                endExclusiveX, y,
+                endExclusiveX, y + TILE_WORLD_SIZE,
+                startX, y + TILE_WORLD_SIZE
+        }, units, collisionSettings);
+        tileCollider.getObstacle().setName("tilecollider" + colliderIndex);
+        spriteAdder.accept(tileCollider);
     }
 
     /**
