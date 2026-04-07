@@ -2,11 +2,16 @@
 	"textures": {
         "shared-earth" : {
             "file":  "shared/earthtile.png",
-            "wrapU": "repeated",
+            "wrapU": "non-repeated",
             "wrapV": "repeated"
         },
         "shared-floor" : {
             "file": "shared/floortile.png",
+            "wrapU": "repeated",
+            "wrapV": "repeated"
+        },
+        "shared-wall" : {
+            "file": "shared/treetile.png",
             "wrapU": "repeated",
             "wrapV": "repeated"
         },

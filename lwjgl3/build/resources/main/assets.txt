@@ -35,3 +35,4 @@ shared/background.png
 shared/earthtile.png
 shared/floortile.png
 shared/floortile1.png
+shared/treetile.png
