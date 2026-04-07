@@ -80,6 +80,8 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     private PhotoSystem photoSystem;
     private LevelRenderer renderer;
 
+    private boolean pendingHazardRestart = false;
+
     /**
      * Lazily creates sound handles, textures, {@link WorldState}, contact tracking,
      * {@link LevelPopulation}, {@link PhotoSystem}, and {@link LevelRenderer}.
@@ -346,6 +348,13 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             ObstacleSprite bd1 = (ObstacleSprite)body1.getUserData();
             ObstacleSprite bd2 = (ObstacleSprite)body2.getUserData();
 
+            // See if surface is fatal
+            if ((bd1 == avatar && bd2 instanceof Surface surface && surface.isFatal()) ||
+                    (bd2 == avatar && bd1 instanceof Surface surface2 && surface2.isFatal())) {
+                pendingHazardRestart = true;
+                return;
+            }
+
             // See if we have landed on the ground.
             if ((avatar.getSensorName().equals(fd2) && avatar != bd1) ||
                     (avatar.getSensorName().equals(fd1) && avatar != bd2)) {
@@ -449,5 +458,12 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             markerPixel = null;
         }
         super.dispose();
+    }
+
+    /** Returns whether Zuko is standing on a fatal tile */
+    public boolean consumeHazardRestart() {
+        boolean result = pendingHazardRestart;
+        pendingHazardRestart = false;
+        return result;
     }
 }

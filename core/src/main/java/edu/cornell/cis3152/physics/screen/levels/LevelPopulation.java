@@ -220,6 +220,16 @@ class LevelPopulation {
             result.clouds.add(cloud);
         }
 
+        Texture gooTexture = textureResolver.apply("shared-earth", "shared/earthtile.png");
+        JsonValue goos = level.get("goo");
+        JsonValue gooPositions = goos.get("positions");
+        for (int ii = 0; ii < gooPositions.size; ii++) {
+            Surface goo = new Surface(gooPositions.get(ii).asFloatArray(), units, goos);
+            goo.getObstacle().setName("goo" + ii);
+            goo.setTexture(gooTexture);
+            spriteAdder.accept(goo);
+        }
+
         return result;
     }
 

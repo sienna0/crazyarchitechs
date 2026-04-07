@@ -26,6 +26,10 @@ import edu.cornell.gdiac.physics2.PolygonObstacle;
  * to that shape.
  */
 public class Surface extends ObstacleSprite {
+
+    /** Whether this surface is fatal */
+    private boolean fatal;
+
     /**
      * Creates a surface from the given set of points and physics units
      *
@@ -41,6 +45,8 @@ public class Surface extends ObstacleSprite {
         super();
 
         float tile = settings.getFloat( "tile" );
+
+        fatal = settings.getBoolean( "fatal" , false);
 
         // Construct a Poly2 object, breaking it into triangles
         Poly2 poly = new Poly2();
@@ -67,6 +73,11 @@ public class Surface extends ObstacleSprite {
         // the JSON to see what happens.
         poly.scl( units );
         mesh.set(poly,tile,tile);
+    }
+
+    /** Returns whether this surface is fatal or not */
+    public boolean isFatal() {
+        return fatal;
     }
 
 }

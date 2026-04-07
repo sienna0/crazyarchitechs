@@ -44,7 +44,7 @@ public abstract class PhysicsScene implements Screen {
     /** Exit code for jumping back to previous level */
     public static final int EXIT_LOSE = 4;
     /** How many frames after winning/losing do we continue? */
-    public static final int EXIT_COUNT = 180;
+    public static final int EXIT_COUNT = 10;
 
     /** The asset directory for retrieving textures, atlases */
     protected AssetDirectory directory;

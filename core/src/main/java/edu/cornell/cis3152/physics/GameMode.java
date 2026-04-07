@@ -5,6 +5,7 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import edu.cornell.cis3152.physics.screen.*;
+import edu.cornell.cis3152.physics.screen.levels.LevelBaseScene;
 import edu.cornell.cis3152.physics.screen.levels.LevelController;
 import edu.cornell.gdiac.assets.AssetDirectory;
 import edu.cornell.gdiac.graphics.SpriteBatch;
@@ -189,6 +190,14 @@ public class GameMode implements Screen, ScreenListener {
                     showingLevelSelect = true;
                     levelSelectScene.show();
                 }
+            }
+            PhysicsScene currentScene = levelController.getCurrentScene();
+            if (currentScene instanceof LevelBaseScene levelScene && levelScene.consumeHazardRestart()) {
+                showingLose = false;
+                loseScene.hide();
+                levelController.loadLevel(levelController.getCurrentLevel());
+                levelController.setScreenListener(this);
+                return;
             }
         }
     }

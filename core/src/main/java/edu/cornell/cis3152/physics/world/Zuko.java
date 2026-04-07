@@ -673,7 +673,6 @@ public class Zuko extends ObstacleSprite {
             float u = obstacle.getPhysicsUnits();
             float mx = obstacle.getX() * u + (faceRight ? 0.3f : -0.3f);
             float my = obstacle.getY() * u - 0.2f;
-
             float tipX = mx + (tongueTarget.x - mx) * tongueProgress;
             float tipY = my + (tongueTarget.y - my) * tongueProgress;
 
