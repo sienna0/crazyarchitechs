@@ -51,7 +51,7 @@
       "sensor": "#ff0000ff",
       "tolerance": 0.05
     },
-    "inventory_size": 1.0,
+    "inventory_size": 3.0,
     "film_count": 10.0,
     "picture_cooldown": 10.0,
     "max_sight_distance": 9.0
@@ -592,7 +592,7 @@
       "positions": []
     },
     "playerSettings": {
-      "inventory_size": 1.0,
+      "inventory_size": 3.0,
       "film_count": 10.0,
       "picture_cooldown": 10.0,
       "max_sight_distance": 9.0
@@ -826,7 +826,7 @@
       ]
     },
     "playerSettings": {
-      "inventory_size": 1.0,
+      "inventory_size": 4.0,
       "film_count": 10.0,
       "picture_cooldown": 10.0,
       "max_sight_distance": 9.0

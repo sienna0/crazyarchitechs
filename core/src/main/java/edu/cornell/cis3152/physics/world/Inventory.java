@@ -27,8 +27,11 @@ public class Inventory {
      *
      * @param data the Zuko JSON node (expects "inventory_size")
      */
-    public Inventory(JsonValue data) {
-        this.size = data.getInt("inventory_size", 5);
+    public Inventory(JsonValue data, JsonValue levelSettings) {
+
+        this.size = (levelSettings != null && levelSettings.has("inventory_size"))
+                ? levelSettings.getInt("inventory_size")
+                : data.getInt("inventory_size", 5);
         this.currPicIndex = 0;
         this.pictureInventory = new Array<>(size);
         pictureInventory.ordered = true;

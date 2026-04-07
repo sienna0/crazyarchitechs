@@ -437,7 +437,7 @@ public class Zuko extends ObstacleSprite {
      * @param units     The physics units
      * @param data      The physics constants for Zuko
      */
-    public Zuko(float units, JsonValue data, float xStartingPos, float yStartingPos) {
+    public Zuko(float units, JsonValue data, float xStartingPos, float yStartingPos, JsonValue levelSettings) {
         this.data = data;
         JsonValue debugInfo = data.get("debug");
 
@@ -485,7 +485,7 @@ public class Zuko extends ObstacleSprite {
         currentTarget = null;
 
         // Inventory
-        pictureInventory = new Inventory(data);
+        pictureInventory = new Inventory(data, levelSettings);
 
         // Create a rectangular mesh for Zuko. Note that the capsule is
         // actually smaller than the image, making a tighter hitbox. You can

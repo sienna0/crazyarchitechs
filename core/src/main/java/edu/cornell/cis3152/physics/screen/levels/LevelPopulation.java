@@ -72,6 +72,7 @@ class LevelPopulation {
 
         JsonValue level = constants.get("level" + currentLevel);
         JsonValue objectLocations = level.get("objectLocations");
+        JsonValue levelPlayerSettings = level.get("playerSettings");
 
         Texture texture = textureResolver.apply("shared-goal", "shared/goaldoor.png");
         JsonValue goal = objectLocations.get("goal");
@@ -146,7 +147,7 @@ class LevelPopulation {
 
         JsonValue posJson = level.get("objectLocations").get("zukoPos");
         result.avatar = buildZuko(units, constants.get("zuko"), posJson.get("pos").getFloat(0), posJson.get("pos").getFloat(1),
-                zukoTexture, walkSheet, photoSheet, jumpSheet, tongueTexture, "avatar");
+                zukoTexture, walkSheet, photoSheet, jumpSheet, tongueTexture, "avatar",levelPlayerSettings);
         spriteAdder.accept(result.avatar);
         result.avatar.createSensor();
 
@@ -160,7 +161,7 @@ class LevelPopulation {
 
                 Zuko extra = buildZuko(units, syntheticZuko,pos[0], pos[1],
                         zukoTexture, walkSheet, photoSheet, jumpSheet, tongueTexture,
-                        "zukosprite" + ii);
+                        "zukosprite" + ii, levelPlayerSettings);
                 spriteAdder.accept(extra);
                 extra.createSensor();
                 result.extraZukos.add(extra);
@@ -239,8 +240,8 @@ class LevelPopulation {
     private Zuko buildZuko(float units, JsonValue zukoJson, float xStartingPos, float yStartingPos,
                            Texture zukoTexture, Texture walkSheet,
                            Texture photoSheet, Texture jumpSheet, Texture tongueTexture,
-                           String name) {
-        Zuko zuko = new Zuko(units, zukoJson, xStartingPos, yStartingPos);
+                           String name, JsonValue levelPlayerSettings) {
+        Zuko zuko = new Zuko(units, zukoJson, xStartingPos, yStartingPos, levelPlayerSettings);
         zuko.setTexture(zukoTexture);
         zuko.setBaseTexture(zukoTexture);
         zuko.getObstacle().setName(name);
@@ -248,6 +249,7 @@ class LevelPopulation {
         zuko.setPhotoAnimation(photoSheet, 1, 13, 13);
         zuko.setJumpAnimation(jumpSheet,  1, 7, 7);
         zuko.setTongueSegment(tongueTexture);
+
         return zuko;
     }
 
