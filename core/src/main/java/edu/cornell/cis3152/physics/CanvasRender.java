@@ -9,7 +9,7 @@ import com.badlogic.gdx.math.Vector2;
  */
 public class CanvasRender {
     /** The original game design resolution */
-    public static final int DESIGN_WIDTH = 1024;
+    public static final int DESIGN_WIDTH = 1016;
     /** The original game design resolution */
     public static final int DESIGN_HEIGHT = 576;
 

@@ -32,7 +32,9 @@ platform/zukotonguechunk.png
 platform/zukowalk.png
 shared/RetroGame.ttf
 shared/background.png
+shared/backgroundwrongsize.png
 shared/earthtile.png
 shared/floortile.png
 shared/floortile1.png
+shared/levelbackground.png
 shared/treetile.png

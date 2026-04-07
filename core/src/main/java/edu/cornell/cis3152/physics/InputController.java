@@ -1,6 +1,7 @@
 package edu.cornell.cis3152.physics;
 
 import com.badlogic.gdx.*;
+import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.math.*;
 
 import com.badlogic.gdx.utils.Array;
@@ -261,7 +262,7 @@ public class InputController {
      * @param scale    drawing scale; combined with the viewport for screen-to-world conversion
      * @param viewport used to convert mouse screen coordinates to canvas/world space
      */
-    public void sync(Rectangle bounds, Vector2 scale, CanvasRender viewport) {
+    public void sync(Rectangle bounds, Vector2 scale, CanvasRender viewport, OrthographicCamera camera) {
         // Copy state from last animation frame
         // Helps us ignore buttons that are held down
         dropPrevious = dropPressed;
@@ -281,9 +282,9 @@ public class InputController {
         // Check to see if a GamePad is connected
         if (xbox != null && xbox.isConnected()) {
             readGamepad(bounds, scale);
-            readKeyboard(bounds, scale, viewport, true); // Read as a back-up
+            readKeyboard(bounds, scale, viewport, camera, true); // Read as a back-up
         } else {
-            readKeyboard(bounds, scale, viewport, false);
+            readKeyboard(bounds, scale, viewport, camera, false);
         }
     }
 
@@ -338,7 +339,7 @@ public class InputController {
      * @param viewport  maps mouse screen coordinates to canvas space
      * @param secondary if true, merge with existing gamepad-derived state instead of replacing it
      */
-    private void readKeyboard(Rectangle bounds, Vector2 scale, CanvasRender viewport, boolean secondary) {
+    private void readKeyboard(Rectangle bounds, Vector2 scale, CanvasRender viewport, OrthographicCamera camera, boolean secondary) {
         // Give priority to gamepad results
         dropPressed = (secondary && dropPressed) || (Gdx.input.isKeyPressed(Input.Keys.Q));
         resetPressed = (secondary && resetPressed) || (Gdx.input.isKeyPressed(Input.Keys.R));
@@ -383,7 +384,15 @@ public class InputController {
         leftClickPressed = Gdx.input.isButtonPressed(Input.Buttons.LEFT);
         rightClickPressed = Gdx.input.isButtonPressed(Input.Buttons.RIGHT);
         viewport.screenToCanvas(Gdx.input.getX(), Gdx.input.getY(), crosshair);
-        crosshair.scl(1/scale.x,1/scale.y);
+        if (camera != null) {
+            float visibleWidth = camera.viewportWidth * camera.zoom;
+            float visibleHeight = camera.viewportHeight * camera.zoom;
+            float worldPixelX = (camera.position.x - visibleWidth * 0.5f) + (crosshair.x / viewport.getWidth()) * visibleWidth;
+            float worldPixelY = (camera.position.y - visibleHeight * 0.5f) + (crosshair.y / viewport.getHeight()) * visibleHeight;
+            crosshair.set(worldPixelX / scale.x, worldPixelY / scale.y);
+        } else {
+            crosshair.scl(1/scale.x,1/scale.y);
+        }
         clampPosition(bounds);
     }
 

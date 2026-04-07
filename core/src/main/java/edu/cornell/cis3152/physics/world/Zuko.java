@@ -116,7 +116,7 @@ public class Zuko extends ObstacleSprite {
     /** The duration of the walk animation */
     private float walkAnimationTime = 0f;
     /** The duration of each walk frame */
-    private float walkFrameDuration = 0.07f;
+    private float walkFrameDuration = 0.14f;
 
     /** The Texture of one segment of Zuko's tongue */
     private Texture tongueSegment;
@@ -337,6 +337,15 @@ public class Zuko extends ObstacleSprite {
      */
     public void setCurrentTarget(GameObject target) {
         this.currentTarget = target;
+    }
+
+    /**
+     * Forces the avatar to face the requested direction.
+     *
+     * @param value whether the avatar should face right
+     */
+    public void setFacingRight(boolean value) {
+        faceRight = value;
     }
 
     public void setBaseTexture(Texture texture) {
@@ -562,6 +571,40 @@ public class Zuko extends ObstacleSprite {
         if (isJumping()) {
             forceCache.set(0, currentJumpForce);
             body.applyLinearImpulse(forceCache,pos,true);
+        }
+    }
+
+    /**
+     * Repositions the avatar without preserving any previous momentum.
+     *
+     * @param x target x-position in physics units
+     * @param y target y-position in physics units
+     */
+    public void warpTo(float x, float y) {
+        if (!obstacle.isActive()) {
+            return;
+        }
+
+        Body body = obstacle.getBody();
+        if (body != null) {
+            body.setTransform(x, y, body.getAngle());
+            body.setLinearVelocity(0f, 0f);
+            body.setAngularVelocity(0f);
+        }
+    }
+
+    /**
+     * Clears current linear and angular motion.
+     */
+    public void stopMotion() {
+        if (!obstacle.isActive()) {
+            return;
+        }
+
+        Body body = obstacle.getBody();
+        if (body != null) {
+            body.setLinearVelocity(0f, 0f);
+            body.setAngularVelocity(0f);
         }
     }
 

@@ -57,7 +57,11 @@ class LevelRenderer {
     /**
      * Main draw entry — renders highlights, range, placed pictures, inventory bar, and pause icon.
      */
-    void draw(SpriteBatch batch, CanvasRender viewport, com.badlogic.gdx.graphics.OrthographicCamera camera, Zuko avatar) {
+    void draw(SpriteBatch batch,
+              CanvasRender viewport,
+              com.badlogic.gdx.graphics.OrthographicCamera camera,
+              com.badlogic.gdx.graphics.OrthographicCamera uiCamera,
+              Zuko avatar) {
         if (avatar == null) {
             return;
         }
@@ -79,7 +83,7 @@ class LevelRenderer {
         viewport.reset();
 
         viewport.apply();
-        batch.begin(camera);
+        batch.begin(uiCamera);
         int invSize = avatar.getPictureInventory().getSize();
         float slotSz = Math.min(MAX_SLOT_SIZE, INVENTORY_BAR_HEIGHT - 2 * INVENTORY_PADDING);
         float dynBarWidth = invSize * slotSz + (invSize + 1) * INVENTORY_PADDING;

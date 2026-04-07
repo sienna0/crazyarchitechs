@@ -16,6 +16,7 @@
             "wrapV": "repeated"
         },
         "shared-background": "shared/background.png",
+        "shared-level-background": "shared/levelbackground.png",
         "shared-goal":   "platform/walltile.png",
         "platform-traci"    : "platform/zuko.png",
         "platform-walk"     : "platform/zukowalk.png",

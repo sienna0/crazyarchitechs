@@ -50,6 +50,8 @@ public abstract class PhysicsScene implements Screen {
     protected AssetDirectory directory;
     /** The drawing camera for this scene */
     protected OrthographicCamera camera;
+    /** Screen-space camera for static backgrounds and HUD */
+    protected OrthographicCamera uiCamera;
     /** Shared sprite batch */
     protected SpriteBatch batch;
     /** Shared letterboxed viewport */
@@ -348,7 +350,7 @@ public abstract class PhysicsScene implements Screen {
      */
     public boolean preUpdate(float dt) {
         InputController input = InputController.getInstance();
-        input.sync(bounds, scale, viewport);
+        input.sync(bounds, scale, viewport, camera);
         if (listener == null) {
             return true;
         }
@@ -457,11 +459,19 @@ public abstract class PhysicsScene implements Screen {
         // Clear the screen (color is homage to the XNA years)
         ScreenUtils.clear( 0.0f, 0.0f, 0.0f,1.0f );
 
+        updateCamera();
         if (camera != null) {
             camera.update();
         }
+        if (uiCamera != null) {
+            uiCamera.update();
+        }
 
         viewport.apply();
+        batch.begin(uiCamera);
+        drawFixedBackground(batch);
+        batch.end();
+
         batch.begin(camera);
 
         drawBackground(batch);
@@ -499,6 +509,20 @@ public abstract class PhysicsScene implements Screen {
     }
 
     /**
+     * Draws any screen-space background that should remain fixed while the world camera moves.
+     */
+    protected void drawFixedBackground(SpriteBatch batch) {
+        // Default scene uses only the clear color.
+    }
+
+    /**
+     * Updates the world camera before rendering.
+     */
+    protected void updateCamera() {
+        // Default scene uses the camera configured at resize time.
+    }
+
+    /**
      * Called when the Screen is resized.
      *
      * This can happen at any point during a non-paused state but will never
@@ -513,7 +537,11 @@ public abstract class PhysicsScene implements Screen {
         if (camera == null) {
             camera = new OrthographicCamera();
         }
+        if (uiCamera == null) {
+            uiCamera = new OrthographicCamera();
+        }
         camera.setToOrtho( false, this.width, this.height );
+        uiCamera.setToOrtho(false, this.width, this.height);
         scale.x = this.width/bounds.width;
         scale.y = this.height/bounds.height;
         reset();

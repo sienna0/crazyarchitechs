@@ -46,6 +46,9 @@ import edu.cornell.gdiac.physics2.ObstacleSprite;
  */
 public class LevelBaseScene extends PhysicsScene implements ContactListener {
     private static final float PAUSE_ICON_SIZE = 38.0f;
+    private static final float TRANSITION_ENTRY_X = 1.25f;
+    private static final float TRANSITION_WALK_MULTIPLIER = 0.8f;
+    private static final float CAMERA_ZOOM = 0.725f;
 
     private Texture backgroundTexture;
 
@@ -81,6 +84,9 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     private LevelRenderer renderer;
 
     private boolean pendingHazardRestart = false;
+    private boolean enteringFromPreviousLevel = false;
+    private float entryTargetX = 0f;
+    private float entryTargetY = 0f;
 
     /**
      * Lazily creates sound handles, textures, {@link WorldState}, contact tracking,
@@ -164,14 +170,51 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     }
 
     @Override
-    protected void drawBackground(SpriteBatch batch) {
+    protected void drawFixedBackground(SpriteBatch batch) {
         if (backgroundTexture != null) {
             batch.setColor(Color.WHITE);
             batch.draw(backgroundTexture, 0, 0, viewport.getWidth(), viewport.getHeight());
         }
+    }
+
+    @Override
+    protected void drawBackground(SpriteBatch batch) {
         if (renderer != null && levelData != null) {
             renderer.drawLevelTiles(batch, levelData, height / bounds.height);
         }
+    }
+
+    @Override
+    protected void updateCamera() {
+        if (camera == null) {
+            return;
+        }
+
+        camera.zoom = CAMERA_ZOOM;
+        float halfViewWidth = (camera.viewportWidth * camera.zoom) * 0.5f;
+        float halfViewHeight = (camera.viewportHeight * camera.zoom) * 0.5f;
+        float worldWidth = bounds.width * scale.x;
+        float worldHeight = bounds.height * scale.y;
+
+        float targetX = worldWidth * 0.5f;
+        float targetY = worldHeight * 0.5f;
+        if (avatar != null) {
+            targetX = avatar.getPosition().x * scale.x;
+            targetY = avatar.getPosition().y * scale.y;
+        }
+
+        camera.position.set(
+                clampCameraAxis(targetX, halfViewWidth, worldWidth),
+                clampCameraAxis(targetY, halfViewHeight, worldHeight),
+                0f
+        );
+    }
+
+    private float clampCameraAxis(float target, float halfView, float worldSize) {
+        if (worldSize <= halfView * 2.0f) {
+            return worldSize * 0.5f;
+        }
+        return Math.max(halfView, Math.min(worldSize - halfView, target));
     }
 
     /**
@@ -246,10 +289,31 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         reset();
     }
 
+    /**
+     * Starts a short auto-walk from the left edge into this level's spawn point.
+     */
+    public void beginEntryFromPreviousLevel() {
+        if (avatar == null) {
+            return;
+        }
+
+        entryTargetX = avatar.getObstacle().getX();
+        entryTargetY = avatar.getObstacle().getY();
+        if (entryTargetX <= TRANSITION_ENTRY_X + 0.15f) {
+            return;
+        }
+
+        enteringFromPreviousLevel = true;
+        avatar.setFacingRight(true);
+        avatar.setJumping(false);
+        avatar.setGrounded(false);
+        avatar.warpTo(TRANSITION_ENTRY_X, entryTargetY);
+    }
+
     @Override
     public void draw(float dt) {
         super.draw(dt);
-        renderer.draw(batch, viewport, camera, avatar);
+        renderer.draw(batch, viewport, camera, uiCamera, avatar);
     }
 
     /**
@@ -303,6 +367,11 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             pauseClicked = true;
         }
 
+        if (enteringFromPreviousLevel) {
+            updateEntryTransition();
+            return;
+        }
+
         InputController input = InputController.getInstance();
         photoSystem.updateHighlights(avatar, sprites, world);
         photoSystem.handlePictureShortcuts(input, avatar);
@@ -311,8 +380,8 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         GameObject target = photoSystem.resolveCurrentTarget(input, avatar, sprites);
         float units = avatar.getObstacle().getPhysicsUnits();
         int clickedSlot = renderer.getClickedSlot(
-                input.getCrossHair().x * units,
-                input.getCrossHair().y * units,
+                pauseMouseCache.x,
+                pauseMouseCache.y,
                 viewport,
                 avatar.getPictureInventory().getSize()
         );
@@ -327,6 +396,21 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         if (avatar.isJumping()) {
             SoundEffectManager.getInstance().play("jump", jumpSound, volume);
             avatar.startJumpAnimation();
+        }
+    }
+
+    private void updateEntryTransition() {
+        // this should make Zuko walk to the right on screen
+        avatar.setFacingRight(true);
+        avatar.setJumping(false);
+        avatar.setMovement(avatar.getForce() * TRANSITION_WALK_MULTIPLIER);
+        avatar.applyForce();
+
+        if (avatar.getObstacle().getX() >= entryTargetX) {
+            avatar.warpTo(entryTargetX, entryTargetY);
+            avatar.setMovement(0f);
+            avatar.stopMotion();
+            enteringFromPreviousLevel = false;
         }
     }
 

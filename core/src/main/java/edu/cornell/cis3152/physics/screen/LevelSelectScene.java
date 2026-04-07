@@ -29,6 +29,8 @@ public class LevelSelectScene implements Screen {
     private OrthographicCamera camera;
     /** Shared font */
     private final BitmapFont font;
+    /** Background texture for the level select screen */
+    private final Texture backgroundTexture;
     /** Solid pixel used to draw button rectangles */
     private final Texture pixel;
 
@@ -69,6 +71,7 @@ public class LevelSelectScene implements Screen {
         this.viewport = viewport;
         this.totalLevels = totalLevels;
         this.font = assets.getEntry("shared-retro", BitmapFont.class);
+        this.backgroundTexture = assets.getEntry("shared-level-background", Texture.class);
         this.camera = new OrthographicCamera();
         this.selectedIndex = 0;
         this.chosenLevel = -1;
@@ -180,6 +183,10 @@ public class LevelSelectScene implements Screen {
 
         viewport.apply();
         batch.begin(camera);
+        batch.setColor(Color.WHITE);
+        if (backgroundTexture != null) {
+            batch.draw(backgroundTexture, 0, 0, width, height);
+        }
         batch.drawText(titleLayout, width / 2.0f, height - 100.0f);
         batch.drawText(instructionLayout, width / 2.0f, height - 170.0f);
 
