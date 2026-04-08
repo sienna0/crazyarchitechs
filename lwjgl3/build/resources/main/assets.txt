@@ -30,6 +30,8 @@ platform/zukojump.png
 platform/zukojump1.png
 platform/zukotonguechunk.png
 platform/zukowalk.png
+shared/NunitoBoldItalic-RpvlV.ttf
+shared/NunitoExtraboldItalic-8MamM.ttf
 shared/RetroGame.ttf
 shared/background.png
 shared/backgroundwrongsize.png
@@ -41,3 +43,4 @@ shared/lily1.png
 shared/lily2.png
 shared/lily3.png
 shared/treetile.png
+shared/water.png

@@ -20,6 +20,7 @@
         "shared-lily-3": "shared/lily3.png",
         "shared-background": "shared/background.png",
         "shared-level-background": "shared/levelbackground.png",
+        "shared-water": "shared/water.png",
         "shared-goal":   "platform/walltile.png",
         "platform-traci"    : "platform/zuko.png",
         "platform-walk"     : "platform/zukowalk.png",
@@ -45,6 +46,14 @@
         "shared-retro": {
             "file": "shared/RetroGame.ttf",
             "size": 64
+        },
+        "shared-nunito-bold": {
+          "file": "shared/NunitoBoldItalic-RpvlV.ttf",
+          "size": 48
+        },
+        "shared-nunito-extra-bold": {
+          "file": "shared/NunitoExtraboldItalic-8MamM.ttf",
+          "size": 64
         }
     }
 }

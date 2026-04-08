@@ -58,7 +58,7 @@ public class PauseMenuScene implements Screen {
     public PauseMenuScene(AssetDirectory assets, SpriteBatch batch, CanvasRender viewport) {
         this.viewport = viewport;
         this.batch = batch;
-        this.font   = assets.getEntry("shared-retro", BitmapFont.class);
+        this.font   = assets.getEntry("shared-nunito-extra-bold", BitmapFont.class);
         this.camera = new OrthographicCamera();
 
         Pixmap pm = new Pixmap(1, 1, Pixmap.Format.RGBA8888);

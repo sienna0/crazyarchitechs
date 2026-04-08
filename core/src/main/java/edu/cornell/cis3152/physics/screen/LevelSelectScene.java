@@ -67,13 +67,17 @@ public class LevelSelectScene implements Screen {
     private boolean clickPrevious;
     /** Reusable coordinate buffer */
     private final Vector2 pointer;
+    private final float spacing = 220f;
+    private final float start = 150f;
+
+    private float scroll;
 
     public LevelSelectScene(AssetDirectory assets, SpriteBatch batch, CanvasRender viewport, int totalLevels) {
         this.batch = batch;
         this.viewport = viewport;
         this.totalLevels = totalLevels;
-        this.font = assets.getEntry("shared-retro", BitmapFont.class);
-        this.backgroundTexture = assets.getEntry("shared-level-background", Texture.class);
+        this.font = assets.getEntry("shared-nunito-bold", BitmapFont.class);
+        this.backgroundTexture = assets.getEntry("shared-water", Texture.class);
         if (this.backgroundTexture != null) {
             this.backgroundTexture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
         }
@@ -117,6 +121,7 @@ public class LevelSelectScene implements Screen {
         optionLayout = new TextLayout();
         optionLayout.setFont(font);
         optionLayout.setAlignment(TextAlign.middleCenter);
+        scroll = 0f;
 
         resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
     }
@@ -190,6 +195,10 @@ public class LevelSelectScene implements Screen {
         confirmPrevious = confirmPressed;
         exitPrevious = exitPressed;
         clickPrevious = clickPressed;
+        scroll -= Gdx.input.isKeyPressed(Input.Keys.A) ? 5f : 0f;
+        scroll += Gdx.input.isKeyPressed(Input.Keys.D) ? 5f : 0f;
+        float maxScroll = Math.max(0, (totalLevels - 1) * spacing - (width - start * 2));
+        scroll = Math.max(0, Math.min(scroll, maxScroll));
     }
 
     private void draw() {
@@ -205,24 +214,25 @@ public class LevelSelectScene implements Screen {
         batch.drawText(titleLayout, width / 2.0f, height - 100.0f);
         batch.drawText(instructionLayout, width / 2.0f, height - 170.0f);
 
+        batch.setColor(1, 1, 1, 0.4f);
         for (int ii = 0; ii < totalLevels; ii++) {
-            Rectangle bounds = getButtonBounds(ii);
+            Vector2 pos = getLevelPosition(ii);
             boolean selected = ii == selectedIndex;
-            Texture lilyTexture = ii < lilyTextures.length ? lilyTextures[ii] : null;
+            float size = selected ? 140f : 110f;
+
+            Texture lilyTexture = lilyTextures[ii % lilyTextures.length];
 
             if (lilyTexture != null) {
                 batch.setColor(selected ? Color.WHITE : new Color(0.82f, 0.82f, 0.82f, 1.0f));
-                batch.draw(lilyTexture, bounds.x, bounds.y, bounds.width, bounds.height);
-            } else {
-                batch.setColor(selected ? new Color(0.80f, 0.31f, 0.18f, 1.0f) : new Color(0.23f, 0.29f, 0.33f, 1.0f));
-                batch.draw(pixel, bounds.x, bounds.y, bounds.width, bounds.height);
-
-                font.getData().setScale(0.85f);
-                optionLayout.setColor(Color.WHITE);
-                optionLayout.setText(String.valueOf(ii + 1));
-                optionLayout.layout();
-                batch.drawText(optionLayout, bounds.x + bounds.width / 2.0f, bounds.y + bounds.height / 2.0f + 2.0f);
+                batch.draw(lilyTexture, pos.x - size/2, pos.y - size /2, size, size);
             }
+
+            font.getData().setScale(0.85f);
+            optionLayout.setColor(Color.WHITE);
+            optionLayout.setText(String.valueOf(ii + 1));
+            optionLayout.layout();
+            batch.drawText(optionLayout, pos.x, + pos.y + 5);
+
         }
         font.getData().setScale(1.0f);
 
@@ -230,24 +240,23 @@ public class LevelSelectScene implements Screen {
         viewport.reset();
     }
 
-    private Rectangle getButtonBounds(int index) {
-        float buttonSize = 140.0f;
-        float gap = 38.0f;
-        float totalWidth = totalLevels * buttonSize + (totalLevels - 1) * gap;
-        float startX = (width - totalWidth) / 2.0f - 90.0f;
-        float upperRowY = height * 0.65f;
-        float lowerRowY = height * 0.18f;
-        float x = startX + index * (buttonSize + gap);
-        float y = (index % 2 == 0) ? upperRowY : lowerRowY;
-        return new Rectangle(x, y, buttonSize, buttonSize);
+    private Vector2 getLevelPosition(int index) {
+
+        float x = start + index * spacing - scroll;
+
+        float amplitude = 120f;
+        float base = height * 0.5f;
+        float y = base + (index % 2 == 0 ? amplitude : - amplitude);
+        return new Vector2(x,y);
     }
+
 
     private int getHoveredIndex() {
         viewport.screenToCanvas(Gdx.input.getX(), Gdx.input.getY(), pointer);
-        float x = pointer.x;
-        float y = pointer.y;
+
         for (int ii = 0; ii < totalLevels; ii++) {
-            if (getButtonBounds(ii).contains(x, y)) {
+            Vector2 pos = getLevelPosition(ii);
+            if (pointer.dst(pos) < 60f) {
                 return ii;
             }
         }
