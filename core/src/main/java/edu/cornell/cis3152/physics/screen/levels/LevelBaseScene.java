@@ -24,6 +24,7 @@ import edu.cornell.gdiac.audio.SoundEffect;
 import edu.cornell.gdiac.audio.SoundEffectManager;
 import edu.cornell.gdiac.graphics.SpriteBatch;
 import edu.cornell.gdiac.physics2.ObstacleSprite;
+import java.util.List;
 
 /**
  * Primary gameplay scene for Frogtographer: one level at a time inside a Box2D world.
@@ -265,7 +266,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         if (constants.get("level" + currentLevel) == null) {
             currentLevel = 1;
         }
-        levelData = levelPopulation.populate(currentLevel, units, worldState);
+        levelData = levelPopulation.populate(currentLevel, units, worldState, world);
         goalDoor = levelData.goalDoor;
         avatar = levelData.avatar;
     }
@@ -327,6 +328,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
                 go.syncPhysics();
             }
         }
+        syncPulleyRopes();
         super.postUpdate(dt);
     }
 
@@ -411,6 +413,32 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             avatar.setMovement(0f);
             avatar.stopMotion();
             enteringFromPreviousLevel = false;
+        }
+    }
+
+    private void syncPulleyRopes() {
+        if (levelData == null) {
+            return;
+        }
+        if (levelData.pulleyCarries.size() < 2 || levelData.pulleyGroundAnchors.size() < 2 || levelData.pulleyRopes.size() < 2) {
+            return;
+        }
+
+        for (int side = 0; side < 2; side++) {
+            BoxSprite carry = levelData.pulleyCarries.get(side);
+            Vector2 carryPos = carry.getObstacle().getPosition();
+            Vector2 offset = levelData.pulleyCarryAnchorOffsets.get(side);
+            Vector2 carryAnchor = new Vector2(carryPos.x + offset.x, carryPos.y + offset.y);
+            Vector2 topAnchor = levelData.pulleyGroundAnchors.get(side);
+
+            List<BoxSprite> ropePieces = levelData.pulleyRopes.get(side);
+            int count = ropePieces.size();
+            for (int ii = 0; ii < count; ii++) {
+                float t = (ii + 0.5f) / count;
+                float x = topAnchor.x + (carryAnchor.x - topAnchor.x) * t;
+                float y = topAnchor.y + (carryAnchor.y - topAnchor.y) * t;
+                ropePieces.get(ii).getObstacle().setPosition(x, y);
+            }
         }
     }
 

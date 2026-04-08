@@ -999,6 +999,81 @@
       "honey": [],
       "cloud": [],
       "ice": [],
+      "pulley_top": [
+        {
+          "pos": [12.5, 9.6],
+          "size": [2.0, 2.0]
+        }
+      ],
+      "pulley_strings": [
+        {
+          "pos": [10.2, 5.2],
+          "size": [1.0, 1.0]
+        },
+        {
+          "pos": [10.2, 6.2],
+          "size": [1.0, 1.0]
+        },
+        {
+          "pos": [10.2, 7.2],
+          "size": [1.0, 1.0]
+        },
+        {
+          "pos": [10.2, 8.2],
+          "size": [1.0, 1.0]
+        },
+        {
+          "pos": [10.2, 9.2],
+          "size": [1.0, 1.0]
+        },
+        {
+          "pos": [14.8, 7.5],
+          "size": [1.0, 1.0]
+        },
+        {
+          "pos": [14.8, 8.5],
+          "size": [1.0, 1.0]
+        },
+        {
+          "pos": [14.8, 9.5],
+          "size": [1.0, 1.0]
+        }
+      ],
+      "pulley_carry": [
+        {
+          "pos": [10.2, 4.2],
+          "size": [1.0, 1.0],
+          "anchor": [10.2, 4.7],
+          "density": 2.0,
+          "friction": 0.9,
+          "linearDamping": 2.5,
+          "angularDamping": 4.0
+        },
+        {
+          "pos": [14.8, 6.55],
+          "size": [1.0, 1.0],
+          "anchor": [14.8, 7.05],
+          "density": 2.0,
+          "friction": 0.9,
+          "linearDamping": 2.5,
+          "angularDamping": 4.0
+        }
+      ],
+      "pulley_block": [
+        {
+          "pos": [7.0, 4.45],
+          "size": [0.9, 0.9],
+          "density": 8.0,
+          "friction": 1.2
+        }
+      ],
+      "pulley_settings": {
+        "groundAnchors": [
+          [11.65, 9.95],
+          [13.35, 9.95]
+        ],
+        "ratio": 1.0
+      },
       "zukosprite": [],
       "goal": {
         "pos": [29.0, 5.75],

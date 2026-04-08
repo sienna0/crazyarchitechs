@@ -2,7 +2,10 @@ package edu.cornell.cis3152.physics.screen.levels;
 
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.BodyDef;
+import com.badlogic.gdx.physics.box2d.World;
+import com.badlogic.gdx.physics.box2d.joints.PulleyJointDef;
 import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.utils.JsonReader;
 import com.badlogic.gdx.utils.JsonWriter;
@@ -47,6 +50,10 @@ class LevelPopulation {
         List<TextureRegion> tileRegions    = new ArrayList<>();
         /** [x, y] screen-space position in pixels for each tile, in the same order as tileRegions. */
         List<float[]>       tilePositions  = new ArrayList<>();
+        List<BoxSprite> pulleyCarries = new ArrayList<>();
+        List<List<BoxSprite>> pulleyRopes = new ArrayList<>();
+        List<Vector2> pulleyGroundAnchors = new ArrayList<>();
+        List<Vector2> pulleyCarryAnchorOffsets = new ArrayList<>();
     }
 
     float TERRAIN_BLOCK_SIZE = 1.5f;
@@ -67,7 +74,7 @@ class LevelPopulation {
      * Entry point — reads {@code levelN} JSON, creates goal, walls, platforms, floors, tilemap,
      * Zuko, extra zukosprites, honey/ice/cloud objects, and tile colliders. Returns a {@link Result}.
      */
-    Result populate(int currentLevel, float units, WorldState worldState) {
+    Result populate(int currentLevel, float units, WorldState worldState, World world) {
         Result result = new Result();
 
         JsonValue level = constants.get("level" + currentLevel);
@@ -221,6 +228,8 @@ class LevelPopulation {
             result.clouds.add(cloud);
         }
 
+        addPulleyAssembly(result, objectLocations, units, world);
+
         Texture gooTexture = textureResolver.apply("shared-earth", "shared/earthtile.png");
         JsonValue goos = level.get("goo");
         JsonValue gooPositions = goos.get("positions");
@@ -232,6 +241,167 @@ class LevelPopulation {
         }
 
         return result;
+    }
+
+    private void addPulleyAssembly(Result result, JsonValue objectLocations, float units, World world) {
+        if (objectLocations == null) {
+            return;
+        }
+
+        JsonValue pulleySettings = objectLocations.get("pulley_settings");
+        JsonValue groundAnchorsJson = pulleySettings == null ? null : pulleySettings.get("groundAnchors");
+
+        Texture topTexture = textureResolver.apply("shared-pulley-top", "shared/pulley_top.png");
+        JsonValue pulleyTop = objectLocations.get("pulley_top");
+        addDecorBoxes(pulleyTop, units, topTexture, "pulley_top");
+
+        Texture stringTexture = textureResolver.apply("shared-pulley-string", "shared/pulley_string.png");
+        JsonValue pulleyStrings = objectLocations.get("pulley_strings");
+        if (groundAnchorsJson != null && groundAnchorsJson.size >= 2) {
+            result.pulleyGroundAnchors.add(readVector(groundAnchorsJson.get(0)));
+            result.pulleyGroundAnchors.add(readVector(groundAnchorsJson.get(1)));
+        }
+        addPulleyRopeDecor(result, pulleyStrings, units, stringTexture);
+
+        Texture carryTexture = textureResolver.apply("shared-pulley-carry", "shared/pulley_carry.png");
+        JsonValue pulleyCarries = objectLocations.get("pulley_carry");
+        List<BoxSprite> carries = new ArrayList<>();
+        List<Vector2> carryAnchors = new ArrayList<>();
+        if (pulleyCarries != null) {
+            for (int ii = 0; ii < pulleyCarries.size; ii++) {
+                JsonValue entry = pulleyCarries.get(ii);
+                float[] pos = entry.get("pos").asFloatArray();
+                float[] size = entry.get("size").asFloatArray();
+                BoxSprite carry = new BoxSprite(
+                        units, pos[0], pos[1], size[0], size[1],
+                        BodyDef.BodyType.DynamicBody, false, true,
+                        entry.getFloat("density", 4.0f),
+                        entry.getFloat("friction", 0.8f),
+                        entry.getFloat("restitution", 0.0f),
+                        entry.getFloat("gravityScale", 1.0f),
+                        "pulley_carry" + ii,
+                        carryTexture
+                );
+                spriteAdder.accept(carry);
+                carry.getObstacle().getBody().setLinearDamping(entry.getFloat("linearDamping", 6.0f));
+                carry.getObstacle().getBody().setAngularDamping(entry.getFloat("angularDamping", 10.0f));
+                carries.add(carry);
+                Vector2 anchor = readAnchor(entry, pos[0], pos[1] + (size[1] * 0.5f));
+                carryAnchors.add(anchor);
+                result.pulleyCarries.add(carry);
+                result.pulleyCarryAnchorOffsets.add(new Vector2(anchor.x - pos[0], anchor.y - pos[1]));
+            }
+        }
+
+        Texture blockTexture = textureResolver.apply("platform-rock", "platform/rock.png");
+        JsonValue pulleyBlocks = objectLocations.get("pulley_block");
+        if (pulleyBlocks != null) {
+            for (int ii = 0; ii < pulleyBlocks.size; ii++) {
+                JsonValue entry = pulleyBlocks.get(ii);
+                float[] pos = entry.get("pos").asFloatArray();
+                float[] size = entry.get("size").asFloatArray();
+                BoxSprite block = new BoxSprite(
+                        units, pos[0], pos[1], size[0], size[1],
+                        BodyDef.BodyType.DynamicBody, false, true,
+                        entry.getFloat("density", 6.0f),
+                        entry.getFloat("friction", 1.1f),
+                        entry.getFloat("restitution", 0.0f),
+                        entry.getFloat("gravityScale", 1.0f),
+                        "pulley_block" + ii,
+                        blockTexture
+                );
+                spriteAdder.accept(block);
+            }
+        }
+
+        if (world != null && pulleySettings != null && carries.size() == 2) {
+            createPulleyJoint(world, carries, carryAnchors, pulleySettings);
+        }
+    }
+
+    private void addPulleyRopeDecor(Result result, JsonValue entries, float units, Texture texture) {
+        result.pulleyRopes.clear();
+        result.pulleyRopes.add(new ArrayList<>());
+        result.pulleyRopes.add(new ArrayList<>());
+        if (entries == null || result.pulleyGroundAnchors.size() < 2) {
+            return;
+        }
+
+        for (int ii = 0; ii < entries.size; ii++) {
+            JsonValue entry = entries.get(ii);
+            float[] pos = entry.get("pos").asFloatArray();
+            float[] size = entry.get("size").asFloatArray();
+            BoxSprite box = new BoxSprite(
+                    units, pos[0], pos[1], size[0], size[1],
+                    BodyDef.BodyType.StaticBody, true, true,
+                    0.0f, 0.0f, 0.0f, 0.0f,
+                    "pulley_string" + ii,
+                    texture
+            );
+            spriteAdder.accept(box);
+
+            int side = nearestGroundAnchor(result.pulleyGroundAnchors, pos[0]);
+            result.pulleyRopes.get(side).add(box);
+        }
+    }
+
+    private int nearestGroundAnchor(List<Vector2> anchors, float x) {
+        if (anchors.size() < 2) {
+            return 0;
+        }
+        return Math.abs(x - anchors.get(0).x) <= Math.abs(x - anchors.get(1).x) ? 0 : 1;
+    }
+
+    private void addDecorBoxes(JsonValue entries, float units, Texture texture, String namePrefix) {
+        if (entries == null) {
+            return;
+        }
+        for (int ii = 0; ii < entries.size; ii++) {
+            JsonValue entry = entries.get(ii);
+            float[] pos = entry.get("pos").asFloatArray();
+            float[] size = entry.get("size").asFloatArray();
+            BoxSprite box = new BoxSprite(
+                    units, pos[0], pos[1], size[0], size[1],
+                    BodyDef.BodyType.StaticBody, true, true,
+                    0.0f, 0.0f, 0.0f, 0.0f,
+                    namePrefix + ii,
+                    texture
+            );
+            spriteAdder.accept(box);
+        }
+    }
+
+    private void createPulleyJoint(World world, List<BoxSprite> carries, List<Vector2> carryAnchors,
+                                   JsonValue pulleySettings) {
+        JsonValue groundAnchorsJson = pulleySettings.get("groundAnchors");
+        if (groundAnchorsJson == null || groundAnchorsJson.size < 2) {
+            return;
+        }
+
+        PulleyJointDef joint = new PulleyJointDef();
+        joint.initialize(
+                carries.get(0).getObstacle().getBody(),
+                carries.get(1).getObstacle().getBody(),
+                readVector(groundAnchorsJson.get(0)),
+                readVector(groundAnchorsJson.get(1)),
+                carryAnchors.get(0),
+                carryAnchors.get(1),
+                pulleySettings.getFloat("ratio", 1.0f)
+        );
+        world.createJoint(joint);
+    }
+
+    private Vector2 readAnchor(JsonValue entry, float defaultX, float defaultY) {
+        JsonValue anchor = entry.get("anchor");
+        if (anchor == null) {
+            return new Vector2(defaultX, defaultY);
+        }
+        return readVector(anchor);
+    }
+
+    private Vector2 readVector(JsonValue value) {
+        float[] xy = value.asFloatArray();
+        return new Vector2(xy[0], xy[1]);
     }
 
     /**

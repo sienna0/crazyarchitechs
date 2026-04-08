@@ -43,5 +43,8 @@ shared/levelbackground.png
 shared/lily1.png
 shared/lily2.png
 shared/lily3.png
+shared/pulley_carry.png
+shared/pulley_string.png
+shared/pulley_top.png
 shared/treetile.png
 shared/water.png
