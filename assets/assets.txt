@@ -37,4 +37,7 @@ shared/earthtile.png
 shared/floortile.png
 shared/floortile1.png
 shared/levelbackground.png
+shared/lily1.png
+shared/lily2.png
+shared/lily3.png
 shared/treetile.png

@@ -47,8 +47,8 @@ import edu.cornell.gdiac.physics2.ObstacleSprite;
 public class LevelBaseScene extends PhysicsScene implements ContactListener {
     private static final float PAUSE_ICON_SIZE = 38.0f;
     private static final float TRANSITION_ENTRY_X = 1.25f;
-    private static final float TRANSITION_WALK_MULTIPLIER = 0.8f;
-    private static final float CAMERA_ZOOM = 0.725f;
+    private static final float TRANSITION_WALK_MULTIPLIER = 0.4f;
+    private static final float CAMERA_ZOOM = 0.75f;
 
     private Texture backgroundTexture;
 

@@ -31,6 +31,8 @@ public class LevelSelectScene implements Screen {
     private final BitmapFont font;
     /** Background texture for the level select screen */
     private final Texture backgroundTexture;
+    /** Lily pad buttons for levels 1-3 */
+    private final Texture[] lilyTextures;
     /** Solid pixel used to draw button rectangles */
     private final Texture pixel;
 
@@ -72,6 +74,19 @@ public class LevelSelectScene implements Screen {
         this.totalLevels = totalLevels;
         this.font = assets.getEntry("shared-retro", BitmapFont.class);
         this.backgroundTexture = assets.getEntry("shared-level-background", Texture.class);
+        if (this.backgroundTexture != null) {
+            this.backgroundTexture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        }
+        this.lilyTextures = new Texture[] {
+                assets.getEntry("shared-lily-1", Texture.class),
+                assets.getEntry("shared-lily-2", Texture.class),
+                assets.getEntry("shared-lily-3", Texture.class)
+        };
+        for (Texture lilyTexture : lilyTextures) {
+            if (lilyTexture != null) {
+                lilyTexture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+            }
+        }
         this.camera = new OrthographicCamera();
         this.selectedIndex = 0;
         this.chosenLevel = -1;
@@ -87,7 +102,7 @@ public class LevelSelectScene implements Screen {
         titleLayout.setFont(font);
         titleLayout.setAlignment(TextAlign.middleCenter);
         titleLayout.setColor(Color.WHITE);
-        titleLayout.setText("SELECT LEVEL");
+        // titleLayout.setText("SELECT LEVEL");
         titleLayout.layout();
 
         font.getData().setScale(0.4f);
@@ -95,7 +110,7 @@ public class LevelSelectScene implements Screen {
         instructionLayout.setFont(font);
         instructionLayout.setAlignment(TextAlign.middleCenter);
         instructionLayout.setColor(new Color(0.89f, 0.87f, 0.76f, 1.0f));
-        instructionLayout.setText("ARROWS OR MOUSE, ENTER TO START, ESC TO QUIT");
+        // instructionLayout.setText("ARROWS OR MOUSE, ENTER TO START, ESC TO QUIT");
         instructionLayout.layout();
         font.getData().setScale(1f);
 
@@ -193,15 +208,21 @@ public class LevelSelectScene implements Screen {
         for (int ii = 0; ii < totalLevels; ii++) {
             Rectangle bounds = getButtonBounds(ii);
             boolean selected = ii == selectedIndex;
+            Texture lilyTexture = ii < lilyTextures.length ? lilyTextures[ii] : null;
 
-            batch.setColor(selected ? new Color(0.80f, 0.31f, 0.18f, 1.0f) : new Color(0.23f, 0.29f, 0.33f, 1.0f));
-            batch.draw(pixel, bounds.x, bounds.y, bounds.width, bounds.height);
+            if (lilyTexture != null) {
+                batch.setColor(selected ? Color.WHITE : new Color(0.82f, 0.82f, 0.82f, 1.0f));
+                batch.draw(lilyTexture, bounds.x, bounds.y, bounds.width, bounds.height);
+            } else {
+                batch.setColor(selected ? new Color(0.80f, 0.31f, 0.18f, 1.0f) : new Color(0.23f, 0.29f, 0.33f, 1.0f));
+                batch.draw(pixel, bounds.x, bounds.y, bounds.width, bounds.height);
 
-            font.getData().setScale(0.85f);
-            optionLayout.setColor(selected ? Color.WHITE : new Color(0.84f, 0.84f, 0.80f, 1.0f));
-            optionLayout.setText("LEVEL " + (ii + 1));
-            optionLayout.layout();
-            batch.drawText(optionLayout, bounds.x + bounds.width / 2.0f, bounds.y + bounds.height / 2.0f + 2.0f);
+                font.getData().setScale(0.85f);
+                optionLayout.setColor(Color.WHITE);
+                optionLayout.setText(String.valueOf(ii + 1));
+                optionLayout.layout();
+                batch.drawText(optionLayout, bounds.x + bounds.width / 2.0f, bounds.y + bounds.height / 2.0f + 2.0f);
+            }
         }
         font.getData().setScale(1.0f);
 
@@ -210,14 +231,15 @@ public class LevelSelectScene implements Screen {
     }
 
     private Rectangle getButtonBounds(int index) {
-        float buttonWidth = Math.min(width * 0.55f, 520.0f);
-        float buttonHeight = 64.0f;
-        float gap = 16.0f;
-        float totalHeight = totalLevels * buttonHeight + (totalLevels - 1) * gap;
-        float startY = (height - totalHeight) / 2.0f -40f;
-        float x = (width - buttonWidth) / 2.0f;
-        float y = startY + (totalLevels - 1 - index) * (buttonHeight + gap);
-        return new Rectangle(x, y, buttonWidth, buttonHeight);
+        float buttonSize = 140.0f;
+        float gap = 38.0f;
+        float totalWidth = totalLevels * buttonSize + (totalLevels - 1) * gap;
+        float startX = (width - totalWidth) / 2.0f - 90.0f;
+        float upperRowY = height * 0.65f;
+        float lowerRowY = height * 0.18f;
+        float x = startX + index * (buttonSize + gap);
+        float y = (index % 2 == 0) ? upperRowY : lowerRowY;
+        return new Rectangle(x, y, buttonSize, buttonSize);
     }
 
     private int getHoveredIndex() {
