@@ -35,6 +35,7 @@ shared/NunitoExtraboldItalic-8MamM.ttf
 shared/RetroGame.ttf
 shared/background.png
 shared/backgroundwrongsize.png
+shared/blanklily.png
 shared/earthtile.png
 shared/floortile.png
 shared/floortile1.png

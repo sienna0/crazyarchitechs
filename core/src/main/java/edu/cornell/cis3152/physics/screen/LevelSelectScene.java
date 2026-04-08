@@ -32,7 +32,7 @@ public class LevelSelectScene implements Screen {
     /** Background texture for the level select screen */
     private final Texture backgroundTexture;
     /** Lily pad buttons for levels 1-3 */
-    private final Texture[] lilyTextures;
+    private final Texture lilyTexture;
     /** Solid pixel used to draw button rectangles */
     private final Texture pixel;
 
@@ -81,16 +81,11 @@ public class LevelSelectScene implements Screen {
         if (this.backgroundTexture != null) {
             this.backgroundTexture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
         }
-        this.lilyTextures = new Texture[] {
-                assets.getEntry("shared-lily-1", Texture.class),
-                assets.getEntry("shared-lily-2", Texture.class),
-                assets.getEntry("shared-lily-3", Texture.class)
-        };
-        for (Texture lilyTexture : lilyTextures) {
-            if (lilyTexture != null) {
+        this.lilyTexture = assets.getEntry("shared-blank-lily", Texture.class);
+        if (lilyTexture != null) {
                 lilyTexture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
-            }
         }
+
         this.camera = new OrthographicCamera();
         this.selectedIndex = 0;
         this.chosenLevel = -1;
@@ -214,13 +209,11 @@ public class LevelSelectScene implements Screen {
         batch.drawText(titleLayout, width / 2.0f, height - 100.0f);
         batch.drawText(instructionLayout, width / 2.0f, height - 170.0f);
 
-        batch.setColor(1, 1, 1, 0.4f);
+        batch.setColor(0, 0, 0, 1f);
         for (int ii = 0; ii < totalLevels; ii++) {
             Vector2 pos = getLevelPosition(ii);
             boolean selected = ii == selectedIndex;
             float size = selected ? 140f : 110f;
-
-            Texture lilyTexture = lilyTextures[ii % lilyTextures.length];
 
             if (lilyTexture != null) {
                 batch.setColor(selected ? Color.WHITE : new Color(0.82f, 0.82f, 0.82f, 1.0f));
