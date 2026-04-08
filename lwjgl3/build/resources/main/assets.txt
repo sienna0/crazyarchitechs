@@ -34,12 +34,13 @@ shared/NunitoBoldItalic-RpvlV.ttf
 shared/NunitoExtraboldItalic-8MamM.ttf
 shared/RetroGame.ttf
 shared/background.png
-shared/backgroundwrongsize.png
+shared/backgroundmeasure.png
 shared/blanklily.png
 shared/earthtile.png
 shared/floortile.png
 shared/floortile1.png
 shared/levelbackground.png
+shared/levelbackgroundfuture.png
 shared/lily1.png
 shared/lily2.png
 shared/lily3.png

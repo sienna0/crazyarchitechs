@@ -4,6 +4,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.utils.JsonValue;
 import edu.cornell.gdiac.assets.ParserUtils;
+import edu.cornell.gdiac.graphics.SpriteBatch;
 import edu.cornell.gdiac.math.Poly2;
 import edu.cornell.gdiac.math.PolyTriangulator;
 import edu.cornell.gdiac.physics2.ObstacleSprite;
@@ -29,6 +30,8 @@ public class Surface extends ObstacleSprite {
 
     /** Whether this surface is fatal */
     private boolean fatal;
+    /** Whether this surface should render */
+    private boolean visible;
 
     /**
      * Creates a surface from the given set of points and physics units
@@ -47,6 +50,7 @@ public class Surface extends ObstacleSprite {
         float tile = settings.getFloat( "tile" );
 
         fatal = settings.getBoolean( "fatal" , false);
+        visible = !settings.getBoolean("invisible", false);
 
         // Construct a Poly2 object, breaking it into triangles
         Poly2 poly = new Poly2();
@@ -71,13 +75,23 @@ public class Surface extends ObstacleSprite {
         // mesh. The attribute tile is used to define how we scale/stretch
         // the texture to fit to the polygon. Try experimenting with this in
         // the JSON to see what happens.
-        poly.scl( units );
-        mesh.set(poly,tile,tile);
+        if (visible) {
+            poly.scl( units );
+            mesh.set(poly,tile,tile);
+        }
     }
 
     /** Returns whether this surface is fatal or not */
     public boolean isFatal() {
         return fatal;
+    }
+
+    @Override
+    public void draw(SpriteBatch batch) {
+        if (!visible) {
+            return;
+        }
+        super.draw(batch);
     }
 
 }

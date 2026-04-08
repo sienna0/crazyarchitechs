@@ -34,6 +34,7 @@ class LevelPopulation {
     private static final float OBJECT_SIZE = 1.0f;
     private static final float FLOOR_TILE_SCALE = 2.0f;
     private static final float TILE_WORLD_SIZE = 1.0f;
+    private static final float PULLEY_ROPE_OVERLAP_SCALE = 1.25f;
 
     /**
      * Holds references to the populated level's key objects (avatar, goal door, object lists, tile data).
@@ -51,7 +52,9 @@ class LevelPopulation {
         /** [x, y] screen-space position in pixels for each tile, in the same order as tileRegions. */
         List<float[]>       tilePositions  = new ArrayList<>();
         List<BoxSprite> pulleyCarries = new ArrayList<>();
-        List<List<BoxSprite>> pulleyRopes = new ArrayList<>();
+        List<BoxSprite> pulleyRopes = new ArrayList<>();
+        List<Vector2> pulleyWheelCenters = new ArrayList<>();
+        List<Float> pulleyWheelRadii = new ArrayList<>();
         List<Vector2> pulleyGroundAnchors = new ArrayList<>();
         List<Vector2> pulleyCarryAnchorOffsets = new ArrayList<>();
     }
@@ -253,7 +256,7 @@ class LevelPopulation {
 
         Texture topTexture = textureResolver.apply("shared-pulley-top", "shared/pulley_top.png");
         JsonValue pulleyTop = objectLocations.get("pulley_top");
-        addDecorBoxes(pulleyTop, units, topTexture, "pulley_top");
+        addPulleyTopDecor(result, pulleyTop, units, topTexture);
 
         Texture stringTexture = textureResolver.apply("shared-pulley-string", "shared/pulley_string.png");
         JsonValue pulleyStrings = objectLocations.get("pulley_strings");
@@ -282,7 +285,23 @@ class LevelPopulation {
                         "pulley_carry" + ii,
                         carryTexture
                 );
+                carry.setObstacle(new BottomStripBoxObstacle(
+                        pos[0], pos[1], size[0], size[1],
+                        entry.getFloat("collisionWidth", size[0] * 0.55f),
+                        entry.getFloat("collisionHeight", Math.min(size[1] * 0.22f, 0.2f))
+                ));
+                carry.getObstacle().setBodyType(BodyDef.BodyType.DynamicBody);
+                carry.getObstacle().setPhysicsUnits(units);
+                carry.getObstacle().setUserData(carry);
+                carry.getObstacle().setSensor(false);
+                carry.getObstacle().setFixedRotation(true);
+                carry.getObstacle().setDensity(entry.getFloat("density", 4.0f));
+                carry.getObstacle().setFriction(entry.getFloat("friction", 0.8f));
+                carry.getObstacle().setRestitution(entry.getFloat("restitution", 0.0f));
+                carry.getObstacle().setGravityScale(entry.getFloat("gravityScale", 1.0f));
+                carry.getObstacle().setName("pulley_carry" + ii);
                 spriteAdder.accept(carry);
+                carry.getObstacle().setCentroid(new Vector2(0.0f, 0.0f));
                 carry.getObstacle().getBody().setLinearDamping(entry.getFloat("linearDamping", 6.0f));
                 carry.getObstacle().getBody().setAngularDamping(entry.getFloat("angularDamping", 10.0f));
                 carries.add(carry);
@@ -321,9 +340,7 @@ class LevelPopulation {
 
     private void addPulleyRopeDecor(Result result, JsonValue entries, float units, Texture texture) {
         result.pulleyRopes.clear();
-        result.pulleyRopes.add(new ArrayList<>());
-        result.pulleyRopes.add(new ArrayList<>());
-        if (entries == null || result.pulleyGroundAnchors.size() < 2) {
+        if (entries == null) {
             return;
         }
 
@@ -332,27 +349,20 @@ class LevelPopulation {
             float[] pos = entry.get("pos").asFloatArray();
             float[] size = entry.get("size").asFloatArray();
             BoxSprite box = new BoxSprite(
-                    units, pos[0], pos[1], size[0], size[1],
+                    units, pos[0], pos[1], size[0], size[1] * PULLEY_ROPE_OVERLAP_SCALE,
                     BodyDef.BodyType.StaticBody, true, true,
                     0.0f, 0.0f, 0.0f, 0.0f,
                     "pulley_string" + ii,
                     texture
             );
             spriteAdder.accept(box);
-
-            int side = nearestGroundAnchor(result.pulleyGroundAnchors, pos[0]);
-            result.pulleyRopes.get(side).add(box);
+            result.pulleyRopes.add(box);
         }
     }
 
-    private int nearestGroundAnchor(List<Vector2> anchors, float x) {
-        if (anchors.size() < 2) {
-            return 0;
-        }
-        return Math.abs(x - anchors.get(0).x) <= Math.abs(x - anchors.get(1).x) ? 0 : 1;
-    }
-
-    private void addDecorBoxes(JsonValue entries, float units, Texture texture, String namePrefix) {
+    private void addPulleyTopDecor(Result result, JsonValue entries, float units, Texture texture) {
+        result.pulleyWheelCenters.clear();
+        result.pulleyWheelRadii.clear();
         if (entries == null) {
             return;
         }
@@ -360,14 +370,17 @@ class LevelPopulation {
             JsonValue entry = entries.get(ii);
             float[] pos = entry.get("pos").asFloatArray();
             float[] size = entry.get("size").asFloatArray();
-            BoxSprite box = new BoxSprite(
-                    units, pos[0], pos[1], size[0], size[1],
+            float radius = entry.getFloat("radius", Math.min(size[0], size[1]) * 0.34f);
+            WheelSprite wheel = new WheelSprite(
+                    units, pos[0], pos[1], radius,
                     BodyDef.BodyType.StaticBody, true, true,
                     0.0f, 0.0f, 0.0f, 0.0f,
-                    namePrefix + ii,
+                    "pulley_top" + ii,
                     texture
             );
-            spriteAdder.accept(box);
+            spriteAdder.accept(wheel);
+            result.pulleyWheelCenters.add(new Vector2(pos[0], pos[1]));
+            result.pulleyWheelRadii.add(radius);
         }
     }
 
@@ -424,7 +437,7 @@ class LevelPopulation {
     }
 
     /**
-     * Generates {@link InvisibleSurface} colliders for contiguous horizontal tile runs.
+     * Generates physics-only colliders for contiguous horizontal tile runs.
      * Merging adjacent cells avoids Box2D seam catches that can snag low-friction objects.
      */
     private void addTilemapColliders(JsonValue level, JsonValue collisionSettings, float units) {
@@ -473,14 +486,20 @@ class LevelPopulation {
 
     private void createTileCollider(int startX, int endExclusiveX, int y, float units,
                                     JsonValue collisionSettings, int colliderIndex) {
-        InvisibleSurface tileCollider = new InvisibleSurface(new float[]{
+        Surface tileCollider = new Surface(new float[]{
                 startX, y,
                 endExclusiveX, y,
                 endExclusiveX, y + TILE_WORLD_SIZE,
                 startX, y + TILE_WORLD_SIZE
-        }, units, collisionSettings);
+        }, units, buildInvisibleCollisionSettings(collisionSettings));
         tileCollider.getObstacle().setName("tilecollider" + colliderIndex);
         spriteAdder.accept(tileCollider);
+    }
+
+    private JsonValue buildInvisibleCollisionSettings(JsonValue collisionSettings) {
+        JsonValue copy = new JsonReader().parse(collisionSettings.toJson(JsonWriter.OutputType.json));
+        copy.addChild("invisible", new JsonValue(true));
+        return copy;
     }
 
     /**

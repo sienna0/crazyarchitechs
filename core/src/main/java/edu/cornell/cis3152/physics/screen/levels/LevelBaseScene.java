@@ -46,7 +46,7 @@ import java.util.List;
  * @see #endContact(Contact)
  */
 public class LevelBaseScene extends PhysicsScene implements ContactListener {
-    private static final float PAUSE_ICON_SIZE = 38.0f;
+    private static final float PAUSE_ICON_SIZE = 56.0f;
     private static final float TRANSITION_ENTRY_X = 1.25f;
     private static final float TRANSITION_WALK_MULTIPLIER = 0.4f;
     private static final float CAMERA_ZOOM = 0.75f;
@@ -420,25 +420,58 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         if (levelData == null) {
             return;
         }
-        if (levelData.pulleyCarries.size() < 2 || levelData.pulleyGroundAnchors.size() < 2 || levelData.pulleyRopes.size() < 2) {
+        if (levelData.pulleyCarries.size() < 2 || levelData.pulleyGroundAnchors.size() < 2 || levelData.pulleyRopes.isEmpty()) {
             return;
         }
 
-        for (int side = 0; side < 2; side++) {
-            BoxSprite carry = levelData.pulleyCarries.get(side);
-            Vector2 carryPos = carry.getObstacle().getPosition();
-            Vector2 offset = levelData.pulleyCarryAnchorOffsets.get(side);
-            Vector2 carryAnchor = new Vector2(carryPos.x + offset.x, carryPos.y + offset.y);
-            Vector2 topAnchor = levelData.pulleyGroundAnchors.get(side);
+        Vector2 leftCarryPos = levelData.pulleyCarries.get(0).getObstacle().getPosition();
+        Vector2 leftOffset = levelData.pulleyCarryAnchorOffsets.get(0);
+        Vector2 leftCarryAnchor = new Vector2(leftCarryPos.x + leftOffset.x, leftCarryPos.y + leftOffset.y);
 
-            List<BoxSprite> ropePieces = levelData.pulleyRopes.get(side);
-            int count = ropePieces.size();
-            for (int ii = 0; ii < count; ii++) {
-                float t = (ii + 0.5f) / count;
-                float x = topAnchor.x + (carryAnchor.x - topAnchor.x) * t;
-                float y = topAnchor.y + (carryAnchor.y - topAnchor.y) * t;
-                ropePieces.get(ii).getObstacle().setPosition(x, y);
+        Vector2 rightCarryPos = levelData.pulleyCarries.get(1).getObstacle().getPosition();
+        Vector2 rightOffset = levelData.pulleyCarryAnchorOffsets.get(1);
+        Vector2 rightCarryAnchor = new Vector2(rightCarryPos.x + rightOffset.x, rightCarryPos.y + rightOffset.y);
+
+        Vector2 leftTopAnchor = levelData.pulleyGroundAnchors.get(0);
+        Vector2 rightTopAnchor = levelData.pulleyGroundAnchors.get(1);
+        if (!levelData.pulleyWheelCenters.isEmpty() && !levelData.pulleyWheelRadii.isEmpty()) {
+            Vector2 wheelCenter = levelData.pulleyWheelCenters.get(0);
+            float wheelRadius = levelData.pulleyWheelRadii.get(0);
+            leftTopAnchor = new Vector2(wheelCenter.x - wheelRadius, wheelCenter.y + wheelRadius);
+            rightTopAnchor = new Vector2(wheelCenter.x + wheelRadius, wheelCenter.y + wheelRadius);
+        }
+
+        Vector2[] ropePath = new Vector2[] { leftCarryAnchor, leftTopAnchor, rightTopAnchor, rightCarryAnchor };
+        float[] segmentLengths = new float[ropePath.length - 1];
+        float totalLength = 0.0f;
+        for (int ii = 0; ii < segmentLengths.length; ii++) {
+            segmentLengths[ii] = ropePath[ii].dst(ropePath[ii + 1]);
+            totalLength += segmentLengths[ii];
+        }
+        if (totalLength <= 0.0f) {
+            return;
+        }
+
+        int count = levelData.pulleyRopes.size();
+        for (int ii = 0; ii < count; ii++) {
+            float distance = totalLength * ((ii + 0.5f) / count);
+            float traversed = 0.0f;
+            int segment = 0;
+            while (segment < segmentLengths.length - 1 && distance > traversed + segmentLengths[segment]) {
+                traversed += segmentLengths[segment];
+                segment++;
             }
+
+            float segmentLength = segmentLengths[segment];
+            Vector2 start = ropePath[segment];
+            Vector2 end = ropePath[segment + 1];
+            float t = segmentLength == 0.0f ? 0.0f : (distance - traversed) / segmentLength;
+            float x = start.x + (end.x - start.x) * t;
+            float y = start.y + (end.y - start.y) * t;
+            float ropeAngle = (float) Math.atan2(-(end.x - start.x), end.y - start.y);
+
+            levelData.pulleyRopes.get(ii).getObstacle().setPosition(x, y);
+            levelData.pulleyRopes.get(ii).getObstacle().setAngle(ropeAngle);
         }
     }
 

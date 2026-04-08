@@ -29,8 +29,8 @@ class LevelRenderer {
     private static final float INVENTORY_PADDING = 8.0f;
     /** Slot size is capped so the HUD stays reasonable with few inventory slots. */
     private static final float MAX_SLOT_SIZE = 40.0f;
-    private static final float PAUSE_ICON_SIZE = 38.0f;
-    private static final float PAUSE_ICON_HOVER_SIZE = 46.0f;
+    private static final float PAUSE_ICON_SIZE = 56.0f;
+    private static final float PAUSE_ICON_HOVER_SIZE = 64.0f;
 
     private final WorldState worldState;
     private final Texture slotTexture;
