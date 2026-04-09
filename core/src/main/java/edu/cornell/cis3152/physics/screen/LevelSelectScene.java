@@ -191,7 +191,11 @@ public class LevelSelectScene implements Screen {
         exitPrevious = exitPressed;
         clickPrevious = clickPressed;
         scroll -= Gdx.input.isKeyPressed(Input.Keys.A) ? 5f : 0f;
+        scroll -= Gdx.input.isKeyPressed(Input.Keys.LEFT) ? 5f : 0f;
+
         scroll += Gdx.input.isKeyPressed(Input.Keys.D) ? 5f : 0f;
+        scroll += Gdx.input.isKeyPressed(Input.Keys.RIGHT) ? 5f : 0f;
+
         float maxScroll = Math.max(0, (totalLevels - 1) * spacing - (width - start * 2));
         scroll = Math.max(0, Math.min(scroll, maxScroll));
     }
