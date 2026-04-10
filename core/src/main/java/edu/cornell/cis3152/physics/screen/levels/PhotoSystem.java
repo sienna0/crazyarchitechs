@@ -139,6 +139,10 @@ class PhotoSystem {
                 }
                 return;
             }
+            if (target != null && target.hasPicture()) {
+                removePictureFromTarget(target, avatar);
+                return;
+            }
         }
 
         if (target == null) {
@@ -294,9 +298,10 @@ class PhotoSystem {
             worldState.setActivePicture(null);
             return;
         }
-        if (activePicture.getSubject() == target) {
+        if (activePicture.getSubject() == target || activePicture.getSubjectType() == target.getObjectType()) {
             return;
         }
+
         if (!hasFullLineOfSight(target, avatar, world, STICK_PICTURE_DISTANCE)) {
             return;
         }
