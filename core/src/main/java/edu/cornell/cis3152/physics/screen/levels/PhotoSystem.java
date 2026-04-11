@@ -84,13 +84,6 @@ class PhotoSystem {
         }
     }
 
-    /**
-     * Maps horizontal input to movement force and primary action to jump for the avatar.
-     */
-    public void updateAvatarMovement(InputController input, Zuko avatar) {
-        avatar.setMovement(input.getHorizontal() * avatar.getForce());
-        avatar.setJumping(input.didPrimary());
-    }
 
     /**
      * Hit-tests the crosshair against non-avatar sprites and stores the result on the avatar

@@ -377,7 +377,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         InputController input = InputController.getInstance();
         photoSystem.updateHighlights(avatar, sprites, world);
         photoSystem.handlePictureShortcuts(input, avatar);
-        photoSystem.updateAvatarMovement(input, avatar);
+        updateAvatarMovement(input, avatar);
 
         GameObject target = photoSystem.resolveCurrentTarget(input, avatar, sprites);
         float units = avatar.getObstacle().getPhysicsUnits();
@@ -399,6 +399,14 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             SoundEffectManager.getInstance().play("jump", jumpSound, volume);
             avatar.startJumpAnimation();
         }
+    }
+
+    /**
+     * Maps horizontal input to movement force and primary action to jump for the avatar.
+     */
+    public void updateAvatarMovement(InputController input, Zuko avatar) {
+        avatar.setMovement(input.getHorizontal() * avatar.getForce());
+        avatar.setJumping(input.didPrimary());
     }
 
     private void updateEntryTransition() {
