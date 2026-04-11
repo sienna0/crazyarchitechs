@@ -34,6 +34,8 @@ public class GameObject extends ObstacleSprite {
     public Obj object;
     /** This object's weight (heavy/light) */
     float weight;
+    /** Downscales objects' physics bodies to fit the tiles without jitter  */
+    private static final float OBJECT_DOWNSCALE = 0.985f;
 
     private BoxObstacle body;
     /** Rest position for spring-based float motion */
@@ -119,7 +121,7 @@ public class GameObject extends ObstacleSprite {
                       float h, BodyDef.BodyType bodyType, boolean sensor) {
         this(object, data);
         this.baseBodyType = bodyType;
-        BoxObstacle body = new BoxObstacle(x, y, w, h);
+        BoxObstacle body = new BoxObstacle(x * OBJECT_DOWNSCALE, y* OBJECT_DOWNSCALE, w* OBJECT_DOWNSCALE, h* OBJECT_DOWNSCALE);
         this.body = body;
         body.setBodyType(bodyType);
         body.setPhysicsUnits(units);
