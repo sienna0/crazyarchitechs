@@ -339,6 +339,7 @@ class PhotoSystem {
         if (avatar.getCurrentPlatform() == target) {
             avatar.setCurrentPlatform(target);
         }
+        avatar.startTongueAnimation(target.getObstacle().getX(), target.getObstacle().getY());
         SoundEffectManager.getInstance().play("plop", plopSound, volume);
     }
 
