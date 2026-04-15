@@ -233,14 +233,55 @@ class LevelPopulation {
 
         addPulleyAssembly(result, objectLocations, units, world);
 
-        Texture gooTexture = textureResolver.apply("shared-earth", "shared/earthtile.png");
+        Texture gooTexture = textureResolver.apply("shared-goo", "shared/gootile.png");
         JsonValue goos = level.get("goo");
         JsonValue gooPositions = goos.get("positions");
+        JsonValue gooOrientations = goos.get("orientations");
+        float gooArtAspect = (float) gooTexture.getHeight() / gooTexture.getWidth();
         for (int ii = 0; ii < gooPositions.size; ii++) {
-            Surface goo = new Surface(gooPositions.get(ii).asFloatArray(), units, goos);
+            float[] pts = gooPositions.get(ii).asFloatArray();
+
+            Surface goo = new Surface(pts, units, goos);
             goo.getObstacle().setName("goo" + ii);
-            goo.setTexture(gooTexture);
+            goo.setVisible(false);
             spriteAdder.accept(goo);
+
+            float angle = (gooOrientations != null && ii < gooOrientations.size)
+                    ? gooOrientations.get(ii).asFloat() : 0f;
+
+            float minX = pts[0], maxX = pts[0], minY = pts[1], maxY = pts[1];
+            for (int j = 2; j < pts.length; j += 2) {
+                minX = Math.min(minX, pts[j]);
+                maxX = Math.max(maxX, pts[j]);
+            }
+            for (int j = 1; j < pts.length; j += 2) {
+                minY = Math.min(minY, pts[j]);
+                maxY = Math.max(maxY, pts[j]);
+            }
+
+            float surfaceSpan;
+            float cx, cy;
+            if (angle == 90 || angle == -90) {
+                surfaceSpan = maxY - minY;
+                cy = (minY + maxY) / 2f;
+                cx = (angle == 90) ? maxX : minX;
+            } else {
+                surfaceSpan = maxX - minX;
+                cx = (minX + maxX) / 2f;
+                cy = (angle == 180) ? minY : maxY;
+            }
+
+            float gooW = surfaceSpan;
+            float gooH = gooW * gooArtAspect;
+
+            BoxSprite decor = new BoxSprite(
+                    units, cx, cy, gooW, gooH,
+                    BodyDef.BodyType.StaticBody, true, true,
+                    0f, 0f, 0f, 0f,
+                    "goo_decor" + ii, gooTexture
+            );
+            decor.getObstacle().setAngle((float) Math.toRadians(angle));
+            spriteAdder.accept(decor);
         }
 
         return result;
