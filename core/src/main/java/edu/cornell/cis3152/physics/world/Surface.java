@@ -86,6 +86,11 @@ public class Surface extends ObstacleSprite {
         return fatal;
     }
 
+    /** Sets whether this surface should render */
+    public void setVisible(boolean visible) {
+        this.visible = visible;
+    }
+
     @Override
     public void draw(SpriteBatch batch) {
         if (!visible) {

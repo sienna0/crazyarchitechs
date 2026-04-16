@@ -81,10 +81,13 @@ let BASE = {
   bullet:  { offset:0.5, size:0.25, speed:20.0, density:10.0 }
 };
 
+let gooOrientation = 0; // 0=top, 90=right, -90=left, 180=bottom
+
 const makeLevel = () => ({
   walls:     { tile:128.0, friction:0.1, density:0.0, restitution:0.1, debug:"#ffffff", positions:[] },
   platforms: { tile:128.0, friction:0.1, density:0.0, restitution:0.1, debug:"#ffffff", positions:[] },
   floors:    { tile:128.0, friction:0.1, density:0.0, restitution:0.1, debug:"#5a8a3c", positions:[] },
+  goo:       { tile:128.0, friction:0.7, density:0.0, restitution:0.1, debug:"#5a8a3c", fatal:true, positions:[], orientations:[] },
   tilemap:   [],
   objectLocations: {
     rock:[], cloud:[], ice:[], zukosprite:[],
@@ -169,6 +172,10 @@ function loadFromJson(parsed){
   for(const lev of Object.values(newLevels)){
     if(!lev.floors) lev.floors={tile:128.0,friction:0.1,density:0.0,restitution:0.1,debug:'#5a8a3c',positions:[]};
     if(!lev.floors.positions) lev.floors.positions=[];
+    if(!lev.goo) lev.goo={tile:128.0,friction:0.7,density:0.0,restitution:0.1,debug:'#5a8a3c',fatal:true,positions:[],orientations:[]};
+    if(!lev.goo.positions) lev.goo.positions=[];
+    if(!lev.goo.orientations) lev.goo.orientations=[];
+    while(lev.goo.orientations.length<lev.goo.positions.length) lev.goo.orientations.push(0);
     if(!lev.tilemap) lev.tilemap=[];
     if(!lev.objectLocations.zukosprite) lev.objectLocations.zukosprite=[];
   }
@@ -195,6 +202,13 @@ function draw(){
   for(let y=0;y<=WORLD.h;y++){ctx.beginPath();ctx.moveTo(0,wy(y));ctx.lineTo(canvas.width,wy(y));ctx.stroke();}
   (lev.tilemap||[]).forEach(t=>drawSheetTile(ctx,t.col,t.row,wx(t.tx),wy(t.ty+1),SCALE,SCALE));
   (lev.floors?.positions||[]).forEach((pts,i)=>{const s=selected&&selected.type==='floor'&&selected.index===i;drawPoly(pts,s?'rgba(80,200,80,0.5)':'rgba(50,140,50,0.35)',s?'rgba(120,255,120,1)':'rgba(80,180,80,0.8)');});
+  (lev.goo?.positions||[]).forEach((pts,i)=>{const s=selected&&selected.type==='goo'&&selected.index===i;drawPoly(pts,s?'rgba(180,50,255,0.55)':'rgba(150,30,230,0.4)',s?'rgba(220,100,255,1)':'rgba(180,60,255,0.8)');
+    const orient=(lev.goo.orientations||[])[i]||0;
+    const bb=polyBounds(pts);const cx2=wx((bb.x0+bb.x1)/2),cy2=wy((bb.y0+bb.y1)/2);
+    ctx.save();ctx.translate(cx2,cy2);ctx.rotate(-orient*Math.PI/180);
+    ctx.fillStyle=s?'rgba(255,255,255,0.9)':'rgba(255,255,255,0.6)';ctx.font='10px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('▼',0,4);
+    ctx.restore();
+  });
   lev.walls.positions.forEach((pts,i)=>drawPoly(pts,selected&&selected.type==='wall'&&selected.index===i?'rgba(100,150,255,0.7)':'rgba(80,100,160,0.45)','rgba(140,160,255,0.9)'));
   lev.platforms.positions.forEach((pts,i)=>{const s=selected&&selected.type==='platform'&&selected.index===i;drawPoly(pts,s?'rgba(255,200,60,0.5)':'rgba(180,140,60,0.35)',s?'rgba(255,220,80,1)':'rgba(200,160,80,0.8)');});
   const ob=lev.objectLocations;
@@ -224,7 +238,8 @@ function hitTest(gX,gY){
   for(const type of ['rock','cloud','ice','zukosprite']){const r=type==='cloud'?1.5:0.9;for(let i=(ob[type]||[]).length-1;i>=0;i--)if(Math.hypot(gX-ob[type][i][0],gY-ob[type][i][1])<r)return {type,index:i};}
   return null;
 }
-function polyHit(pts,x,y,m){let x0=pts[0],x1=pts[0],y0=pts[1],y1=pts[1];for(let i=0;i<pts.length;i+=2){x0=Math.min(x0,pts[i]);x1=Math.max(x1,pts[i]);}for(let i=1;i<pts.length;i+=2){y0=Math.min(y0,pts[i]);y1=Math.max(y1,pts[i]);}return x>=x0-m&&x<=x1+m&&y>=y0-m&&y<=y1+m;}
+function polyHit(pts,x,y,m){const b=polyBounds(pts);return x>=b.x0-m&&x<=b.x1+m&&y>=b.y0-m&&y<=b.y1+m;}
+function polyBounds(pts){let x0=pts[0],x1=pts[0],y0=pts[1],y1=pts[1];for(let i=0;i<pts.length;i+=2){x0=Math.min(x0,pts[i]);x1=Math.max(x1,pts[i]);}for(let i=1;i<pts.length;i+=2){y0=Math.min(y0,pts[i]);y1=Math.max(y1,pts[i]);}return {x0,x1,y0,y1};}
 
 // ── Mouse ───────────────────────────────────────────────────────────
 canvas.addEventListener('contextmenu',e=>e.preventDefault());
@@ -236,10 +251,21 @@ canvas.addEventListener('mousedown',e=>{
     for(const type of ['rock','cloud','ice']){const r=type==='cloud'?1.5:0.9;for(let i=ob[type].length-1;i>=0;i--){if(Math.hypot(gX-ob[type][i][0],gY-ob[type][i][1])<r){ob[type].splice(i,1);if(selected&&selected.type===type)selected=null;buildSidebar();draw();updateJson();return;}}}
     for(let i=lev.platforms.positions.length-1;i>=0;i--){if(polyHit(lev.platforms.positions[i],gX,gY,0.2)){lev.platforms.positions.splice(i,1);if(selected&&selected.type==='platform'&&selected.index===i)selected=null;buildSidebar();draw();updateJson();return;}}
     for(let i=(lev.floors?.positions||[]).length-1;i>=0;i--){if(polyHit(lev.floors.positions[i],gX,gY,0.2)){lev.floors.positions.splice(i,1);if(selected&&selected.type==='floor'&&selected.index===i)selected=null;buildSidebar();draw();updateJson();return;}}
+    for(let i=(lev.goo?.positions||[]).length-1;i>=0;i--){if(polyHit(lev.goo.positions[i],gX,gY,0.2)){lev.goo.positions.splice(i,1);lev.goo.orientations.splice(i,1);if(selected&&selected.type==='goo'&&selected.index===i)selected=null;buildSidebar();draw();updateJson();return;}}
     for(const type of ['rock','cloud','ice','zukosprite']){const r=type==='cloud'?1.5:0.9;const arr=lev.objectLocations[type]||[];for(let i=arr.length-1;i>=0;i--){if(Math.hypot(gX-arr[i][0],gY-arr[i][1])<r){arr.splice(i,1);if(selected&&selected.type===type&&selected.index===i)selected=null;buildSidebar();draw();updateJson();return;}}}
     const tx=Math.floor(gX),ty=Math.floor(gY);
     const tidx=(lev.tilemap||[]).findIndex(t=>t.tx===tx&&t.ty===ty);if(tidx!==-1){lev.tilemap.splice(tidx,1);draw();updateJson();return;}
     return;
+  }
+  if(activeTool==='goo'){
+    const nx=snap(gX),ny=snap(gY);
+    let poly;
+    if(gooOrientation===0||gooOrientation===180) poly=[nx,ny,nx+1,ny,nx+1,ny+0.25,nx,ny+0.25];
+    else poly=[nx,ny,nx+0.25,ny,nx+0.25,ny+1,nx,ny+1];
+    lev.goo.positions.push(poly);
+    lev.goo.orientations.push(gooOrientation);
+    selected={type:'goo',index:lev.goo.positions.length-1};
+    buildSidebar();draw();updateJson();return;
   }
   if(activeTool==='floor'){const nx=snap(gX),ny=snap(gY);lev.floors.positions.push([nx,ny,nx+3,ny,nx+3,ny+0.5,nx,ny+0.5]);selected={type:'floor',index:lev.floors.positions.length-1};buildSidebar();draw();updateJson();return;}
   if(activeTool==='tile'){
@@ -263,6 +289,7 @@ canvas.addEventListener('mousedown',e=>{
   }
   for(let i=lev.platforms.positions.length-1;i>=0;i--){if(polyHit(lev.platforms.positions[i],gX,gY,0.3)){selected={type:'platform',index:i};dragging=true;dragStartWorld={x:gX,y:gY};dragStartObj=[...lev.platforms.positions[i]];buildSidebar();draw();updateJson();return;}}
   for(let i=(lev.floors?.positions||[]).length-1;i>=0;i--){if(polyHit(lev.floors.positions[i],gX,gY,0.3)){selected={type:'floor',index:i};dragging=true;dragStartWorld={x:gX,y:gY};dragStartObj=[...lev.floors.positions[i]];buildSidebar();draw();updateJson();return;}}
+  for(let i=(lev.goo?.positions||[]).length-1;i>=0;i--){if(polyHit(lev.goo.positions[i],gX,gY,0.3)){selected={type:'goo',index:i};dragging=true;dragStartWorld={x:gX,y:gY};dragStartObj=[...lev.goo.positions[i]];buildSidebar();draw();updateJson();return;}}
   for(let i=lev.walls.positions.length-1;i>=0;i--){if(polyHit(lev.walls.positions[i],gX,gY,0.15)){selected={type:'wall',index:i};dragging=true;dragStartWorld={x:gX,y:gY};dragStartObj=[...lev.walls.positions[i]];buildSidebar();draw();updateJson();return;}}
   selected=null;buildSidebar();draw();updateJson();
 });
@@ -281,7 +308,7 @@ canvas.addEventListener('mousemove',e=>{
   if(['rock','cloud','ice','zukosprite'].includes(selected.type)){const arr2=ob[selected.type]||[];arr2[selected.index][0]=snap(dragStartObj[0]+dx);arr2[selected.index][1]=snap(dragStartObj[1]+dy);}
   else if(selected.type==='goal'){ob.goal.pos[0]=snap(dragStartObj[0]+dx);ob.goal.pos[1]=snap(dragStartObj[1]+dy);}
   else if(selected.type==='zuko'){ob.zuko.pos[0]=snap(dragStartObj[0]+dx);ob.zuko.pos[1]=snap(dragStartObj[1]+dy);}
-  else if(['platform','wall','floor'].includes(selected.type)){const arr=selected.type==='platform'?lev.platforms.positions[selected.index]:selected.type==='floor'?lev.floors.positions[selected.index]:lev.walls.positions[selected.index];for(let i=0;i<arr.length;i+=2)arr[i]=snap(dragStartObj[i]+dx);for(let i=1;i<arr.length;i+=2)arr[i]=snap(dragStartObj[i]+dy);}
+  else if(['platform','wall','floor','goo'].includes(selected.type)){const arr=selected.type==='platform'?lev.platforms.positions[selected.index]:selected.type==='floor'?lev.floors.positions[selected.index]:selected.type==='goo'?lev.goo.positions[selected.index]:lev.walls.positions[selected.index];for(let i=0;i<arr.length;i+=2)arr[i]=snap(dragStartObj[i]+dx);for(let i=1;i<arr.length;i+=2)arr[i]=snap(dragStartObj[i]+dy);}
   buildSidebar();draw();updateJson();
 });
 canvas.addEventListener('mouseup',()=>{dragging=false;dragStartWorld=null;dragStartObj=null;});
@@ -321,8 +348,17 @@ function buildSidebar(){
   ls.appendChild(ab);sb.appendChild(ls);
   const ts=document.createElement('div');ts.className='sidebar-section';ts.innerHTML='<h3>tool</h3>';
   const tr=document.createElement('div');tr.className='tools-row';
-  [['select','↖'],['platform','▬'],['floor','🟩'],['rock','🪨'],['cloud','☁'],['ice','🧊'],['zukosprite','🐸'],['tile','▦']].forEach(([t,icon])=>{const b=document.createElement('button');b.className='tool-btn'+(activeTool===t?' active':'');b.innerHTML=`${icon} ${t}`;b.onclick=()=>{activeTool=t;buildSidebar();};tr.appendChild(b);});
-  ts.appendChild(tr);sb.appendChild(ts);
+  [['select','↖'],['platform','▬'],['floor','🟩'],['goo','☠'],['rock','🪨'],['cloud','☁'],['ice','🧊'],['zukosprite','🐸'],['tile','▦']].forEach(([t,icon])=>{const b=document.createElement('button');b.className='tool-btn'+(activeTool===t?' active':'');b.innerHTML=`${icon} ${t}`;b.onclick=()=>{activeTool=t;buildSidebar();};tr.appendChild(b);});
+  ts.appendChild(tr);
+  if(activeTool==='goo'){
+    const orientRow=document.createElement('div');orientRow.className='prop-row';orientRow.style.marginTop='6px';
+    orientRow.innerHTML='<span class="prop-label">orient</span>';
+    const sel=document.createElement('select');sel.className='prop-input';
+    [[0,'top'],[90,'right'],[-90,'left'],[180,'bottom']].forEach(([v,lbl])=>{const o=document.createElement('option');o.value=v;o.textContent=lbl;if(gooOrientation===v)o.selected=true;sel.appendChild(o);});
+    sel.onchange=()=>{gooOrientation=parseInt(sel.value);};
+    orientRow.appendChild(sel);ts.appendChild(orientRow);
+  }
+  sb.appendChild(ts);
   const tp=document.createElement('div');tp.className='sidebar-section';tp.innerHTML='<h3>tiles</h3>';
   const tpInner=document.createElement('div');tpInner.className='tile-picker';tpInner.id='tilePicker';
   tp.appendChild(tpInner);sb.appendChild(tp);
@@ -340,6 +376,16 @@ function buildSidebar(){
     } else if(selected.type==='zuko'){
       box.innerHTML='<h4>zuko</h4>';
       [['pos x',()=>ob.zuko.pos[0],v=>{ob.zuko.pos[0]=v;}],['pos y',()=>ob.zuko.pos[1],v=>{ob.zuko.pos[1]=v;}],['size',()=>ob.zuko.size,v=>{ob.zuko.size=v;}],['force',()=>ob.zuko.force,v=>{ob.zuko.force=v;}],['maxspeed',()=>ob.zuko.maxspeed,v=>{ob.zuko.maxspeed=v;}],['jump_force',()=>ob.zuko.jump_force,v=>{ob.zuko.jump_force=v;}]].forEach(([label,get,set])=>{const row=document.createElement('div');row.className='prop-row';row.innerHTML=`<span class="prop-label">${label}</span>`;const inp=document.createElement('input');inp.className='prop-input';inp.type='number';inp.step='0.25';inp.value=get();inp.onchange=()=>{set(parseFloat(inp.value)||0);draw();updateJson();};row.appendChild(inp);box.appendChild(row);});
+    } else if(selected.type==='goo'){
+      const arr=lev.goo.positions[selected.index];
+      box.innerHTML='<h4>goo '+selected.index+'</h4>';
+      ['x1','y1','x2','y2','x3','y3','x4','y4'].slice(0,arr.length).forEach((lbl,i)=>{const row=document.createElement('div');row.className='prop-row';row.innerHTML=`<span class="prop-label">${lbl}</span>`;const inp=document.createElement('input');inp.className='prop-input';inp.type='number';inp.step='0.25';inp.value=arr[i];inp.onchange=()=>{arr[i]=parseFloat(inp.value)||0;draw();updateJson();};row.appendChild(inp);box.appendChild(row);});
+      const oRow=document.createElement('div');oRow.className='prop-row';oRow.innerHTML='<span class="prop-label">orient</span>';
+      const oSel=document.createElement('select');oSel.className='prop-input';
+      [[0,'top'],[90,'right'],[-90,'left'],[180,'bottom']].forEach(([v,lbl2])=>{const o=document.createElement('option');o.value=v;o.textContent=lbl2;if((lev.goo.orientations[selected.index]||0)===v)o.selected=true;oSel.appendChild(o);});
+      oSel.onchange=()=>{lev.goo.orientations[selected.index]=parseInt(oSel.value);draw();updateJson();};
+      oRow.appendChild(oSel);box.appendChild(oRow);
+      const db=document.createElement('button');db.className='delete-btn';db.textContent='delete goo';db.onclick=()=>{lev.goo.positions.splice(selected.index,1);lev.goo.orientations.splice(selected.index,1);selected=null;buildSidebar();draw();updateJson();};box.appendChild(db);
     } else if(['platform','wall','floor'].includes(selected.type)){
       const arr=selected.type==='platform'?lev.platforms.positions[selected.index]:selected.type==='floor'?lev.floors.positions[selected.index]:lev.walls.positions[selected.index];
       box.innerHTML=`<h4>${selected.type} ${selected.index}</h4>`;

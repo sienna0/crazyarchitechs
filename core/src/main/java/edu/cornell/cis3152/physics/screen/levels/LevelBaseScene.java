@@ -10,6 +10,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.utils.Array;
@@ -84,6 +85,11 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     private PhotoSystem photoSystem;
     private LevelRenderer renderer;
 
+    private float gooAnimPhaseTimer;
+    private int gooAnimCycle;
+    /** From {@code constants.json} {@code goo.frame_duration_sec}. */
+    private float gooAnimFrameDuration = 0.26f;
+
     private boolean pendingHazardRestart = false;
     private boolean enteringFromPreviousLevel = false;
     private float entryTargetX = 0f;
@@ -127,6 +133,10 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         }
         if (levelPopulation == null) {
             levelPopulation = new LevelPopulation(constants, this::requireTexture, this::addSprite);
+        }
+        JsonValue gooJson = constants.get("goo");
+        if (gooJson != null) {
+            gooAnimFrameDuration = gooJson.getFloat("frame_duration_sec", 0.26f);
         }
         if (photoSystem == null) {
             JsonValue gp = constants.get("gameplay");
@@ -269,6 +279,43 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         levelData = levelPopulation.populate(currentLevel, units, worldState, world);
         goalDoor = levelData.goalDoor;
         avatar = levelData.avatar;
+        gooAnimPhaseTimer = 0f;
+        gooAnimCycle = 0;
+    }
+
+    private void applyGooTextureRegions() {
+        if (levelData == null || levelData.gooFrames == null || levelData.gooDecors.isEmpty()) {
+            return;
+        }
+        TextureRegion[] frames = levelData.gooFrames;
+        int n = frames.length;
+        if (n == 0) {
+            return;
+        }
+        List<BoxSprite> decors = levelData.gooDecors;
+        for (int ii = 0; ii < decors.size(); ii++) {
+            BoxSprite b = decors.get(ii);
+            float x = b.getObstacle().getX();
+            float y = b.getObstacle().getY();
+            int off = LevelPopulation.gooPhaseOffsetForDecor(x, y, n);
+            decors.get(ii).setTextureRegion(frames[(gooAnimCycle + off) % n]);
+        }
+    }
+
+    private void updateGooAnimation(float dt) {
+        if (levelData == null || levelData.gooFrames == null || levelData.gooDecors.isEmpty()) {
+            return;
+        }
+        int n = levelData.gooFrames.length;
+        if (n == 0) {
+            return;
+        }
+        gooAnimPhaseTimer += dt;
+        while (gooAnimPhaseTimer >= gooAnimFrameDuration) {
+            gooAnimPhaseTimer -= gooAnimFrameDuration;
+            gooAnimCycle = (gooAnimCycle + 1) % n;
+            applyGooTextureRegions();
+        }
     }
     
     /**
@@ -351,6 +398,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
      */
     @Override
     public void update(float dt) {
+        updateGooAnimation(dt);
         viewport.screenToCanvas(Gdx.input.getX(), Gdx.input.getY(), worldState.getPauseMouseCache());
         float iconSize = PAUSE_ICON_SIZE;
         float iconX = viewport.getWidth() - iconSize - 15f;
