@@ -31,6 +31,9 @@ import java.util.function.Consumer;
 class LevelPopulation {
 
     private static final int TILE_PX = 16;
+    private static final int GOO_FRAME_COUNT = 3;
+    /** Default if {@code constants.goo.surface_line_from_bottom} is absent (5px / 16px tile). */
+    private static final float GOO_SURFACE_LINE_FROM_BOTTOM_DEFAULT = 5f / 16f;
     private static final float OBJECT_SIZE = 1.0f;
     private static final float FLOOR_TILE_SCALE = 2.0f;
     private static final float TILE_WORLD_SIZE = 1.0f;
@@ -57,6 +60,10 @@ class LevelPopulation {
         List<Float> pulleyWheelRadii = new ArrayList<>();
         List<Vector2> pulleyGroundAnchors = new ArrayList<>();
         List<Vector2> pulleyCarryAnchorOffsets = new ArrayList<>();
+        /** Decorative goo sprites (fatal hazard art); animated in {@link LevelBaseScene}. */
+        List<BoxSprite> gooDecors = new ArrayList<>();
+        /** One texture region per animation frame ({@code shared/goo_0.png}, …). */
+        TextureRegion[] gooFrames;
     }
 
     float TERRAIN_BLOCK_SIZE = 1.5f;
@@ -233,11 +240,43 @@ class LevelPopulation {
 
         addPulleyAssembly(result, objectLocations, units, world);
 
-        Texture gooTexture = textureResolver.apply("shared-goo", "shared/gootile.png");
+        addGooDecorations(result, level, units);
+
+        return result;
+    }
+
+    /**
+     * Fatal goo uses invisible {@link Surface} colliders; art is tiled 1×1 with textures from
+     * {@code shared/goo_0.png} … {@code goo_N}.
+     */
+    private void addGooDecorations(Result result, JsonValue level, float units) {
         JsonValue goos = level.get("goo");
+        if (goos == null) {
+            return;
+        }
         JsonValue gooPositions = goos.get("positions");
+        if (gooPositions == null || gooPositions.size == 0) {
+            return;
+        }
+
+        JsonValue gooCfg = constants.get("goo");
+        float surfaceLine = gooCfg != null
+                ? gooCfg.getFloat("surface_line_from_bottom", GOO_SURFACE_LINE_FROM_BOTTOM_DEFAULT)
+                : GOO_SURFACE_LINE_FROM_BOTTOM_DEFAULT;
+
+        TextureRegion[] gooFrames = new TextureRegion[GOO_FRAME_COUNT];
+        for (int f = 0; f < GOO_FRAME_COUNT; f++) {
+            Texture t = textureResolver.apply(
+                    "shared-goo-" + f,
+                    "shared/goo_" + f + ".png"
+            );
+            gooFrames[f] = new TextureRegion(t);
+        }
+        result.gooFrames = gooFrames;
+
         JsonValue gooOrientations = goos.get("orientations");
-        float gooArtAspect = (float) gooTexture.getHeight() / gooTexture.getWidth();
+        Texture tile0 = gooFrames[0].getTexture();
+
         for (int ii = 0; ii < gooPositions.size; ii++) {
             float[] pts = gooPositions.get(ii).asFloatArray();
 
@@ -260,31 +299,54 @@ class LevelPopulation {
             }
 
             float surfaceSpan;
-            float cx, cy;
             if (angle == 90 || angle == -90) {
                 surfaceSpan = maxY - minY;
-                cy = (minY + maxY) / 2f;
-                cx = (angle == 90) ? maxX : minX;
             } else {
                 surfaceSpan = maxX - minX;
-                cx = (minX + maxX) / 2f;
-                cy = (angle == 180) ? minY : maxY;
             }
 
-            float gooW = surfaceSpan;
-            float gooH = gooW * gooArtAspect;
+            int nTiles = Math.max(1, (int) Math.ceil(surfaceSpan / TILE_WORLD_SIZE - 1e-5f));
 
-            BoxSprite decor = new BoxSprite(
-                    units, cx, cy, gooW, gooH,
-                    BodyDef.BodyType.StaticBody, true, true,
-                    0f, 0f, 0f, 0f,
-                    "goo_decor" + ii, gooTexture
-            );
-            decor.getObstacle().setAngle((float) Math.toRadians(angle));
-            spriteAdder.accept(decor);
+            for (int ti = 0; ti < nTiles; ti++) {
+                float tcx;
+                float tcy;
+                if (angle == 90 || angle == -90) {
+                    tcx = (angle == 90) ? maxX - TILE_WORLD_SIZE / 2f : minX + TILE_WORLD_SIZE / 2f;
+                    tcy = minY + TILE_WORLD_SIZE * (ti + 0.5f);
+                } else {
+                    tcx = minX + TILE_WORLD_SIZE * (ti + 0.5f);
+                    if (angle == 180f) {
+                        tcy = minY + TILE_WORLD_SIZE * (0.5f - surfaceLine);
+                    } else {
+                        tcy = maxY + TILE_WORLD_SIZE * (0.5f - surfaceLine);
+                    }
+                }
+
+                int phaseOff = gooPhaseOffsetForDecor(tcx, tcy, GOO_FRAME_COUNT);
+                BoxSprite decor = new BoxSprite(
+                        units, tcx, tcy,
+                        TILE_WORLD_SIZE, TILE_WORLD_SIZE,
+                        BodyDef.BodyType.StaticBody, true, true,
+                        0f, 0f, 0f, 0f,
+                        "goo_decor" + ii + "_" + ti, tile0
+                );
+                decor.setTextureRegion(gooFrames[phaseOff]);
+                decor.getObstacle().setAngle((float) Math.toRadians(angle));
+                spriteAdder.accept(decor);
+                result.gooDecors.add(decor);
+            }
         }
+    }
 
-        return result;
+    /**
+     * Stable per-tile animation offset from world position (no parallel arrays; same layout every load).
+     */
+    static int gooPhaseOffsetForDecor(float worldX, float worldY, int frameCount) {
+        if (frameCount <= 1) {
+            return 0;
+        }
+        int h = Float.floatToIntBits(worldX) ^ (Float.floatToIntBits(worldY) * 31);
+        return Math.floorMod(h, frameCount);
     }
 
     private void addPulleyAssembly(Result result, JsonValue objectLocations, float units, World world) {

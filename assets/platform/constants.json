@@ -31,6 +31,10 @@
     "lift_spring_stiffness": 2.0,
     "lift_spring_damping": 3.5
   },
+  "goo": {
+    "frame_duration_sec": 0.26,
+    "surface_line_from_bottom": 0.3125
+  },
   "zuko": {
     "inner": [0.7, 0.95],
     "size": 1.0,
