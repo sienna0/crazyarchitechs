@@ -40,7 +40,6 @@ shared/blanklily.png
 shared/earthtile.png
 shared/floortile.png
 shared/floortile1.png
-shared/gootile.png
 shared/levelbackground.png
 shared/levelbackgroundfuture.png
 shared/lily1.png

@@ -5,11 +5,6 @@
             "wrapU": "non-repeated",
             "wrapV": "repeated"
         },
-        "shared-goo" : {
-            "file":  "shared/gootile.png",
-            "wrapU": "non-repeated",
-            "wrapV": "non-repeated"
-        },
         "shared-floor" : {
             "file": "shared/floortile.png",
             "wrapU": "repeated",
