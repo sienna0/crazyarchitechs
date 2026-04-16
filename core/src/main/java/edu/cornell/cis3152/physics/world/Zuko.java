@@ -559,13 +559,18 @@ public class Zuko extends ObstacleSprite {
             body.applyForce(forceCache,pos,true);
         }
 
-        // TODO add an even higher velocity for ice maybe?
-        // Velocity too high, clamp it
-        if (!onIce && Math.abs(vx) >= maxspeed) {
-            obstacle.setVX(Math.signum(vx)*maxspeed);
+        float movement = getMovement();
+        // At max speed, still apply horizontal force when braking or reversing; otherwise the
+        // clamp below would skip input entirely and air / ground direction changes feel sluggish.
+        boolean atSpeedCap = !onIce && Math.abs(vx) >= maxspeed;
+        boolean inputOpposesVelocity =
+                movement != 0f && Math.abs(vx) > 1e-4f && Math.signum(movement) != Math.signum(vx);
+
+        if (atSpeedCap && !inputOpposesVelocity) {
+            obstacle.setVX(Math.signum(vx) * maxspeed);
         } else {
-            forceCache.set(getMovement(),0);
-            body.applyForce(forceCache,pos,true);
+            forceCache.set(movement, 0f);
+            body.applyForce(forceCache, pos, true);
         }
 
         if (isJumping()) {
