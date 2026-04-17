@@ -5,6 +5,21 @@
             "wrapU": "non-repeated",
             "wrapV": "repeated"
         },
+        "shared-goo-0" : {
+            "file":  "shared/goo_0.png",
+            "wrapU": "non-repeated",
+            "wrapV": "non-repeated"
+        },
+        "shared-goo-1" : {
+            "file":  "shared/goo_1.png",
+            "wrapU": "non-repeated",
+            "wrapV": "non-repeated"
+        },
+        "shared-goo-2" : {
+            "file":  "shared/goo_2.png",
+            "wrapU": "non-repeated",
+            "wrapV": "non-repeated"
+        },
         "shared-floor" : {
             "file": "shared/floortile.png",
             "wrapU": "repeated",
