@@ -81,6 +81,7 @@ public class Camera {
         return (dx * dx + dy * dy) <= (maxDistance * maxDistance);
     }
 
+    //FIXME this is never called? Then what's the point of picture cooldown?
     /** Ticks down the cooldown timer each frame. */
     public void update(float dt) {
         if (pictureCooldown > 0) {

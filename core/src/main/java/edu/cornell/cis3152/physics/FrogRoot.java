@@ -31,7 +31,7 @@ import edu.cornell.gdiac.graphics.*;
  * intents and purposes, and you would draw it as a root class in an
  * architecture specification.
  */
-public class GDXRoot extends Game implements ScreenListener {
+public class FrogRoot extends Game implements ScreenListener {
     /** AssetManager to load game assets (textures, sounds, etc.) */
     AssetDirectory directory;
     /** Shared sprite batch for drawing */
@@ -49,7 +49,7 @@ public class GDXRoot extends Game implements ScreenListener {
      * This method configures the asset manager, but does not load any assets
      * or assign any screen.
      */
-    public GDXRoot() { }
+    public FrogRoot() { }
 
     /**
      * Called when the Application is first created.

@@ -16,7 +16,7 @@
  */
 package edu.cornell.cis3152.physics.lwjgl3;
 
-import edu.cornell.cis3152.physics.GDXRoot;
+import edu.cornell.cis3152.physics.FrogRoot;
 import edu.cornell.gdiac.backend.*;
 
 
@@ -41,7 +41,7 @@ public class DesktopLauncher {
         if (StartupHelper.startNewJvmIfRequired()) {
             return;
         }
-        new GDXApp(new GDXRoot(), configureApplication());
+        new GDXApp(new FrogRoot(), configureApplication());
     }
 
     /**
