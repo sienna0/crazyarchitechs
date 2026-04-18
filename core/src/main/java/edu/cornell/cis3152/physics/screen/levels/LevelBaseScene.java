@@ -373,6 +373,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         for (ObstacleSprite sprite : sprites) {
             if (sprite instanceof GameObject go) {
                 go.syncPhysics();
+                go.clampHoneyHorizontalVelocityUnlessIced();
             }
         }
         syncPulleyRopes();

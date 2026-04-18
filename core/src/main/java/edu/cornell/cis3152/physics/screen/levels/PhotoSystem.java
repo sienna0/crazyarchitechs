@@ -110,7 +110,9 @@ class PhotoSystem {
     /**
      * Per-frame picture UI and world actions: inventory slot clicks select/clear the active
      * picture; right-click on a target {@linkplain #removePictureFromTarget unsticks};
-     * left-click with no active picture {@linkplain #takePictureOfTarget takes} a new one,
+     * left-click with no active picture {@linkplain #takePictureOfTarget takes} a new one;
+     * left-click with an active picture on an object that already has a photo
+     * {@linkplain #swapActiveWithPictureOnTarget replaces} the stuck photo (the old one is discarded);
      * otherwise {@linkplain #applyPictureToTarget sticks} the active picture onto the target.
      */
     void handlePictureAction(InputController input,
@@ -133,7 +135,11 @@ class PhotoSystem {
                 return;
             }
             if (target != null && target.hasPicture()) {
-                removePictureFromTarget(target, avatar);
+                if (worldState.getActivePicture() != null && worldState.getSelectedSlotIndex() >= 0) {
+                    swapActiveWithPictureOnTarget(target, avatar, world);
+                } else {
+                    removePictureFromTarget(target, avatar);
+                }
                 return;
             }
         }
@@ -299,6 +305,49 @@ class PhotoSystem {
             return;
         }
 
+        completeStickFromInventory(activePicture, target, avatar, worldState.getSelectedSlotIndex());
+    }
+
+    /**
+     * With a picture selected in the hotbar, left-click on a surface that already has a photo:
+     * clears the old effect and removes that photo from the world (not returned to inventory),
+     * then sticks the active photo like a normal apply.
+     */
+    private void swapActiveWithPictureOnTarget(GameObject target, Zuko avatar, World world) {
+        Picture activePicture = worldState.getActivePicture();
+        int slotIndex = worldState.getSelectedSlotIndex();
+        Picture attachedPicture = findPictureOnTarget(target);
+
+        if (activePicture == null || slotIndex < 0 || attachedPicture == null) {
+            return;
+        }
+        if (activePicture.getSubject() == null) {
+            worldState.setActivePicture(null);
+            return;
+        }
+        if (activePicture.getSubject() == target || activePicture.getSubjectType() == target.getObjectType()) {
+            return;
+        }
+        if (!hasFullLineOfSight(target, avatar, world, STICK_PICTURE_DISTANCE)) {
+            return;
+        }
+
+        target.resetAttributes();
+        attachedPicture.clearTarget();
+        attachedPicture.clearSubject();
+        worldState.getPictures().removeValue(attachedPicture, true);
+
+        completeStickFromInventory(activePicture, target, avatar, slotIndex);
+    }
+
+    /**
+     * Applies the in-hand picture to {@code target}, clears the hotbar slot used for it, and
+     * clears selection.
+     */
+    private void completeStickFromInventory(Picture activePicture,
+                                            GameObject target,
+                                            Zuko avatar,
+                                            int slotIndex) {
         if (activePicture.getTarget() != null) {
             activePicture.getTarget().resetAttributes();
         }
@@ -308,7 +357,6 @@ class PhotoSystem {
             target.setFloatHome(target.getObstacle().getX(), subject.getFloatHome().y);
         }
 
-        int slotIndex = worldState.getSelectedSlotIndex();
         avatar.getPictureInventory().removePicture(slotIndex);
         worldState.setActivePicture(null);
         worldState.setSelectedSlotIndex(-1);

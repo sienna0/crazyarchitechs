@@ -246,6 +246,28 @@ public class GameObject extends ObstacleSprite {
     }
 
     /**
+     * Honey blocks are not horizontally pushable unless an ice photo is stuck on them
+     * ({@link Quality#SLIPPERY}). Clears horizontal linear velocity each frame while preserving
+     * vertical motion (falling, cloud lift).
+     */
+    public void clampHoneyHorizontalVelocityUnlessIced() {
+        if (object != Obj.HONEY || baseBodyType != BodyDef.BodyType.DynamicBody) {
+            return;
+        }
+        if (hasPicture && pictureQuality == SLIPPERY) {
+            return;
+        }
+        Body physicsBody = body.getBody();
+        if (physicsBody == null) {
+            return;
+        }
+        Vector2 v = physicsBody.getLinearVelocity();
+        if (v.x != 0f) {
+            physicsBody.setLinearVelocity(0f, v.y);
+        }
+    }
+
+    /**
      * Resets picture flag, picture quality, and all physics fields to values read from
      * the stored JSON, then sets {@link #pendingPhysicsSync}. Invoked when a picture is
      * removed (e.g. from {@link ObjectEffect} teardown) so the body returns to level defaults.
