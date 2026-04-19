@@ -80,6 +80,8 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     protected ObjectSet<Fixture> sensorFixtures;
 
     private Texture markerPixel;
+    /** Rows = stuck-on surface ({@link GameObject} target); cols = photographed type (subject). Filenames: {@code picture_<surface>_with_<photo>.png}. */
+    private Texture[][] stuckPictureTextures;
     private LevelPopulation levelPopulation;
     private LevelPopulation.Result levelData;
     private PhotoSystem photoSystem;
@@ -149,11 +151,37 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
                     worldState, stickDist, takeDist, springK, springD,
                     volume, fireSound, plopSound
             );
+            if (stuckPictureTextures == null) {
+                stuckPictureTextures = loadStuckPictureTextures();
+            }
             renderer = new LevelRenderer(
                     worldState, slotTexture, pauseIconTexture, markerPixel,
+                    stuckPictureTextures,
                     stickDist, takeDist
             );
         }
+    }
+
+    /**
+     * Loads combo sprites keyed by {@code [target surface][photographed subject]} — matches
+     * {@code picture_<surface>_with_<photo>.png} (e.g. honey block + ice snapshot → honey_with_ice).
+     */
+    private Texture[][] loadStuckPictureTextures() {
+        Obj[] vals = Obj.values();
+        Texture[][] m = new Texture[vals.length][vals.length];
+        m[Obj.CLOUD.ordinal()][Obj.HONEY.ordinal()] =
+                requireTexture("platform-picture-cloud-with-honey", "platform/picture_cloud_with_honey.png");
+        m[Obj.CLOUD.ordinal()][Obj.ICE.ordinal()] =
+                requireTexture("platform-picture-cloud-with-ice", "platform/picture_cloud_with_ice.png");
+        m[Obj.HONEY.ordinal()][Obj.CLOUD.ordinal()] =
+                requireTexture("platform-picture-honey-with-cloud", "platform/picture_honey_with_cloud.png");
+        m[Obj.HONEY.ordinal()][Obj.ICE.ordinal()] =
+                requireTexture("platform-picture-honey-with-ice", "platform/picture_honey_with_ice.png");
+        m[Obj.ICE.ordinal()][Obj.CLOUD.ordinal()] =
+                requireTexture("platform-picture-ice-with-cloud", "platform/picture_ice_with_cloud.png");
+        m[Obj.ICE.ordinal()][Obj.HONEY.ordinal()] =
+                requireTexture("platform-picture-ice-with-honey", "platform/picture_ice_with_honey.png");
+        return m;
     }
 
     /**

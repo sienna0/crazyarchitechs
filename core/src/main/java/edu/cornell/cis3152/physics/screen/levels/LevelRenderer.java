@@ -16,12 +16,15 @@ import edu.cornell.gdiac.math.PathFactory;
 import edu.cornell.gdiac.physics2.Obstacle;
 
 /**
- * Responsible for all non-physics rendering: HUD inventory bar, placed-picture Polaroid overlays,
+ * Responsible for all non-physics rendering: HUD inventory bar, stuck-picture overlays (surface-with-photo combo art),
  * highlight outlines, range indicators, pause icon, and level tile backgrounds.
  * <p>
  * Uses screen-space coordinates for HUD elements.
  */
 class LevelRenderer {
+    /** World-space size for stuck combo art ({@code picture_*_with_*.png}). */
+    private static final float STUCK_COMBO_SIZE = 34.0f;
+    /** Legacy Polaroid inner size if combo art is unavailable. */
     private static final float STUCK_PICTURE_SIZE = 22.0f;
     private static final float STUCK_PICTURE_BORDER = 2.0f;
     private static final float STUCK_PICTURE_INNER_PADDING = 4.0f;
@@ -36,6 +39,8 @@ class LevelRenderer {
     private final Texture slotTexture;
     private final Texture pauseIconTexture;
     private final Texture markerPixel;
+    /** [target surface][photographed subject] — matches {@code picture_<surface>_with_<photo>.png}. */
+    private final Texture[][] stuckPictureTextures;
     private final float stickDistance;
     private final float takeDistance;
     private final Affine2 highlightTransform = new Affine2();
@@ -44,12 +49,14 @@ class LevelRenderer {
                   Texture slotTexture,
                   Texture pauseIconTexture,
                   Texture markerPixel,
+                  Texture[][] stuckPictureTextures,
                   float stickDistance,
                   float takeDistance) {
         this.worldState = worldState;
         this.slotTexture = slotTexture;
         this.pauseIconTexture = pauseIconTexture;
         this.markerPixel = markerPixel;
+        this.stuckPictureTextures = stuckPictureTextures;
         this.stickDistance = stickDistance;
         this.takeDistance = takeDistance;
     }
@@ -184,7 +191,7 @@ class LevelRenderer {
     }
 
     /**
-     * Renders Polaroid-style overlays on objects that have pictures stuck to them.
+     * Draws combo art on surfaces that have a stuck picture (e.g. {@code picture_cloud_with_ice.png}).
      */
     private void drawPlacedPictures(SpriteBatch batch) {
         for (Picture picture : worldState.getPictures()) {
@@ -193,11 +200,35 @@ class LevelRenderer {
             }
 
             GameObject target = picture.getTarget();
+            GameObject subject = picture.getSubject();
             Obstacle obstacle = target.getObstacle();
             float units = obstacle.getPhysicsUnits();
             float centerX = obstacle.getX() * units;
             float centerY = obstacle.getY() * units;
             float rotation = obstacle.getAngle() * MathUtils.radiansToDegrees;
+
+            Texture combo = resolveStuckComboTexture(subject, target);
+            if (combo != null) {
+                batch.setColor(Color.WHITE);
+                float sz = STUCK_COMBO_SIZE;
+                batch.draw(combo,
+                        centerX - (sz * 0.5f),
+                        centerY - (sz * 0.5f),
+                        sz * 0.5f,
+                        sz * 0.5f,
+                        sz,
+                        sz,
+                        1.0f,
+                        1.0f,
+                        rotation,
+                        0,
+                        0,
+                        combo.getWidth(),
+                        combo.getHeight(),
+                        false,
+                        false);
+                continue;
+            }
 
             drawStuckPictureLayer(batch, centerX, centerY, STUCK_PICTURE_SIZE + (STUCK_PICTURE_BORDER * 2.0f), Color.BLACK, rotation);
             drawStuckPictureLayer(batch, centerX, centerY, STUCK_PICTURE_SIZE, new Color(0.96f, 0.95f, 0.91f, 1.0f), rotation);
@@ -225,6 +256,23 @@ class LevelRenderer {
                         false);
             }
         }
+    }
+
+    /** Assets follow {@code picture_<surface>_with_<photographed type>.png} — index [target][subject]. */
+    private Texture resolveStuckComboTexture(GameObject subject, GameObject target) {
+        if (subject == null || target == null || stuckPictureTextures == null) {
+            return null;
+        }
+        int si = subject.getObjectType().ordinal();
+        int ti = target.getObjectType().ordinal();
+        if (ti < 0 || ti >= stuckPictureTextures.length) {
+            return null;
+        }
+        Texture[] row = stuckPictureTextures[ti];
+        if (row == null || si < 0 || si >= row.length) {
+            return null;
+        }
+        return row[si];
     }
 
     /**

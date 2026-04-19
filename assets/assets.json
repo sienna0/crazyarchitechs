@@ -50,6 +50,12 @@
         "platform-honey"    : "platform/honey.png",
         "platform-cloud"    : "platform/cloud.png",
         "platform-pause"    : "platform/pause_icon.png",
+        "platform-picture-cloud-with-honey": "platform/picture_cloud_with_honey.png",
+        "platform-picture-cloud-with-ice": "platform/picture_cloud_with_ice.png",
+        "platform-picture-honey-with-cloud": "platform/picture_honey_with_cloud.png",
+        "platform-picture-honey-with-ice": "platform/picture_honey_with_ice.png",
+        "platform-picture-ice-with-cloud": "platform/picture_ice_with_cloud.png",
+        "platform-picture-ice-with-honey": "platform/picture_ice_with_honey.png",
         "platform-tileset"  : "platform/tileset.png"
     },
     "jsons"  : {

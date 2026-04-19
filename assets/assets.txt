@@ -19,6 +19,12 @@ platform/jump.wav
 platform/oldzuko.png
 platform/pause_icon.png
 platform/pew.wav
+platform/picture_cloud_with_honey.png
+platform/picture_cloud_with_ice.png
+platform/picture_honey_with_cloud.png
+platform/picture_honey_with_ice.png
+platform/picture_ice_with_cloud.png
+platform/picture_ice_with_honey.png
 platform/plop.wav
 platform/rock.png
 platform/tileset.png
