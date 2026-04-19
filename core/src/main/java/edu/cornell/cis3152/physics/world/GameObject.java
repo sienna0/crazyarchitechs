@@ -121,7 +121,7 @@ public class GameObject extends ObstacleSprite {
                       float h, BodyDef.BodyType bodyType, boolean sensor) {
         this(object, data);
         this.baseBodyType = bodyType;
-        BoxObstacle body = new BoxObstacle(x * OBJECT_DOWNSCALE, y* OBJECT_DOWNSCALE, w* OBJECT_DOWNSCALE, h* OBJECT_DOWNSCALE);
+        BoxObstacle body = new BoxObstacle(x, y, w* OBJECT_DOWNSCALE, h* OBJECT_DOWNSCALE);
         this.body = body;
         body.setBodyType(bodyType);
         body.setPhysicsUnits(units);
