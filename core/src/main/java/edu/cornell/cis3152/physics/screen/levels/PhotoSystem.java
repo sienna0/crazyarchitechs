@@ -277,6 +277,8 @@ class PhotoSystem {
             if (sprite == avatar) continue;
             if (!(sprite instanceof GameObject go)) continue;
             if (hasFullLineOfSight(go, avatar, world, range)) {
+                if (activePicture != null) {
+                    if (activePicture.getSubjectType() == go.getObjectType()) {continue;}}
                 worldState.addHighlight(go);
             }
 
