@@ -51,6 +51,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     private static final float TRANSITION_ENTRY_X = 1.25f;
     private static final float TRANSITION_WALK_MULTIPLIER = 0.4f;
     private static final float CAMERA_ZOOM = 0.75f;
+    private static final float PULLEY_ROPE_WHEEL_INSET = 2.0f / 16.0f;
 
     private Texture backgroundTexture;
 
@@ -522,8 +523,10 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         if (!levelData.pulleyWheelCenters.isEmpty() && !levelData.pulleyWheelRadii.isEmpty()) {
             Vector2 wheelCenter = levelData.pulleyWheelCenters.get(0);
             float wheelRadius = levelData.pulleyWheelRadii.get(0);
-            leftTopAnchor = new Vector2(wheelCenter.x - wheelRadius, wheelCenter.y + wheelRadius);
-            rightTopAnchor = new Vector2(wheelCenter.x + wheelRadius, wheelCenter.y + wheelRadius);
+            float ropeRadius = Math.max(0.0f, wheelRadius - PULLEY_ROPE_WHEEL_INSET);
+            float ropeY = wheelCenter.y;
+            leftTopAnchor = new Vector2(wheelCenter.x - ropeRadius, ropeY);
+            rightTopAnchor = new Vector2(wheelCenter.x + ropeRadius, ropeY);
         }
 
         Vector2[] ropePath = new Vector2[] { leftCarryAnchor, leftTopAnchor, rightTopAnchor, rightCarryAnchor };

@@ -37,7 +37,10 @@ class LevelPopulation {
     private static final float OBJECT_SIZE = 1.0f;
     private static final float FLOOR_TILE_SCALE = 2.0f;
     private static final float TILE_WORLD_SIZE = 1.0f;
+    private static final float PULLEY_ROPE_SEGMENT_SPACING = 0.25f;
+    private static final float PULLEY_ROPE_SEGMENT_SIZE = 0.25f;
     private static final float PULLEY_ROPE_OVERLAP_SCALE = 1.25f;
+   // private static final float PULLEY_ROPE_WHEEL_INSET = 0f;//2.0f / TILE_PX;
 
     /**
      * Holds references to the populated level's key objects (avatar, goal door, object lists, tile data).
@@ -359,15 +362,12 @@ class LevelPopulation {
 
         Texture topTexture = textureResolver.apply("shared-pulley-top", "shared/pulley_top.png");
         JsonValue pulleyTop = objectLocations.get("pulley_top");
-        addPulleyTopDecor(result, pulleyTop, units, topTexture);
+        readPulleyTopGeometry(result, pulleyTop);
 
-        Texture stringTexture = textureResolver.apply("shared-pulley-string", "shared/pulley_string.png");
-        JsonValue pulleyStrings = objectLocations.get("pulley_strings");
         if (groundAnchorsJson != null && groundAnchorsJson.size >= 2) {
             result.pulleyGroundAnchors.add(readVector(groundAnchorsJson.get(0)));
             result.pulleyGroundAnchors.add(readVector(groundAnchorsJson.get(1)));
         }
-        addPulleyRopeDecor(result, pulleyStrings, units, stringTexture);
 
         Texture carryTexture = textureResolver.apply("shared-pulley-carry", "shared/pulley_carry.png");
         JsonValue pulleyCarries = objectLocations.get("pulley_carry");
@@ -384,7 +384,7 @@ class LevelPopulation {
                         entry.getFloat("density", 4.0f),
                         entry.getFloat("friction", 0.8f),
                         entry.getFloat("restitution", 0.0f),
-                        entry.getFloat("gravityScale", 1.0f),
+                        entry.getFloat("gravityScale", 2.5f),
                         "pulley_carry" + ii,
                         carryTexture
                 );
@@ -401,11 +401,11 @@ class LevelPopulation {
                 carry.getObstacle().setDensity(entry.getFloat("density", 4.0f));
                 carry.getObstacle().setFriction(entry.getFloat("friction", 0.8f));
                 carry.getObstacle().setRestitution(entry.getFloat("restitution", 0.0f));
-                carry.getObstacle().setGravityScale(entry.getFloat("gravityScale", 1.0f));
+                carry.getObstacle().setGravityScale(entry.getFloat("gravityScale", 2.5f));
                 carry.getObstacle().setName("pulley_carry" + ii);
                 spriteAdder.accept(carry);
                 carry.getObstacle().setCentroid(new Vector2(0.0f, 0.0f));
-                carry.getObstacle().getBody().setLinearDamping(entry.getFloat("linearDamping", 6.0f));
+                carry.getObstacle().getBody().setLinearDamping(entry.getFloat("linearDamping", 1.0f));
                 carry.getObstacle().getBody().setAngularDamping(entry.getFloat("angularDamping", 10.0f));
                 carries.add(carry);
                 Vector2 anchor = readAnchor(entry, pos[0], pos[1] + (size[1] * 0.5f));
@@ -414,6 +414,15 @@ class LevelPopulation {
                 result.pulleyCarryAnchorOffsets.add(new Vector2(anchor.x - pos[0], anchor.y - pos[1]));
             }
         }
+
+        Texture stringTexture = textureResolver.apply("shared-pulley-string", "shared/pulley_string.png");
+        JsonValue pulleyStrings = objectLocations.get("pulley_strings");
+        if (pulleyStrings == null || pulleyStrings.size == 0) {
+            addGeneratedPulleyRopeDecor(result, carryAnchors, units, stringTexture);
+        } else {
+            addPulleyRopeDecor(result, pulleyStrings, units, stringTexture);
+        }
+        addPulleyTopDecor(pulleyTop, units, topTexture);
 
         Texture blockTexture = textureResolver.apply("platform-rock", "platform/rock.png");
         JsonValue pulleyBlocks = objectLocations.get("pulley_block");
@@ -441,6 +450,65 @@ class LevelPopulation {
         }
     }
 
+    private void addGeneratedPulleyRopeDecor(Result result, List<Vector2> carryAnchors, float units, Texture texture) {
+        result.pulleyRopes.clear();
+        if (carryAnchors.size() < 2 || result.pulleyGroundAnchors.size() < 2) {
+            return;
+        }
+
+        Vector2 leftTopAnchor = result.pulleyGroundAnchors.get(0);
+        Vector2 rightTopAnchor = result.pulleyGroundAnchors.get(1);
+        if (!result.pulleyWheelCenters.isEmpty() && !result.pulleyWheelRadii.isEmpty()) {
+            Vector2 wheelCenter = result.pulleyWheelCenters.get(0);
+            float wheelRadius = result.pulleyWheelRadii.get(0);
+           //  float ropeRadius = Math.max(0.0f, wheelRadius - PULLEY_ROPE_WHEEL_INSET);
+            float ropeY = wheelCenter.y;
+            leftTopAnchor = new Vector2(wheelCenter.x, ropeY);
+            rightTopAnchor = new Vector2(wheelCenter.x, ropeY);
+        }
+
+        Vector2[] ropePath = new Vector2[] { carryAnchors.get(0), leftTopAnchor, rightTopAnchor, carryAnchors.get(1) };
+        float[] segmentLengths = new float[ropePath.length - 1];
+        float totalLength = 0.0f;
+        for (int ii = 0; ii < segmentLengths.length; ii++) {
+            segmentLengths[ii] = ropePath[ii].dst(ropePath[ii + 1]);
+            totalLength += segmentLengths[ii];
+        }
+        if (totalLength <= 0.0f) {
+            return;
+        }
+
+        int count = Math.max(1, (int)Math.ceil(totalLength / PULLEY_ROPE_SEGMENT_SPACING));
+        for (int ii = 0; ii < count; ii++) {
+            float distance = totalLength * ((ii + 0.5f) / count);
+            float traversed = 0.0f;
+            int segment = 0;
+            while (segment < segmentLengths.length - 1 && distance > traversed + segmentLengths[segment]) {
+                traversed += segmentLengths[segment];
+                segment++;
+            }
+
+            float segmentLength = segmentLengths[segment];
+            Vector2 start = ropePath[segment];
+            Vector2 end = ropePath[segment + 1];
+            float t = segmentLength == 0.0f ? 0.0f : (distance - traversed) / segmentLength;
+            float x = start.x + (end.x - start.x) * t;
+            float y = start.y + (end.y - start.y) * t;
+            float ropeAngle = (float) Math.atan2(-(end.x - start.x), end.y - start.y);
+
+            BoxSprite box = new BoxSprite(
+                    units, x, y, PULLEY_ROPE_SEGMENT_SIZE, PULLEY_ROPE_SEGMENT_SIZE * PULLEY_ROPE_OVERLAP_SCALE,
+                    BodyDef.BodyType.StaticBody, true, true,
+                    0.0f, 0.0f, 0.0f, 0.0f,
+                    "pulley_string" + ii,
+                    texture
+            );
+            spriteAdder.accept(box);
+            box.getObstacle().setAngle(ropeAngle);
+            result.pulleyRopes.add(box);
+        }
+    }
+
     private void addPulleyRopeDecor(Result result, JsonValue entries, float units, Texture texture) {
         result.pulleyRopes.clear();
         if (entries == null) {
@@ -463,9 +531,23 @@ class LevelPopulation {
         }
     }
 
-    private void addPulleyTopDecor(Result result, JsonValue entries, float units, Texture texture) {
+    private void readPulleyTopGeometry(Result result, JsonValue entries) {
         result.pulleyWheelCenters.clear();
         result.pulleyWheelRadii.clear();
+        if (entries == null) {
+            return;
+        }
+        for (int ii = 0; ii < entries.size; ii++) {
+            JsonValue entry = entries.get(ii);
+            float[] pos = entry.get("pos").asFloatArray();
+            float[] size = entry.get("size").asFloatArray();
+            float radius = entry.getFloat("radius", Math.min(size[0], size[1]) * 0.34f);
+            result.pulleyWheelCenters.add(new Vector2(pos[0], pos[1]));
+            result.pulleyWheelRadii.add(radius);
+        }
+    }
+
+    private void addPulleyTopDecor(JsonValue entries, float units, Texture texture) {
         if (entries == null) {
             return;
         }
@@ -482,8 +564,6 @@ class LevelPopulation {
                     texture
             );
             spriteAdder.accept(wheel);
-            result.pulleyWheelCenters.add(new Vector2(pos[0], pos[1]));
-            result.pulleyWheelRadii.add(radius);
         }
     }
 
