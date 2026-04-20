@@ -138,9 +138,6 @@ public class FrogRoot extends Game implements ScreenListener {
             gameMode = new GameMode(directory, batch, viewport);
             gameMode.setScreenListener(this);
             setScreen(gameMode);
-        } else if (exitCode == PhysicsScene.EXIT_QUIT) {
-            // We quit the main application
-            Gdx.app.exit();
         }
     }
 
