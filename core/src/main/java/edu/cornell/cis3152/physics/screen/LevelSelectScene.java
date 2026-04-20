@@ -72,6 +72,15 @@ public class LevelSelectScene implements Screen {
 
     private float scroll;
 
+    private final TextLayout arrowLayout;
+
+    private Rectangle leftArrowBounds;
+    private Rectangle rightArrowBounds;
+
+    private static final float ARROW_SIZE = 70f;
+    private static final float ARROW_PADDING = 20f;
+    private static final int PAGE_SIZE = 3;
+
     public LevelSelectScene(AssetDirectory assets, SpriteBatch batch, CanvasRender viewport, int totalLevels) {
         this.batch = batch;
         this.viewport = viewport;
@@ -117,7 +126,12 @@ public class LevelSelectScene implements Screen {
         optionLayout.setFont(font);
         optionLayout.setAlignment(TextAlign.middleCenter);
         scroll = 0f;
+        arrowLayout = new TextLayout();
+        arrowLayout.setFont(font);
+        arrowLayout.setAlignment(TextAlign.middleCenter);
 
+        leftArrowBounds = new Rectangle();
+        rightArrowBounds = new Rectangle();
         resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
     }
 
@@ -173,10 +187,18 @@ public class LevelSelectScene implements Screen {
         }
 
         if (clickPressed && !clickPrevious) {
-            int clickedIndex = getHoveredIndex();
-            if (clickedIndex >= 0) {
-                selectedIndex = clickedIndex;
-                chosenLevel = clickedIndex + 1;
+            viewport.screenToCanvas(Gdx.input.getX(), Gdx.input.getY(), pointer);
+            if (leftArrowBounds.contains(pointer)) {
+                scrollByPage(-1);
+            } else if (rightArrowBounds.contains(pointer)){
+                scrollByPage(1);
+            }
+            else {
+                int clickedIndex = getHoveredIndex();
+                if (clickedIndex >= 0) {
+                    selectedIndex = clickedIndex;
+                    chosenLevel = clickedIndex + 1;
+                }
             }
         } else {
             int hoveredIndex = getHoveredIndex();
@@ -232,6 +254,9 @@ public class LevelSelectScene implements Screen {
 
         }
         font.getData().setScale(1.0f);
+        float maxScroll = Math.max(0, (totalLevels - 1) * spacing - (width - start * 2));
+        drawArrow(false, scroll > 1f);
+        drawArrow(true,  scroll < maxScroll - 1f);
 
         batch.end();
         viewport.reset();
@@ -267,6 +292,39 @@ public class LevelSelectScene implements Screen {
         camera.setToOrtho(false, this.width, this.height);
     }
 
+    private void clampScroll() {
+        float maxScroll = Math.max(0, (totalLevels - 1) * spacing - (width - start * 2));
+        scroll = Math.max(0, Math.min(scroll, maxScroll));
+    }
+
+    private void scrollByPage(int direction) {
+        scroll += direction * PAGE_SIZE * spacing;
+        clampScroll();
+    }
+
+    private void drawArrow(boolean isRight, boolean active) {
+        float cy = height * 0.5f;
+        float x = isRight
+                ? width - ARROW_PADDING - ARROW_SIZE
+                : ARROW_PADDING;
+
+        Rectangle bounds = isRight ? rightArrowBounds : leftArrowBounds;
+        bounds.set(x, cy - ARROW_SIZE / 2, ARROW_SIZE, ARROW_SIZE);
+
+        Color bgColor = active
+                ? new Color(0f, 0f, 0f, 0.5f)
+                : new Color(0f, 0f, 0f, 0.25f);
+        batch.setColor(bgColor);
+        batch.draw(pixel, x, cy - ARROW_SIZE / 2, ARROW_SIZE, ARROW_SIZE);
+
+        font.getData().setScale(0.9f);
+        arrowLayout.setColor(active ? Color.WHITE : new Color(1f, 1f, 1f, 0.3f));
+        arrowLayout.setText(isRight ? ">" : "<");
+        arrowLayout.layout();
+        batch.setColor(Color.WHITE);
+        batch.drawText(arrowLayout, x + ARROW_SIZE / 2, cy + 5);
+        font.getData().setScale(1.0f);
+    }
     @Override
     public void pause() {
     }
