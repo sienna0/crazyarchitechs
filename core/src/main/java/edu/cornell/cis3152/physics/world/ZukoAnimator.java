@@ -1,0 +1,223 @@
+package edu.cornell.cis3152.physics.world;
+
+import com.badlogic.gdx.math.*;
+import com.badlogic.gdx.graphics.*;
+import com.badlogic.gdx.physics.box2d.*;
+
+import edu.cornell.gdiac.graphics.SpriteBatch;
+import edu.cornell.gdiac.graphics.SpriteSheet;
+
+import edu.cornell.gdiac.physics2.*;
+
+public class ZukoAnimator {
+    /** The SpriteSheet for Zuko's phototaking animation */
+    private SpriteSheet photoSheet;
+    /** The duration of the photo animation */
+    private float photoAnimationTime = 0f;
+    /** The duration of each frame */
+    private float photoFrameDuration = 0.07f;
+    /** Whether the animation is playing or not */
+    private boolean playingPhoto = false;
+
+    /** The SpriteSheet for Zuko's jumping animation */
+    private SpriteSheet jumpSheet;
+    /** The duration of the animation */
+    private float jumpAnimationTime = 0f;
+    /** The duration of each frame */
+    private float jumpFrameDuration = 0.14f;
+    /** Whether the animation is playing or not */
+    private boolean playingJump = false;
+
+    /** The SpriteSheet for Zuko's walk animation */
+    private SpriteSheet walkSheet;
+    /** The duration of the walk animation */
+    private float walkAnimationTime = 0f;
+    /** The duration of each walk frame */
+    private float walkFrameDuration = 0.14f;
+
+    /** The Texture of one segment of Zuko's tongue */
+    private Texture tongueSegment;
+    /** The progress of the tongue to the target. 0 = fully retracted, 1 = fully extended */
+    private float tongueProgress = 0f;
+    /** The speed of the tongue */
+    private float tongueSpeed = 8.0f;
+    /** The sticking target */
+    private Vector2 tongueTarget = new Vector2();
+//    /** The offset of the tongue on Zuko's sprite */
+//    private Vector2 tongueMouthOffset = new Vector2(0.1f, 0f);
+    /** The state of Zuko's tongue. 0 = idle, 1 = extending, 2 = retracting */
+    private float tongueState = 0f;
+    /** The Affine2 for drawing the tongue */
+    private final Affine2 tongueTransform = new Affine2();
+    /** Distance from tongue to target */
+    private float tongueTotalDist = 0f;
+
+    private Texture baseTexture;
+
+    /** Cache for the affine flip */
+    private final Affine2 flipCache = new Affine2();
+
+    public Texture getBaseTexture() { return baseTexture; }
+
+    public void setBaseTexture(Texture texture) {
+        baseTexture = texture;
+    }
+
+
+    /**
+     * Starts the photo-taking animation
+     */
+    public void startPhotoAnimation() {
+        playingPhoto = true;
+        photoAnimationTime = 0f;
+    }
+
+    /**
+     * Sets the photo animation SpriteSheet for Zuko
+     * @param sheet
+     * @param rows
+     * @param cols
+     */
+    public void setPhotoAnimation(Texture sheet, int rows, int cols, int size) {
+        photoSheet = new SpriteSheet(sheet, rows, cols, size);
+    }
+
+    /**
+     * Starts Zuko's jump animation
+     */
+    public void startJumpAnimation() {
+        playingJump = true;
+        jumpAnimationTime = 0f;
+    }
+
+    /**
+     * Sets the jump animation SpriteSheet for Zuko
+     * @param sheet
+     * @param rows
+     * @param cols
+     */
+    public void setJumpAnimation(Texture sheet, int rows, int cols, int size) {
+        jumpSheet = new SpriteSheet(sheet, rows, cols, size);
+    }
+
+    /**
+     * Sets the walk animation SpriteSheet for Zuko
+     * @param sheet
+     * @param rows
+     * @param cols
+     */
+    public void setWalkAnimation(Texture sheet, int rows, int cols, int size) {
+        walkSheet = new SpriteSheet(sheet, rows, cols, size);
+    }
+
+    /**
+     * Sets the tongue segment texture
+     */
+    public void setTongueSegment(Texture texture) {
+        this.tongueSegment = texture;
+    }
+
+    /**
+     * Starts Zuko's tongue animation when a photo is being stuck
+     */
+    public void startTongueAnimation(float zukoX, float zukoY, float targetX, float targetY, float units) {
+        tongueTarget.set(targetX * units, targetY * units);
+
+        float mx = zukoX * units;
+        float my = zukoY * units;
+        float dx = tongueTarget.x - mx;
+        float dy = tongueTarget.y - my;
+        tongueTotalDist = (float) Math.sqrt(dx * dx + dy * dy);
+
+        tongueProgress = 0f;
+        tongueState = 1f;
+    }
+
+    /**
+     * Separate draw method for the tongue. Draws incrementally based on progress.
+     */
+    public void drawTongue(SpriteBatch batch, boolean faceRight, float zukoX, float zukoY, float units) {
+        if (tongueState != 0f && tongueSegment != null) {
+            float mx = zukoX * units + (faceRight ? 0.3f : -0.3f);
+            float my = zukoY * units - 0.2f;
+            float tipX = mx + (tongueTarget.x - mx) * tongueProgress;
+            float tipY = my + (tongueTarget.y - my) * tongueProgress;
+
+            float totalDist = tongueTotalDist * tongueProgress;
+            int numSegs = Math.max(1, (int) (totalDist / 3f) + 1);
+
+            float angle = (float)(Math.atan2(tipY - my, tipX - mx) * 180f / Math.PI);
+
+            for (int i = 0; i < numSegs; i++) {
+                float t = (float) i / numSegs;
+                float sx = mx + (tipX - mx) * t;
+                float sy = my + (tipY - my) * t;
+
+                tongueTransform.setToTrnRotScl(sx, sy, angle, 1f, 1f);
+                batch.draw(tongueSegment, tongueTransform);
+            }
+        }
+    }
+
+    public void update(float dt, boolean isGrounded, float velocityX) {
+        if (playingPhoto && photoSheet != null) {
+            photoAnimationTime += dt;
+            int frame = (int)(photoAnimationTime / photoFrameDuration);
+            if (frame >= photoSheet.getSize()) {
+                playingPhoto = false;
+                photoSheet.setFrame(0);
+            } else {
+                photoSheet.setFrame(frame);
+            }
+        } else if (playingJump && jumpSheet != null) {
+            jumpAnimationTime += dt;
+            int frame = (int)(jumpAnimationTime / jumpFrameDuration);
+            if (frame >= jumpSheet.getSize()) {
+                playingJump = false;
+                jumpSheet.setFrame(0);
+            } else {
+                jumpSheet.setFrame(frame);
+            }
+        } else if (walkSheet != null && isGrounded && Math.abs(velocityX) > 0.1f) {
+            walkAnimationTime += dt;
+            int frame = ((int)(walkAnimationTime / walkFrameDuration)) % walkSheet.getSize();
+            walkSheet.setFrame(frame);
+        } else if (walkSheet != null) {
+            walkAnimationTime = 0f;
+            walkSheet.setFrame(0);
+        }
+
+        if (tongueState == 1f) {
+            tongueProgress += dt * tongueSpeed;
+            if (tongueProgress >= 1f) {
+                tongueProgress = 1f;
+                tongueState = 2f;
+            }
+        } else if (tongueState == 2f) {
+            tongueProgress -= dt * tongueSpeed;
+            if (tongueProgress <= 0f) {
+                tongueProgress = 0f;
+                tongueState = 0f;
+            }
+        }
+    }
+
+    public Affine2 getFlip(boolean faceRight) {
+        if (faceRight) {
+            flipCache.setToScaling(1, 1);
+        } else {
+            flipCache.setToScaling(-1, 1);
+        }
+        return flipCache;
+    }
+
+    public SpriteSheet getActiveSheet(boolean isGrounded, float velocityX) {
+        if (playingPhoto && photoSheet != null) return photoSheet;
+        if (playingJump && jumpSheet != null) return jumpSheet;
+        if (walkSheet != null && isGrounded && Math.abs(velocityX) > 0.1f) return walkSheet;
+        return null;
+    }
+
+    public boolean isPlayingJump() { return playingJump; }
+
+}

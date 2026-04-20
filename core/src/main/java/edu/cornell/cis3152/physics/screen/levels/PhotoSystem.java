@@ -424,13 +424,18 @@ class PhotoSystem {
         if (target == null || world == null) {
             return false;
         }
-
-        for (Vector2 sample : getVisibilitySamples(target)) {
-            if (!isSampleVisible(target, avatar, world, sample, maxDistance)) {
-                return false;
+        Vector2[] samples = getVisibilitySamples(target);
+        int visibleCount = 0;
+        int requiredCount = 3;
+        for (Vector2 sample : samples) {
+            if (isSampleVisible(target, avatar, world, sample, maxDistance)) {
+                visibleCount++;
+                if (visibleCount >= requiredCount) {
+                    return true;
+                }
             }
         }
-        return true;
+        return false;
     }
 
     private Vector2[] getVisibilitySamples(GameObject target) {

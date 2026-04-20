@@ -13,8 +13,6 @@ import edu.cornell.gdiac.math.Path2;
 import edu.cornell.gdiac.math.PathFactory;
 import edu.cornell.gdiac.physics2.*;
 
-import java.awt.geom.AffineTransform;
-
 // TODO i do think we should refactor this file.. it's getting quite long
 // TODO split animation and movement?
 
@@ -43,31 +41,6 @@ public class Zuko extends ObstacleSprite {
     private float drawSize;
     private float jumpDrawHeight;
 
-    /** The factor to multiply by the input */
-    private float force;
-    /** The amount to slow the character down */
-    private float damping;
-    /** The maximum character speed */
-    private float maxspeed;
-    /** The impulse for a full-strength jump */
-    private float jumpForce;
-    /** The impulse for the current jump request */
-    private float currentJumpForce;
-    /** Cooldown (in animation frames) for jumping */
-    private int jumpLimit;
-
-    /** The current horizontal movement of the character */
-    private float   movement;
-    /** Which direction is the character facing */
-    private boolean faceRight;
-    /** How long until we can jump again */
-    private int jumpCooldown;
-    /** Whether we are actively jumping */
-    private boolean isJumping;
-    /** How long until we can shoot again */
-    private int shootCooldown;
-    /** Whether our feet are on the ground */
-    private boolean isGrounded;
     /** The object type currently supporting Zuko's ground sensor */
     private GameObject currentPlatform;
 
@@ -78,66 +51,15 @@ public class Zuko extends ObstacleSprite {
     /** The name of the sensor fixture */
     private String sensorName;
 
-    /** Cache for internal force calculations */
-    private final Vector2 forceCache = new Vector2();
-    /** Cache for the affine flip */
-    private final Affine2 flipCache = new Affine2();
-
     /** The object currently under mouse/being aimed at */
     private GameObject currentTarget;
 
     /** Inventory of pictures that Zuko may use */
     private Inventory pictureInventory;
 
-    private static final float REDUCED_JUMP_MULTIPLIER = 0.5f;
+    private ZukoAnimator animator;
 
-    private boolean canJumpFull = true;
-    private boolean onIce = false;
-
-    /** The SpriteSheet for Zuko's phototaking animation */
-    private SpriteSheet photoSheet;
-    /** The duration of the photo animation */
-    private float photoAnimationTime = 0f;
-    /** The duration of each frame */
-    private float photoFrameDuration = 0.07f;
-    /** Whether the animation is playing or not */
-    private boolean playingPhoto = false;
-
-    /** The SpriteSheet for Zuko's jumping animation */
-    private SpriteSheet jumpSheet;
-    /** The duration of the animation */
-    private float jumpAnimationTime = 0f;
-    /** The duration of each frame */
-    private float jumpFrameDuration = 0.14f;
-    /** Whether the animation is playing or not */
-    private boolean playingJump = false;
-
-    /** The SpriteSheet for Zuko's walk animation */
-    private SpriteSheet walkSheet;
-    /** The duration of the walk animation */
-    private float walkAnimationTime = 0f;
-    /** The duration of each walk frame */
-    private float walkFrameDuration = 0.14f;
-
-    /** The Texture of one segment of Zuko's tongue */
-    private Texture tongueSegment;
-    /** The progress of the tongue to the target. 0 = fully retracted, 1 = fully extended */
-    private float tongueProgress = 0f;
-    /** The speed of the tongue */
-    private float tongueSpeed = 8.0f;
-    /** The sticking target */
-    private Vector2 tongueTarget = new Vector2();
-//    /** The offset of the tongue on Zuko's sprite */
-//    private Vector2 tongueMouthOffset = new Vector2(0.1f, 0f);
-    /** The state of Zuko's tongue. 0 = idle, 1 = extending, 2 = retracting */
-    private float tongueState = 0f;
-    /** The Affine2 for drawing the tongue */
-    private final Affine2 tongueTransform = new Affine2();
-    /** Distance from tongue to target */
-    private float tongueTotalDist = 0f;
-
-
-    private Texture baseTexture;
+    private ZukoMovement movement;
 
     /**
      * Returns the position of this character's obstacle
@@ -156,74 +78,6 @@ public class Zuko extends ObstacleSprite {
         return height;
     }
 
-    /**
-     * Returns the left/right movement of this character.
-     *
-     * This is the result of input times force.
-     *
-     * @return the left/right movement of this character.
-     */
-    public float getMovement() {
-        return movement;
-    }
-
-    /**
-     * Sets the left/right movement of this character.
-     *
-     * This is the result of input times force.
-     *
-     * @param value the left/right movement of this character.
-     */
-    public void setMovement(float value) {
-        movement = value;
-        // Change facing if appropriate
-        if (movement < 0) {
-            faceRight = false;
-        } else if (movement > 0) {
-            faceRight = true;
-        }
-    }
-
-    /**
-     * Returns true if Zuko is actively jumping.
-     *
-     * @return true if Zuko is actively jumping.
-     */
-    public boolean isJumping() {
-        return isJumping && isGrounded && jumpCooldown <= 0;
-    }
-
-    /**
-     * Sets whether Zuko is actively jumping.
-     *
-     * @param value whether Zuko is actively jumping.
-     */
-    public void setJumping(boolean value) {
-        if (value) {
-            isJumping = true;
-            currentJumpForce = canJumpFull ? jumpForce : jumpForce * REDUCED_JUMP_MULTIPLIER;
-            return;
-        }
-        isJumping = false;
-    }
-
-    /**
-     * Returns true if Zuko is on the ground.
-     *
-     * @return true if Zuko is on the ground.
-     */
-    public boolean isGrounded() {
-        return isGrounded;
-    }
-
-    /**
-     * Sets whether Zuko is on the ground.
-     *
-     * @param value whether Zuko is on the ground.
-     */
-    public void setGrounded(boolean value) {
-        isGrounded = value;
-    }
 
     /**
      * Returns the object type Zuko is currently standing on.
@@ -236,63 +90,17 @@ public class Zuko extends ObstacleSprite {
 
     /**
      * Updates ground-contact context: {@code null} restores full jumps and clears ice.
-     * Otherwise recomputes {@link #canJumpFull} and {@link #onIce} from the platform's
+     * Otherwise recomputes canJumpFull and onIce from the platform's
      * base {@link Obj} type and whether a honey/ice picture is applied.
      *
      * @param platform the object under the foot sensor, or null if not on a {@link GameObject}
      */
     public void setCurrentPlatform(GameObject platform) {
         currentPlatform = platform;
-        if (platform == null) {
-            canJumpFull = true;
-            onIce = false;
-            return;
-        }
-
-        boolean baseIsHoney = platform.getObjectType() == Obj.HONEY;
-        boolean baseIsIce = platform.getObjectType() == Obj.ICE;
-        Quality pictureQuality = platform.getPictureQuality();
-        boolean hasHoneyPicture = pictureQuality == Quality.STICKY && platform.hasPicture();
-        boolean hasIcePicture = pictureQuality == Quality.SLIPPERY && platform.hasPicture();
-
-        canJumpFull = (!baseIsHoney || hasIcePicture) && !hasHoneyPicture;
-        onIce = (baseIsIce && !hasHoneyPicture) || hasIcePicture;
+        movement.setCurrentPlatform(platform);
     }
 
-    /**
-     * Returns how much force to apply to get Zuko moving
-     *
-     * Multiply this by the input to get the movement value.
-     *
-     * @return how much force to apply to get Zuko moving
-     */
-    public float getForce() {
-        return force;
-    }
 
-    /**
-     * Returns how hard the brakes are applied to stop Zuko moving
-     *
-     * @return how hard the brakes are applied to stop Zuko moving
-     */
-    public float getDamping() {
-        return damping;
-    }
-
-    public void setDamping(float value) {
-        damping = value;
-    }
-
-    /**
-     * Returns the upper limit on Zuko's left-right movement.
-     *
-     * This does NOT apply to vertical movement.
-     *
-     * @return the upper limit on Zuko's left-right movement.
-     */
-    public float getMaxSpeed() {
-        return maxspeed;
-    }
 
     /**
      * Returns the name of the ground sensor
@@ -306,14 +114,7 @@ public class Zuko extends ObstacleSprite {
         return sensorName;
     }
 
-    /**
-     * Returns true if this character is facing right
-     *
-     * @return true if this character is facing right
-     */
-    public boolean isFacingRight() {
-        return faceRight;
-    }
+
 
     /**
      * returns the object currently under the mouse
@@ -338,99 +139,12 @@ public class Zuko extends ObstacleSprite {
     }
 
     /**
-     * Forces the avatar to face the requested direction.
-     *
-     * @param value whether the avatar should face right
-     */
-    public void setFacingRight(boolean value) {
-        faceRight = value;
-    }
-
-    public void setBaseTexture(Texture texture) {
-        baseTexture = texture;
-        setTexture(texture);
-    }
-
-
-    /**
-     * Starts the photo-taking process
-     */
-    public void startTakingPhoto(boolean shouldFaceRight) {
-        faceRight = shouldFaceRight;
-        startPhotoAnimation();
-    }
-
-
-    /**
-     * Starts the photo-taking animation
-     */
-    private void startPhotoAnimation() {
-        playingPhoto = true;
-        photoAnimationTime = 0f;
-    }
-
-    /**
-     * Sets the photo animation SpriteSheet for Zuko
-     * @param sheet
-     * @param rows
-     * @param cols
-     */
-    public void setPhotoAnimation(Texture sheet, int rows, int cols, int size) {
-        photoSheet = new SpriteSheet(sheet, rows, cols, size);
-    }
-
-    /**
      * Starts Zuko's jump animation
      */
     public void startJumpAnimation() {
-        playingJump = true;
-        jumpAnimationTime = 0f;
+        animator.startJumpAnimation();
     }
 
-    /**
-     * Starts Zuko's tongue animation when a photo is being stuck
-     */
-    public void startTongueAnimation(float targetX, float targetY) {
-        faceRight = targetX > obstacle.getX();
-        float u = obstacle.getPhysicsUnits();
-        tongueTarget.set(targetX * u, targetY * u);
-
-        float mx = obstacle.getX() * u;
-        float my = obstacle.getY() * u;
-        float dx = tongueTarget.x - mx;
-        float dy = tongueTarget.y - my;
-        tongueTotalDist = (float) Math.sqrt(dx * dx + dy * dy);
-
-        tongueProgress = 0f;
-        tongueState = 1f;
-    }
-
-    /**
-     * Sets the jump animation SpriteSheet for Zuko
-     * @param sheet
-     * @param rows
-     * @param cols
-     */
-    public void setJumpAnimation(Texture sheet, int rows, int cols, int size) {
-        jumpSheet = new SpriteSheet(sheet, rows, cols, size);
-    }
-
-    /**
-     * Sets the walk animation SpriteSheet for Zuko
-     * @param sheet
-     * @param rows
-     * @param cols
-     */
-    public void setWalkAnimation(Texture sheet, int rows, int cols, int size) {
-        walkSheet = new SpriteSheet(sheet, rows, cols, size);
-    }
-
-    /**
-     * Sets the tongue segment texture
-     */
-    public void setTongueSegment(Texture texture) {
-        this.tongueSegment = texture;
-    }
 
 
     /**
@@ -471,21 +185,10 @@ public class Zuko extends ObstacleSprite {
         debug = ParserUtils.parseColor( debugInfo.get("avatar"),  Color.WHITE);
         sensorColor = ParserUtils.parseColor( debugInfo.get("sensor"),  Color.WHITE);
 
-        maxspeed = data.getFloat("maxspeed", 0);
-        damping = data.getFloat("damping", 0);
-        force = data.getFloat("force", 0);
-        jumpForce = data.getFloat( "jump_force", 0 );
-        currentJumpForce = jumpForce;
-        jumpLimit = data.getInt( "jump_cool", 0 );
 
         // Gameplay attributes
-        isGrounded = false;
-        isJumping = false;
-        faceRight = true;
-        currentPlatform = null;
 
-        shootCooldown = 0;
-        jumpCooldown = 0;
+        currentPlatform = null;
 
         //Camera attributes - you can put all of this in constants.json but I am scared of a merge conflict so O put it directly for now
 
@@ -500,6 +203,8 @@ public class Zuko extends ObstacleSprite {
         //mesh.set(-size/2.0f,-size/2.0f,size,size);
         drawSize = size;
         jumpDrawHeight = size * (20f / 16f);
+        animator = new ZukoAnimator();
+        movement = new ZukoMovement(data);
         mesh.set(-drawSize/2.0f, -drawSize/2.0f, drawSize, drawSize);
 
     }
@@ -538,45 +243,12 @@ public class Zuko extends ObstacleSprite {
 
     /**
      * Integrates one movement step on the Box2D body: horizontal damping when input is idle,
-     * otherwise drive with {@link #getMovement()}; caps horizontal speed unless {@link #onIce}
-     * (ice allows exceeding {@link #maxspeed}); applies {@link #currentJumpForce} as an upward
+     * otherwise drive with getMovement; caps horizontal speed unless onIce
+     * (ice allows exceeding maxSpeed); applies currentJumpForce as an upward
      * impulse when {@link #isJumping()} is true. No-op if the obstacle is not active.
      */
     public void applyForce() {
-        if (!obstacle.isActive()) {
-            return;
-        }
-
-        float maxspeed = canJumpFull ? getMaxSpeed() : getMaxSpeed()/2;
-
-        Vector2 pos = obstacle.getPosition();
-        float vx = obstacle.getVX();
-        Body body = obstacle.getBody();
-
-        // Preserve momentum on ice so slippery surfaces feel distinct.
-        if (getMovement() == 0f && !onIce) {
-            forceCache.set(-getDamping()*vx,0);
-            body.applyForce(forceCache,pos,true);
-        }
-
-        float movement = getMovement();
-        // At max speed, still apply horizontal force when braking or reversing; otherwise the
-        // clamp below would skip input entirely and air / ground direction changes feel sluggish.
-        boolean atSpeedCap = !onIce && Math.abs(vx) >= maxspeed;
-        boolean inputOpposesVelocity =
-                movement != 0f && Math.abs(vx) > 1e-4f && Math.signum(movement) != Math.signum(vx);
-
-        if (atSpeedCap && !inputOpposesVelocity) {
-            obstacle.setVX(Math.signum(vx) * maxspeed);
-        } else {
-            forceCache.set(movement, 0f);
-            body.applyForce(forceCache, pos, true);
-        }
-
-        if (isJumping()) {
-            forceCache.set(0, currentJumpForce);
-            body.applyLinearImpulse(forceCache,pos,true);
-        }
+        movement.applyForce(obstacle);
     }
 
     /**
@@ -586,31 +258,14 @@ public class Zuko extends ObstacleSprite {
      * @param y target y-position in physics units
      */
     public void warpTo(float x, float y) {
-        if (!obstacle.isActive()) {
-            return;
-        }
-
-        Body body = obstacle.getBody();
-        if (body != null) {
-            body.setTransform(x, y, body.getAngle());
-            body.setLinearVelocity(0f, 0f);
-            body.setAngularVelocity(0f);
-        }
+        movement.warpTo(x,y, obstacle);
     }
 
     /**
      * Clears current linear and angular motion.
      */
     public void stopMotion() {
-        if (!obstacle.isActive()) {
-            return;
-        }
-
-        Body body = obstacle.getBody();
-        if (body != null) {
-            body.setLinearVelocity(0f, 0f);
-            body.setAngularVelocity(0f);
-        }
+        movement.stopMotion(obstacle);
     }
 
 
@@ -618,7 +273,7 @@ public class Zuko extends ObstacleSprite {
     /**
      * Per-frame tick: adjusts jump cooldown, advances exactly one animation channel with
      * priority photo &gt; jump &gt; walk (walk only when grounded and moving), resets finished
-     * sheets to frame 0 and restores {@link #baseTexture} when appropriate, then updates
+     * sheets to frame 0 and restores  when appropriate, then updates
      * the {@link Camera}.
      *
      * @param dt seconds since the last frame
@@ -626,123 +281,36 @@ public class Zuko extends ObstacleSprite {
     @Override
     public void update(float dt) {
         // Apply cooldowns
-        if (isJumping()) {
-            jumpCooldown = jumpLimit;
-        } else {
-            jumpCooldown = Math.max(0, jumpCooldown - 1);
-        }
-
-        if (playingPhoto && photoSheet != null) {
-            photoAnimationTime += dt;
-            int frame = (int)(photoAnimationTime / photoFrameDuration);
-            if (frame >= photoSheet.getSize()) {
-                playingPhoto = false;
-                photoSheet.setFrame(0);
-                if (baseTexture != null) {
-                    setTexture(baseTexture);
-                }
-            } else {
-                photoSheet.setFrame(frame);
-            }
-        } else if (playingJump && jumpSheet != null) {
-            jumpAnimationTime += dt;
-            int frame = (int)(jumpAnimationTime / jumpFrameDuration);
-            if (frame >= jumpSheet.getSize()) {
-                playingJump = false;
-                jumpSheet.setFrame(0);
-                if (baseTexture != null) {
-                    setTexture(baseTexture);
-                }
-            } else {
-                jumpSheet.setFrame(frame);
-            }
-        } else if (walkSheet != null && isGrounded && Math.abs(obstacle.getVX()) > 0.1f) {
-            walkAnimationTime += dt;
-            int frame = ((int)(walkAnimationTime / walkFrameDuration)) % walkSheet.getSize();
-            walkSheet.setFrame(frame);
-        } else if (walkSheet != null) {
-            walkAnimationTime = 0f;
-            walkSheet.setFrame(0);
-        }
-
-        if (tongueState == 1f) {
-            tongueProgress += dt * tongueSpeed;
-            if (tongueProgress >= 1f) {
-                tongueProgress = 1f;
-                tongueState = 2f;
-            }
-        } else if (tongueState == 2f) {
-            tongueProgress -= dt * tongueSpeed;
-            if (tongueProgress <= 0f) {
-                tongueProgress = 0f;
-                tongueState = 0f;
-            }
-        }
-
+        movement.updateCooldown();
+        animator.update(dt, movement.isGrounded(), obstacle.getVX());
         super.update(dt);
     }
 
     /**
-     * Chooses the active sprite sheet (photo, jump, walk, or static {@link #baseTexture})
+     * Chooses the active sprite sheet (photo, jump, walk, or static )
      * consistent with {@link #update(float)}, applies a horizontal flip affine when
-     * {@link #faceRight} is false, then delegates to {@code ObstacleSprite.draw}.
+     * faceright is false, then delegates to {@code ObstacleSprite.draw}.
      *
      * @param batch destination batch
      */
     @Override
     public void draw(SpriteBatch batch) {
-        if (faceRight) {
-            flipCache.setToScaling( 1,1 );
-        } else {
-            flipCache.setToScaling( -1,1 );
-        }
-        if (playingPhoto && photoSheet != null) {
-            setSpriteSheet(photoSheet);
-        } else if (playingJump && jumpSheet != null) {
-            setSpriteSheet(jumpSheet);
-        } else if (walkSheet != null && isGrounded && Math.abs(obstacle.getVX()) > 0.1f) {
-            setSpriteSheet(walkSheet);
-        } else if (baseTexture != null) {
-            setTexture(baseTexture);
+        SpriteSheet activeSheet = animator.getActiveSheet(movement.isGrounded(), obstacle.getVX());
+        if (activeSheet != null) {
+            setSpriteSheet(activeSheet);
+        } else if (animator.getBaseTexture() != null) {
+            setTexture(animator.getBaseTexture());
         }
 
-        if (playingJump && jumpSheet != null) {
+        if (animator.isPlayingJump()) {
             float yOffset = (jumpDrawHeight - drawSize) / 2.0f;
             mesh.set(-drawSize/2.0f, -jumpDrawHeight/2.0f + yOffset, drawSize, jumpDrawHeight);
         } else {
             mesh.set(-drawSize/2.0f, -drawSize/2.0f, drawSize, drawSize);
         }
-        super.draw(batch,flipCache);
+        super.draw(batch, animator.getFlip(movement.isFacingRight()));
 
-        drawTongue(batch);
-    }
-
-    /**
-     * Separate draw method for the tongue. Draws incrementally based on progress.
-     */
-    private void drawTongue(SpriteBatch batch) {
-        if (tongueState != 0f && tongueSegment != null) {
-            float u = obstacle.getPhysicsUnits();
-            float mx = obstacle.getX() * u + (faceRight ? 0.3f : -0.3f);
-            float my = obstacle.getY() * u - 0.2f;
-            float tipX = mx + (tongueTarget.x - mx) * tongueProgress;
-            float tipY = my + (tongueTarget.y - my) * tongueProgress;
-
-            float totalDist = tongueTotalDist * tongueProgress;
-            float segSize = tongueSegment.getWidth();
-            int numSegs = Math.max(1, (int) (totalDist / 3f) + 1);
-
-            float angle = (float)(Math.atan2(tipY - my, tipX - mx) * 180f / Math.PI);
-
-            for (int i = 0; i < numSegs; i++) {
-                float t = (float) i / numSegs;
-                float sx = mx + (tipX - mx) * t;
-                float sy = my + (tipY - my) * t;
-
-                tongueTransform.setToTrnRotScl(sx, sy, angle, 1f, 1f);
-                batch.draw(tongueSegment, tongueTransform);
-            }
-        }
+        animator.drawTongue(batch, movement.isFacingRight(), obstacle.getX(), obstacle.getY(), obstacle.getPhysicsUnits());
     }
 
     /**
@@ -775,4 +343,54 @@ public class Zuko extends ObstacleSprite {
             batch.outline( sensorOutline, transform );
         }
     }
+
+    public void setBaseTexture(Texture texture) {
+        animator.setBaseTexture(texture);
+    }
+
+    public void startTakingPhoto(boolean shouldFaceRight) {
+        setFacingRight(shouldFaceRight);
+        animator.startPhotoAnimation();
+    }
+
+    public void startTongueAnimation(float targetX, float targetY) {
+        boolean facingRight = targetX > obstacle.getX();
+        setFacingRight(facingRight);
+        animator.startTongueAnimation(obstacle.getX(), obstacle.getY(), targetX, targetY, obstacle.getPhysicsUnits());
+    }
+
+    public void setPhotoAnimation(Texture sheet, int rows, int cols, int size) {
+        animator.setPhotoAnimation(sheet, rows, cols, size);
+    }
+
+    public void setJumpAnimation(Texture sheet, int rows, int cols, int size) {
+        animator.setJumpAnimation(sheet, rows, cols, size);
+    }
+
+    public void setWalkAnimation(Texture sheet, int rows, int cols, int size) {
+        animator.setWalkAnimation(sheet, rows, cols, size);
+    }
+
+    public void setTongueSegment(Texture texture) {
+        animator.setTongueSegment(texture);
+    }
+    public void setMovement(float value) {
+        movement.setMovement(value);
+    }
+    public boolean isJumping() {
+        return movement.isJumping();
+    }
+    public void setJumping(boolean value) {
+        movement.setJumping(value);
+    }
+    public void setGrounded(boolean value) {
+        movement.setGrounded(value);
+    }
+    public float getForce() {
+        return movement.getForce();
+    }
+    public void setFacingRight(boolean value) {
+        movement.setFacingRight(value);
+    }
+
 }
