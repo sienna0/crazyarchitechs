@@ -34,8 +34,6 @@ class PhotoSystem {
 
     private float STICK_PICTURE_DISTANCE = 9.0f;
     private float TAKE_PICTURE_DISTANCE = 9.0f;
-    /** Remaining photos Zuko can take this level. */
-    private int filmCount;
     /** Frames remaining until the next photo is allowed. */
     private int pictureCooldown;
     /** Cooldown duration in frames after each photo. */
@@ -57,7 +55,6 @@ class PhotoSystem {
         this.volume = volume;
         this.fireSound = fireSound;
         this.plopSound = plopSound;
-        this.filmCount = data.getInt("film_count", 10);
         this.pictureLimit = data.getInt("picture_cooldown", 10);
         this.pictureCooldown = 0;
         this.pictureTaken = false;
@@ -244,13 +241,12 @@ class PhotoSystem {
     }
 
     /**
-     * If in range, film is available, and the camera allows a shot: records a new {@link Picture}
+     * If in range, cooldown elapsed, and inventory has a free slot: records a new {@link Picture}
      * of the target, adds it to {@link WorldState} and the inventory, plays audio, and starts
      * the take-photo facing animation from mouse vs avatar position.
      */
     private void takePictureOfTarget(InputController input, GameObject target, Zuko avatar, World world) {
-        if (!(filmCount > 0
-                && pictureCooldown <= 0)){
+        if (pictureCooldown > 0) {
             return;
         }
         if (!hasFullLineOfSight(target, avatar, world, TAKE_PICTURE_DISTANCE)) {
@@ -274,7 +270,7 @@ class PhotoSystem {
     /**
      * Populates highlights for every non-avatar object within line-of-sight and the current
      * photo range (stick distance when a picture is selected, take distance otherwise),
-     * skipping when the player cannot take a new photo and no slot is selected.
+     * skipping when there is no free inventory slot (and no slot selected for sticking).
      */
     private void findObjectNearZuko(Zuko avatar, PooledList<ObstacleSprite> sprites, World world) {
         Picture activePicture = worldState.getActivePicture();
@@ -493,9 +489,8 @@ class PhotoSystem {
         private Fixture fixture;
         private float fraction = Float.MAX_VALUE;
     }
-    /** Consumes one film, starts the cooldown, and flags the shutter sound. */
+    /** Starts the post-shot cooldown and flags the shutter sound for one frame. */
     public void takePicture() {
-        filmCount--;
         pictureCooldown = pictureLimit;
         pictureTaken = true;
     }

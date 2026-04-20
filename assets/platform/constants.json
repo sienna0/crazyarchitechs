@@ -52,7 +52,6 @@
       "tolerance": 0.05
     },
     "inventory_size": 3.0,
-    "film_count": 10.0,
     "picture_cooldown": 10.0,
     "max_sight_distance": 9.0
   },
@@ -225,7 +224,6 @@
     ],
     "playerSettings": {
       "inventory_size": 1.0,
-      "film_count": 10.0,
       "picture_cooldown": 10.0,
       "max_sight_distance": 9.0
     },
@@ -346,7 +344,6 @@
     ],
     "playerSettings": {
       "inventory_size": 1.0,
-      "film_count": 10.0,
       "picture_cooldown": 10.0,
       "max_sight_distance": 9.0
     },
@@ -600,7 +597,6 @@
           "tolerance": 0.05
         },
         "inventory_size": 1.0,
-        "film_count": 10.0,
         "picture_cooldown": 10.0,
         "max_sight_distance": 9.0
       },
@@ -626,7 +622,6 @@
     },
     "playerSettings": {
       "inventory_size": 1.0,
-      "film_count": 10.0,
       "picture_cooldown": 10.0,
       "max_sight_distance": 9.0
     }
@@ -995,7 +990,6 @@
     ],
     "playerSettings": {
       "inventory_size": 1.0,
-      "film_count": 10.0,
       "picture_cooldown": 10.0,
       "max_sight_distance": 9.0
     },
@@ -1212,7 +1206,6 @@
     ],
     "playerSettings": {
       "inventory_size": 1.0,
-      "film_count": 10.0,
       "picture_cooldown": 10.0,
       "max_sight_distance": 9.0
     },
@@ -1346,7 +1339,6 @@
     ],
     "playerSettings": {
       "inventory_size": 1.0,
-      "film_count": 10.0,
       "picture_cooldown": 10.0,
       "max_sight_distance": 9.0
     },
@@ -1582,7 +1574,6 @@
           "tolerance": 0.05
         },
         "inventory_size": 5.0,
-        "film_count": 10.0,
         "picture_cooldown": 10.0,
         "max_sight_distance": 9.0
       },
@@ -1609,7 +1600,6 @@
     },
     "playerSettings": {
       "inventory_size": 4.0,
-      "film_count": 10.0,
       "picture_cooldown": 10.0,
       "max_sight_distance": 9.0
     }
@@ -1746,7 +1736,6 @@
     ],
     "playerSettings": {
       "inventory_size": 3.0,
-      "film_count": 10.0,
       "picture_cooldown": 10.0,
       "max_sight_distance": 9.0
     },
@@ -1905,7 +1894,6 @@
     ],
     "playerSettings": {
       "inventory_size": 3.0,
-      "film_count": 10.0,
       "picture_cooldown": 10.0,
       "max_sight_distance": 9.0
     },
@@ -2089,7 +2077,6 @@
     ],
     "playerSettings": {
       "inventory_size": 2.0,
-      "film_count": 10.0,
       "picture_cooldown": 10.0,
       "max_sight_distance": 9.0
     },
@@ -2275,7 +2262,6 @@
     ],
     "playerSettings": {
       "inventory_size": 1.0,
-      "film_count": 10.0,
       "picture_cooldown": 10.0,
       "max_sight_distance": 9.0
     },
@@ -2568,7 +2554,6 @@
           "tolerance": 0.05
         },
         "inventory_size": 5.0,
-        "film_count": 10.0,
         "picture_cooldown": 10.0,
         "max_sight_distance": 9.0
       },
@@ -2622,7 +2607,6 @@
     },
     "playerSettings": {
       "inventory_size": 3.0,
-      "film_count": 10.0,
       "picture_cooldown": 10.0,
       "max_sight_distance": 9.0
     }
@@ -2856,7 +2840,6 @@
     ],
     "playerSettings": {
       "inventory_size": 1.0,
-      "film_count": 10.0,
       "picture_cooldown": 10.0,
       "max_sight_distance": 9.0
     },
@@ -2995,7 +2978,6 @@
     ],
     "playerSettings": {
       "inventory_size": 1.0,
-      "film_count": 10.0,
       "picture_cooldown": 10.0,
       "max_sight_distance": 9.0
     },
@@ -3226,7 +3208,6 @@
     ],
     "playerSettings": {
       "inventory_size": 1.0,
-      "film_count": 10.0,
       "picture_cooldown": 10.0,
       "max_sight_distance": 9.0
     },
@@ -3327,7 +3308,6 @@
     ],
     "playerSettings": {
       "inventory_size": 1.0,
-      "film_count": 10.0,
       "picture_cooldown": 10.0,
       "max_sight_distance": 9.0
     },
@@ -3525,7 +3505,6 @@
     ],
     "playerSettings": {
       "inventory_size": 1.0,
-      "film_count": 10.0,
       "picture_cooldown": 10.0,
       "max_sight_distance": 9.0
     },
@@ -3698,7 +3677,6 @@
     ],
     "playerSettings": {
       "inventory_size": 1.0,
-      "film_count": 10.0,
       "picture_cooldown": 10.0,
       "max_sight_distance": 9.0
     },
@@ -3818,7 +3796,6 @@
     ],
     "playerSettings": {
       "inventory_size": 1.0,
-      "film_count": 10.0,
       "picture_cooldown": 10.0,
       "max_sight_distance": 9.0
     },
