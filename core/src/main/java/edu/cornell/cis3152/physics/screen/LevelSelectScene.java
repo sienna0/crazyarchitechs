@@ -76,7 +76,7 @@ public class LevelSelectScene implements Screen {
         this.batch = batch;
         this.viewport = viewport;
         this.totalLevels = totalLevels;
-        this.font = assets.getEntry("shared-nunito-bold", BitmapFont.class);
+        this.font = assets.getEntry("shared-retro", BitmapFont.class);
         this.backgroundTexture = assets.getEntry("shared-water", Texture.class);
         if (this.backgroundTexture != null) {
             this.backgroundTexture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
