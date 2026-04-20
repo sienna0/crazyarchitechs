@@ -89,8 +89,6 @@ public class Zuko extends ObstacleSprite {
     /** Inventory of pictures that Zuko may use */
     private Inventory pictureInventory;
 
-    private Camera camera;
-
     private static final float REDUCED_JUMP_MULTIPLIER = 0.5f;
 
     private boolean canJumpFull = true;
@@ -326,9 +324,6 @@ public class Zuko extends ObstacleSprite {
         return currentTarget;
     }
 
-    public Camera getCamera() {
-        return camera;
-    }
 
     public Inventory getPictureInventory() {
         return pictureInventory;
@@ -507,7 +502,6 @@ public class Zuko extends ObstacleSprite {
         jumpDrawHeight = size * (20f / 16f);
         mesh.set(-drawSize/2.0f, -drawSize/2.0f, drawSize, drawSize);
 
-        camera = new Camera(data);
     }
 
     /**
@@ -684,8 +678,6 @@ public class Zuko extends ObstacleSprite {
                 tongueState = 0f;
             }
         }
-
-        camera.update(dt);
 
         super.update(dt);
     }

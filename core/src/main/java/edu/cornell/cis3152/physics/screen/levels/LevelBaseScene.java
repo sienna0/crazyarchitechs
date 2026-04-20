@@ -150,7 +150,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
 
             photoSystem = new PhotoSystem(
                     worldState, stickDist, takeDist, springK, springD,
-                    volume, fireSound, plopSound
+                    volume, fireSound, plopSound, constants.get("zuko")
             );
             if (stuckPictureTextures == null) {
                 stuckPictureTextures = loadStuckPictureTextures();
@@ -429,6 +429,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     @Override
     public void update(float dt) {
         updateGooAnimation(dt);
+        photoSystem.update(dt);
         viewport.screenToCanvas(Gdx.input.getX(), Gdx.input.getY(), worldState.getPauseMouseCache());
         float iconSize = PAUSE_ICON_SIZE;
         float iconX = viewport.getWidth() - iconSize - 15f;
@@ -467,8 +468,8 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         );
         photoSystem.handlePictureAction(input, target, avatar, clickedSlot, world);
 
-        if (avatar.getCamera().isPictureTaken()) {
-            avatar.getCamera().clearPictureTaken();
+        if (photoSystem.isPictureTaken()) {
+            photoSystem.clearPictureTaken();
         }
 
         photoSystem.applyLiftSprings(sprites);

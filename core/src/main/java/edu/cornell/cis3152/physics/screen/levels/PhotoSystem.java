@@ -5,6 +5,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.World;
+import com.badlogic.gdx.utils.JsonValue;
 import edu.cornell.cis3152.physics.InputController;
 import edu.cornell.cis3152.physics.screen.WorldState;
 import edu.cornell.cis3152.physics.world.GameObject;
@@ -33,6 +34,14 @@ class PhotoSystem {
 
     private float STICK_PICTURE_DISTANCE = 9.0f;
     private float TAKE_PICTURE_DISTANCE = 9.0f;
+    /** Remaining photos Zuko can take this level. */
+    private int filmCount;
+    /** Frames remaining until the next photo is allowed. */
+    private int pictureCooldown;
+    /** Cooldown duration in frames after each photo. */
+    private final int pictureLimit;
+    /** One-frame flag consumed by the scene to play the shutter sound. */
+    private boolean pictureTaken;
 
     public PhotoSystem (WorldState worldState,
                 float stickDistance,
@@ -41,13 +50,17 @@ class PhotoSystem {
                 float liftSpringDamping,
                 float volume,
                 SoundEffect fireSound,
-                SoundEffect plopSound) {
+                SoundEffect plopSound, JsonValue data) {
         this.worldState = worldState;
         this.liftSpringStiffness = liftSpringStiffness;
         this.liftSpringDamping = liftSpringDamping;
         this.volume = volume;
         this.fireSound = fireSound;
         this.plopSound = plopSound;
+        this.filmCount = data.getInt("film_count", 10);
+        this.pictureLimit = data.getInt("picture_cooldown", 10);
+        this.pictureCooldown = 0;
+        this.pictureTaken = false;
     }
 
     /**
@@ -236,11 +249,8 @@ class PhotoSystem {
      * the take-photo facing animation from mouse vs avatar position.
      */
     private void takePictureOfTarget(InputController input, GameObject target, Zuko avatar, World world) {
-        if (!avatar.getCamera().canTakePicture(
-                target.getObstacle().getX(),
-                target.getObstacle().getY(),
-                avatar.getObstacle().getX(),
-                avatar.getObstacle().getY())) {
+        if (!(filmCount > 0
+                && pictureCooldown <= 0)){
             return;
         }
         if (!hasFullLineOfSight(target, avatar, world, TAKE_PICTURE_DISTANCE)) {
@@ -250,7 +260,7 @@ class PhotoSystem {
             return;
         }
 
-        avatar.getCamera().takePicture();
+        takePicture();
         Vector2 mousePosition = input.getCrossHair();
         Vector2 avatarPosition = avatar.getPosition();
         avatar.startTakingPhoto(mousePosition.x > avatarPosition.x);
@@ -477,5 +487,28 @@ class PhotoSystem {
     private static final class RaycastHit {
         private Fixture fixture;
         private float fraction = Float.MAX_VALUE;
+    }
+    /** Consumes one film, starts the cooldown, and flags the shutter sound. */
+    public void takePicture() {
+        filmCount--;
+        pictureCooldown = pictureLimit;
+        pictureTaken = true;
+    }
+
+    /** Returns true during the single frame after a photo was taken (for sound). */
+    public boolean isPictureTaken() {
+        return pictureTaken;
+    }
+
+    /** Clears the one-frame picture-taken flag after the scene has handled it. */
+    public void clearPictureTaken() {
+        pictureTaken = false;
+    }
+
+    /** Ticks down the cooldown timer each frame. */
+    public void update(float dt) {
+        if (pictureCooldown > 0) {
+            pictureCooldown--;
+        }
     }
 }
