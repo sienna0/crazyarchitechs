@@ -159,9 +159,9 @@ class LevelPopulation {
         addTilemapColliders(level, floors, units);
 
         Texture zukoTexture  = textureResolver.apply("platform-traci",  "platform/traci.png");
-        Texture walkSheet    = textureResolver.apply("platform-walk",   "platform/zukowalk.png");
+        Texture walkSheet    = textureResolver.apply("platform-updatedwalk",   "platform/zukowalk.png");
         Texture photoSheet   = textureResolver.apply("platform-camera", "platform/cameraflash.png");
-        Texture jumpSheet    = textureResolver.apply("platform-jump",   "platform/zukojump.png");
+        Texture jumpSheet    = textureResolver.apply("platform-jumpupdated",   "platform/zukojumpupdated.png");
         Texture tongueTexture =  textureResolver.apply("platform-tongue",   "platform/zukotonguechunk.png");
 
 
@@ -613,7 +613,7 @@ class LevelPopulation {
         zuko.getObstacle().setName(name);
         zuko.setWalkAnimation(walkSheet,  1, 6, 6);
         zuko.setPhotoAnimation(photoSheet, 1, 13, 13);
-        zuko.setJumpAnimation(jumpSheet,  1, 7, 7);
+        zuko.setJumpAnimation(jumpSheet,  1, 6, 6);
         zuko.setTongueSegment(tongueTexture);
 
         return zuko;

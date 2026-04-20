@@ -40,6 +40,9 @@ public class Zuko extends ObstacleSprite {
     /** The height of Zuko's avatar */
     private float height;
 
+    private float drawSize;
+    private float jumpDrawHeight;
+
     /** The factor to multiply by the input */
     private float force;
     /** The amount to slow the character down */
@@ -499,7 +502,10 @@ public class Zuko extends ObstacleSprite {
         // Create a rectangular mesh for Zuko. Note that the capsule is
         // actually smaller than the image, making a tighter hitbox. You can
         // see this when you enable debug mode.
-        mesh.set(-size/2.0f,-size/2.0f,size,size);
+        //mesh.set(-size/2.0f,-size/2.0f,size,size);
+        drawSize = size;
+        jumpDrawHeight = size * (20f / 16f);
+        mesh.set(-drawSize/2.0f, -drawSize/2.0f, drawSize, drawSize);
 
         camera = new Camera(data);
     }
@@ -708,6 +714,12 @@ public class Zuko extends ObstacleSprite {
             setTexture(baseTexture);
         }
 
+        if (playingJump && jumpSheet != null) {
+            float yOffset = (jumpDrawHeight - drawSize) / 2.0f;
+            mesh.set(-drawSize/2.0f, -jumpDrawHeight/2.0f + yOffset, drawSize, jumpDrawHeight);
+        } else {
+            mesh.set(-drawSize/2.0f, -drawSize/2.0f, drawSize, drawSize);
+        }
         super.draw(batch,flipCache);
 
         drawTongue(batch);
