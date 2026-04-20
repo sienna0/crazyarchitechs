@@ -67,7 +67,7 @@ public class LevelSelectScene implements Screen {
     private boolean clickPrevious;
     /** Reusable coordinate buffer */
     private final Vector2 pointer;
-    private final float spacing = 220f;
+    private final float spacing = 180f;
     private final float start = 150f;
 
     private float scroll;
