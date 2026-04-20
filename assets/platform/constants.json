@@ -3733,5 +3733,155 @@
         "pos": [2.5, 5.0]
       }
     }
+  },
+  "level19": {
+    "walls": {
+      "tile": 128.0,
+      "friction": 0.1,
+      "density": 0.0,
+      "restitution": 0.1,
+      "debug": "#ffffff",
+      "positions": []
+    },
+    "platforms": {
+      "tile": 128.0,
+      "friction": 0.7,
+      "density": 0.0,
+      "restitution": 0.1,
+      "debug": "#ffffff",
+      "positions": []
+    },
+    "floors": {
+      "tile": 128.0,
+      "friction": 0.7,
+      "density": 0.0,
+      "restitution": 0.1,
+      "debug": "#5a8a3c",
+      "positions": []
+    },
+    "goo": {
+      "tile": 128.0,
+      "friction": 0.7,
+      "density": 0.0,
+      "restitution": 0.1,
+      "debug": "#5a8a3c",
+      "fatal": true,
+      "positions": []
+    },
+    "tilemap": [
+      {"tx": 1.0, "ty": 3.0, "col": 1.0, "row": 0.0},
+      {"tx": 2.0, "ty": 3.0, "col": 1.0, "row": 0.0},
+      {"tx": 3.0, "ty": 3.0, "col": 1.0, "row": 0.0},
+      {"tx": 4.0, "ty": 3.0, "col": 1.0, "row": 0.0},
+      {"tx": 0.0, "ty": 3.0, "col": 1.0, "row": 0.0},
+      {"tx": 5.0, "ty": 3.0, "col": 1.0, "row": 0.0},
+      {"tx": 6.0, "ty": 3.0, "col": 1.0, "row": 0.0},
+      {"tx": 7.0, "ty": 3.0, "col": 1.0, "row": 0.0},
+      {"tx": 8.0, "ty": 3.0, "col": 1.0, "row": 0.0},
+      {"tx": 9.0, "ty": 3.0, "col": 1.0, "row": 0.0},
+      {"tx": 10.0, "ty": 3.0, "col": 1.0, "row": 0.0},
+      {"tx": 11.0, "ty": 3.0, "col": 5.0, "row": 2.0},
+      {"tx": 11.0, "ty": 4.0, "col": 5.0, "row": 1.0},
+      {"tx": 11.0, "ty": 5.0, "col": 5.0, "row": 1.0},
+      {"tx": 11.0, "ty": 6.0, "col": 5.0, "row": 1.0},
+      {"tx": 11.0, "ty": 7.0, "col": 5.0, "row": 1.0},
+      {"tx": 11.0, "ty": 8.0, "col": 5.0, "row": 1.0},
+      {"tx": 11.0, "ty": 9.0, "col": 5.0, "row": 1.0},
+      {"tx": 11.0, "ty": 10.0, "col": 0.0, "row": 0.0},
+      {"tx": 12.0, "ty": 10.0, "col": 1.0, "row": 0.0},
+      {"tx": 13.0, "ty": 10.0, "col": 1.0, "row": 0.0},
+      {"tx": 14.0, "ty": 10.0, "col": 1.0, "row": 0.0},
+      {"tx": 15.0, "ty": 10.0, "col": 1.0, "row": 0.0},
+      {"tx": 16.0, "ty": 10.0, "col": 1.0, "row": 0.0},
+      {"tx": 17.0, "ty": 10.0, "col": 1.0, "row": 0.0},
+      {"tx": 18.0, "ty": 10.0, "col": 2.0, "row": 0.0},
+      {"tx": 18.0, "ty": 9.0, "col": 3.0, "row": 1.0},
+      {"tx": 18.0, "ty": 8.0, "col": 3.0, "row": 1.0},
+      {"tx": 18.0, "ty": 7.0, "col": 3.0, "row": 1.0},
+      {"tx": 18.0, "ty": 6.0, "col": 3.0, "row": 1.0},
+      {"tx": 18.0, "ty": 5.0, "col": 3.0, "row": 1.0},
+      {"tx": 18.0, "ty": 4.0, "col": 3.0, "row": 1.0},
+      {"tx": 18.0, "ty": 3.0, "col": 3.0, "row": 2.0},
+      {"tx": 19.0, "ty": 3.0, "col": 1.0, "row": 0.0},
+      {"tx": 20.0, "ty": 3.0, "col": 1.0, "row": 0.0},
+      {"tx": 21.0, "ty": 3.0, "col": 1.0, "row": 0.0},
+      {"tx": 22.0, "ty": 3.0, "col": 1.0, "row": 0.0},
+      {"tx": 23.0, "ty": 3.0, "col": 1.0, "row": 0.0},
+      {"tx": 24.0, "ty": 3.0, "col": 1.0, "row": 0.0},
+      {"tx": 25.0, "ty": 3.0, "col": 1.0, "row": 0.0},
+      {"tx": 26.0, "ty": 3.0, "col": 1.0, "row": 0.0},
+      {"tx": 27.0, "ty": 3.0, "col": 4.0, "row": 2.0},
+      {"tx": 29.0, "ty": 3.0, "col": 4.0, "row": 2.0},
+      {"tx": 30.0, "ty": 3.0, "col": 4.0, "row": 2.0},
+      {"tx": 31.0, "ty": 3.0, "col": 4.0, "row": 2.0},
+      {"tx": 28.0, "ty": 3.0, "col": 4.0, "row": 2.0}
+    ],
+    "playerSettings": {
+      "inventory_size": 1.0,
+      "film_count": 10.0,
+      "picture_cooldown": 10.0,
+      "max_sight_distance": 9.0
+    },
+    "objectLocations": {
+      "honey": [
+        [5.5, 4.75],
+        [6.5, 7.25]
+      ],
+      "cloud": [
+        [0.5, 8.75]
+      ],
+      "ice": [],
+      "zukosprite": [],
+      "pulley_top": [
+        {
+          "pos": [6.0, 9.5],
+          "size": [2.0, 2.0],
+          "radius": 0.68
+        }
+      ],
+      "pulley_carry": [
+        {
+          "pos": [5.5, 4.5],
+          "size": [1.0, 1.0],
+          "anchor": [5.5, 5.0],
+          "density": 2.0,
+          "friction": 0.9,
+          "gravityScale": 2.5,
+          "linearDamping": 1.0,
+          "angularDamping": 4.0
+        },
+        {
+          "pos": [6.5, 7.0],
+          "size": [1.0, 1.0],
+          "anchor": [6.5, 7.5],
+          "density": 2.0,
+          "friction": 0.9,
+          "gravityScale": 2.5,
+          "linearDamping": 1.0,
+          "angularDamping": 4.0
+        }
+      ],
+      "goal": {
+        "pos": [26.0, 5.75],
+        "size": 3.0,
+        "density": 0.0,
+        "friction": 0.0,
+        "restitution": 0.0
+      },
+      "zuko": {
+        "pos": [2.5, 5.0]
+      },
+      "zukoPos": {
+        "pos": [2.5, 5.0]
+      },
+      "pulley_settings": {
+        "groundAnchors": [
+          [5.5, 10.25],
+          [6.5, 10.25]
+        ],
+        "pin_radius": 0.1,
+        "ratio": 1.0
+      }
+    }
   }
 }

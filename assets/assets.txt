@@ -37,6 +37,7 @@ platform/zukojump1.png
 platform/zukojumpupdated.png
 platform/zukotonguechunk.png
 platform/zukowalk.png
+platform/zukowalk1.png
 shared/NunitoBoldItalic-RpvlV.ttf
 shared/NunitoExtraboldItalic-8MamM.ttf
 shared/RetroGame.ttf
