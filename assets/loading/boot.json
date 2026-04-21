@@ -1,7 +1,7 @@
 {
 	"textures": {
-        "splash": {
-            "file": "loading/splash.png",
+        "mainMenuBackground": {
+            "file": "loading/main_menu_background.png",
             "minfilter" : "linear",
             "magfilter" : "linear"
         },
@@ -21,6 +21,12 @@
                 "foreright"  : [296, 45, 320, 90]
             }
         }
+	},
+	"fonts": {
+		"menu": {
+			"file": "shared/RetroGame.ttf",
+			"size": 48
+		}
 	},
     "jsons" : {
       "constants" : {
