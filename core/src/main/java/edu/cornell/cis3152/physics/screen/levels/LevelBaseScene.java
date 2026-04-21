@@ -16,6 +16,7 @@ import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.utils.ObjectSet;
+import edu.cornell.cis3152.physics.CanvasRender;
 import edu.cornell.cis3152.physics.InputController;
 import edu.cornell.cis3152.physics.screen.PhysicsScene;
 import edu.cornell.cis3152.physics.screen.WorldState;
@@ -47,7 +48,9 @@ import java.util.List;
  * @see #endContact(Contact)
  */
 public class LevelBaseScene extends PhysicsScene implements ContactListener {
-    private static final float PAUSE_ICON_SIZE = 56.0f;
+    private static final float UI = CanvasRender.layoutScale();
+    private static final float PAUSE_ICON_SIZE = 56.0f * UI;
+    private static final float PAUSE_ICON_MARGIN = 15f * UI;
     private static final float TRANSITION_ENTRY_X = 1.25f;
     private static final float TRANSITION_WALK_MULTIPLIER = 0.4f;
     private static final float CAMERA_ZOOM = 0.75f;
@@ -432,8 +435,8 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         photoSystem.update(dt);
         viewport.screenToCanvas(Gdx.input.getX(), Gdx.input.getY(), worldState.getPauseMouseCache());
         float iconSize = PAUSE_ICON_SIZE;
-        float iconX = viewport.getWidth() - iconSize - 15f;
-        float iconY = viewport.getHeight() - iconSize - 15f;
+        float iconX = viewport.getWidth() - iconSize - PAUSE_ICON_MARGIN;
+        float iconY = viewport.getHeight() - iconSize - PAUSE_ICON_MARGIN;
         Vector2 pauseMouseCache = worldState.getPauseMouseCache();
         boolean pauseIconHovered = pauseMouseCache.x >= iconX && pauseMouseCache.x <= iconX + iconSize
                 && pauseMouseCache.y >= iconY && pauseMouseCache.y <= iconY + iconSize;

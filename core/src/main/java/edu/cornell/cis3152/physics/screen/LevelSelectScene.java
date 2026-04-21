@@ -8,7 +8,6 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.ScreenUtils;
 import edu.cornell.cis3152.physics.CanvasRender;
@@ -67,8 +66,6 @@ public class LevelSelectScene implements Screen {
     private boolean clickPrevious;
     /** Reusable coordinate buffer */
     private final Vector2 pointer;
-    private final float spacing = 220f;
-    private final float start = 150f;
 
     private float scroll;
 
@@ -104,7 +101,7 @@ public class LevelSelectScene implements Screen {
         // titleLayout.setText("SELECT LEVEL");
         titleLayout.layout();
 
-        font.getData().setScale(0.4f);
+        font.getData().setScale(0.4f * CanvasRender.layoutScale());
         instructionLayout = new TextLayout();
         instructionLayout.setFont(font);
         instructionLayout.setAlignment(TextAlign.middleCenter);
@@ -190,12 +187,15 @@ public class LevelSelectScene implements Screen {
         confirmPrevious = confirmPressed;
         exitPrevious = exitPressed;
         clickPrevious = clickPressed;
-        scroll -= Gdx.input.isKeyPressed(Input.Keys.A) ? 5f : 0f;
-        scroll -= Gdx.input.isKeyPressed(Input.Keys.LEFT) ? 5f : 0f;
+        float scrollStep = 5f * CanvasRender.layoutScale();
+        scroll -= Gdx.input.isKeyPressed(Input.Keys.A) ? scrollStep : 0f;
+        scroll -= Gdx.input.isKeyPressed(Input.Keys.LEFT) ? scrollStep : 0f;
 
-        scroll += Gdx.input.isKeyPressed(Input.Keys.D) ? 5f : 0f;
-        scroll += Gdx.input.isKeyPressed(Input.Keys.RIGHT) ? 5f : 0f;
+        scroll += Gdx.input.isKeyPressed(Input.Keys.D) ? scrollStep : 0f;
+        scroll += Gdx.input.isKeyPressed(Input.Keys.RIGHT) ? scrollStep : 0f;
 
+        float spacing = levelSpacing();
+        float start = levelStartMargin();
         float maxScroll = Math.max(0, (totalLevels - 1) * spacing - (width - start * 2));
         scroll = Math.max(0, Math.min(scroll, maxScroll));
     }
@@ -210,25 +210,28 @@ public class LevelSelectScene implements Screen {
         if (backgroundTexture != null) {
             batch.draw(backgroundTexture, 0, 0, width, height);
         }
-        batch.drawText(titleLayout, width / 2.0f, height - 100.0f);
-        batch.drawText(instructionLayout, width / 2.0f, height - 170.0f);
+        float titleY = height - height * (100f / 720f);
+        float instructY = height - height * (170f / 720f);
+        batch.drawText(titleLayout, width / 2.0f, titleY);
+        batch.drawText(instructionLayout, width / 2.0f, instructY);
 
         batch.setColor(0, 0, 0, 1f);
         for (int ii = 0; ii < totalLevels; ii++) {
             Vector2 pos = getLevelPosition(ii);
             boolean selected = ii == selectedIndex;
-            float size = selected ? 140f : 110f;
+            float size = selected ? lilySizeSelected() : lilySizeNormal();
 
             if (lilyTexture != null) {
                 batch.setColor(selected ? Color.WHITE : new Color(0.82f, 0.82f, 0.82f, 1.0f));
                 batch.draw(lilyTexture, pos.x - size/2, pos.y - size /2, size, size);
             }
 
-            font.getData().setScale(0.85f);
+            font.getData().setScale(0.85f * CanvasRender.layoutScale());
             optionLayout.setColor(Color.WHITE);
             optionLayout.setText(String.valueOf(ii + 1));
             optionLayout.layout();
-            batch.drawText(optionLayout, pos.x, + pos.y + 5);
+            float labelLift = 5f * CanvasRender.layoutScale();
+            batch.drawText(optionLayout, pos.x, pos.y + labelLift);
 
         }
         font.getData().setScale(1.0f);
@@ -237,13 +240,30 @@ public class LevelSelectScene implements Screen {
         viewport.reset();
     }
 
-    private Vector2 getLevelPosition(int index) {
+    private float levelSpacing() {
+        return width * (220f / 1280f);
+    }
 
+    private float levelStartMargin() {
+        return width * (150f / 1280f);
+    }
+
+    private float lilySizeSelected() {
+        return width * (140f / 1280f);
+    }
+
+    private float lilySizeNormal() {
+        return width * (110f / 1280f);
+    }
+
+    private Vector2 getLevelPosition(int index) {
+        float spacing = levelSpacing();
+        float start = levelStartMargin();
         float x = start + index * spacing - scroll;
 
-        float amplitude = 120f;
+        float amplitude = height * (120f / 720f);
         float base = height * 0.5f;
-        float y = base + (index % 2 == 0 ? amplitude : - amplitude);
+        float y = base + (index % 2 == 0 ? amplitude : -amplitude);
         return new Vector2(x,y);
     }
 
@@ -251,9 +271,10 @@ public class LevelSelectScene implements Screen {
     private int getHoveredIndex() {
         viewport.screenToCanvas(Gdx.input.getX(), Gdx.input.getY(), pointer);
 
+        float hoverRad = width * (60f / 1280f);
         for (int ii = 0; ii < totalLevels; ii++) {
             Vector2 pos = getLevelPosition(ii);
-            if (pointer.dst(pos) < 60f) {
+            if (pointer.dst(pos) < hoverRad) {
                 return ii;
             }
         }

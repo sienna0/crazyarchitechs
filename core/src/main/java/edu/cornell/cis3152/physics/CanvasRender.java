@@ -9,9 +9,21 @@ import com.badlogic.gdx.math.Vector2;
  */
 public class CanvasRender {
     /** The original game design resolution */
-    public static final int DESIGN_WIDTH = 1280;
+    public static final int DESIGN_WIDTH = 640;
     /** The original game design resolution */
-    public static final int DESIGN_HEIGHT = 720;
+    public static final int DESIGN_HEIGHT = 360;
+
+    /** Reference size UI constants were authored against (letterboxed logical canvas). */
+    private static final float REFERENCE_WIDTH = 1280f;
+    private static final float REFERENCE_HEIGHT = 720f;
+
+    /**
+     * Uniform scale from the 1280×720 reference to the current {@link #DESIGN_WIDTH}×{@link #DESIGN_HEIGHT}.
+     * Use for legacy pixel constants so widgets keep the same proportion of the canvas when the design size changes.
+     */
+    public static float layoutScale() {
+        return Math.min(DESIGN_WIDTH / REFERENCE_WIDTH, DESIGN_HEIGHT / REFERENCE_HEIGHT);
+    }
 
     /** The current screen width */
     private int screenWidth;
