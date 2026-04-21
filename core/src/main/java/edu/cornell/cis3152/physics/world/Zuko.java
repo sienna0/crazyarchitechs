@@ -382,6 +382,10 @@ public class Zuko extends ObstacleSprite {
         animator.setDeathMeltAnimation(sheet, rows, cols, size);
     }
 
+    public void setIdleAnimation(Texture sheet, int rows, int cols, int size) {
+        animator.setIdleAnimation(sheet, rows, cols, size);
+    }
+
     public void setTongueSegment(Texture texture) {
         animator.setTongueSegment(texture);
     }

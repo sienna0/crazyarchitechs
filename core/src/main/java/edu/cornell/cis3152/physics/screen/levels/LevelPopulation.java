@@ -164,11 +164,12 @@ class LevelPopulation {
         Texture jumpSheet    = textureResolver.apply("platform-jumpupdated",   "platform/zukojumpupdated.png");
         Texture tongueTexture =  textureResolver.apply("platform-tongue",   "platform/zukotonguechunk.png");
         Texture deathMeltSheet = textureResolver.apply("platform-deathmelt",   "platform/zukodeathmelt.png");
+        Texture idleSheet = textureResolver.apply("platform-idle", "platform/zukoidle.png");
 
 
         JsonValue posJson = level.get("objectLocations").get("zukoPos");
         result.avatar = buildZuko(units, constants.get("zuko"), posJson.get("pos").getFloat(0), posJson.get("pos").getFloat(1),
-                zukoTexture, walkSheet, photoSheet, jumpSheet, deathMeltSheet, tongueTexture, "avatar",levelPlayerSettings);
+                zukoTexture, walkSheet, photoSheet, jumpSheet, deathMeltSheet, idleSheet, tongueTexture, "avatar",levelPlayerSettings);
         spriteAdder.accept(result.avatar);
         result.avatar.createSensor();
 
@@ -181,7 +182,7 @@ class LevelPopulation {
                         level.get("objectLocations").get("zukoPos"), pos[0], pos[1]);
 
                 Zuko extra = buildZuko(units, syntheticZuko,pos[0], pos[1],
-                        zukoTexture, walkSheet, photoSheet, jumpSheet, tongueTexture, deathMeltSheet,
+                        zukoTexture, walkSheet, photoSheet, jumpSheet, deathMeltSheet, idleSheet, tongueTexture,
                         "zukosprite" + ii, levelPlayerSettings);
                 spriteAdder.accept(extra);
                 extra.createSensor();
@@ -606,16 +607,17 @@ class LevelPopulation {
      */
     private Zuko buildZuko(float units, JsonValue zukoJson, float xStartingPos, float yStartingPos,
                            Texture zukoTexture, Texture walkSheet,
-                           Texture photoSheet, Texture jumpSheet, Texture deathMeltSheet, Texture tongueTexture,
+                           Texture photoSheet, Texture jumpSheet, Texture deathMeltSheet, Texture idleSheet, Texture tongueTexture,
                            String name, JsonValue levelPlayerSettings) {
         Zuko zuko = new Zuko(units, zukoJson, xStartingPos, yStartingPos, levelPlayerSettings);
         zuko.setTexture(zukoTexture);
         zuko.setBaseTexture(zukoTexture);
         zuko.getObstacle().setName(name);
-        zuko.setWalkAnimation(walkSheet,  1, 6, 6);
+        zuko.setWalkAnimation(walkSheet,  1, 7, 7);
         zuko.setPhotoAnimation(photoSheet, 1, 11, 11);
         zuko.setJumpAnimation(jumpSheet,  1, 6, 6);
         zuko.setDeathMeltAnimation(deathMeltSheet,  1, 13, 13);
+        zuko.setIdleAnimation(idleSheet, 1, 7, 7);
         zuko.setTongueSegment(tongueTexture);
 
         return zuko;

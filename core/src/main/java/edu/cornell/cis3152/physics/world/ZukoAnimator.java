@@ -35,6 +35,13 @@ public class ZukoAnimator {
     /** The duration of each walk frame */
     private float walkFrameDuration = 0.14f;
 
+    /** The SpriteSheet for Zuko's walk animation */
+    private SpriteSheet idleSheet;
+    /** The duration of the walk animation */
+    private float idleAnimationTime = 0f;
+    /** The duration of each walk frame */
+    private float idleFrameDuration = 0.14f;
+
     /** The SpriteSheet for Zuko's melting death animation */
     private SpriteSheet deathMeltSheet;
     /** The duration of the melting death animation */
@@ -140,6 +147,16 @@ public class ZukoAnimator {
     }
 
     /**
+     * Sets the jump animation SpriteSheet for Zuko
+     * @param sheet
+     * @param rows
+     * @param cols
+     */
+    public void setIdleAnimation(Texture sheet, int rows, int cols, int size) {
+        idleSheet = new SpriteSheet(sheet, rows, cols, size);
+    }
+
+    /**
      * Sets the tongue segment texture
      */
     public void setTongueSegment(Texture texture) {
@@ -226,6 +243,10 @@ public class ZukoAnimator {
             walkAnimationTime += dt;
             int frame = ((int)(walkAnimationTime / walkFrameDuration)) % walkSheet.getSize();
             walkSheet.setFrame(frame);
+        } else if (idleSheet != null && isGrounded) {
+            idleAnimationTime += dt;
+            int frame = ((int)(idleAnimationTime / idleFrameDuration)) % idleSheet.getSize();
+            idleSheet.setFrame(frame);
         } else if (walkSheet != null) {
             walkAnimationTime = 0f;
             walkSheet.setFrame(0);
@@ -260,6 +281,7 @@ public class ZukoAnimator {
         if (playingJump && jumpSheet != null) return jumpSheet;
         if (playingDeathMelt && deathMeltSheet != null) return deathMeltSheet;
         if (walkSheet != null && isGrounded && Math.abs(velocityX) > 0.1f) return walkSheet;
+        if (idleSheet != null) return idleSheet;
         return null;
     }
 
