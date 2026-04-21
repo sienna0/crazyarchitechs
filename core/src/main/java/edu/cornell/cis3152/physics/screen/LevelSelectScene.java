@@ -33,6 +33,8 @@ public class LevelSelectScene implements Screen {
     private final Texture backgroundTexture;
     /** Lily pad buttons for levels 1-3 */
     private final Texture lilyTexture;
+    /** Title screen–style control; returns to main menu */
+    private final Texture menuButtonTexture;
     /** Solid pixel used to draw button rectangles */
     private final Texture pixel;
 
@@ -78,6 +80,11 @@ public class LevelSelectScene implements Screen {
     private static final float ARROW_SIZE_REF = 70f;
     private static final float ARROW_PADDING_REF = 20f;
     private static final int PAGE_SIZE = 3;
+    private static final float MENU_BTN_MAX_W_FRAC = 0.2f;
+    private static final float MENU_BTN_TOP_MARGIN_REF = 16f;
+    private static final float MENU_BTN_RIGHT_MARGIN_REF = 16f;
+    private static final float MENU_IDLE_SCALE = 0.92f;
+    private static final Color MENU_HOVER_TINT = new Color(0.52f, 0.52f, 0.55f, 1f);
 
     public LevelSelectScene(AssetDirectory assets, SpriteBatch batch, CanvasRender viewport, int totalLevels) {
         this.batch = batch;
@@ -91,6 +98,10 @@ public class LevelSelectScene implements Screen {
         this.lilyTexture = assets.getEntry("shared-blank-lily", Texture.class);
         if (lilyTexture != null) {
                 lilyTexture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        }
+        this.menuButtonTexture = assets.getEntry("shared-pause-menu", Texture.class);
+        if (menuButtonTexture != null) {
+            menuButtonTexture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
         }
 
         this.camera = new OrthographicCamera();
@@ -186,12 +197,13 @@ public class LevelSelectScene implements Screen {
 
         if (clickPressed && !clickPrevious) {
             viewport.screenToCanvas(Gdx.input.getX(), Gdx.input.getY(), pointer);
-            if (leftArrowBounds.contains(pointer)) {
+            if (getMenuButtonBounds().contains(pointer.x, pointer.y)) {
+                exitRequested = true;
+            } else if (leftArrowBounds.contains(pointer)) {
                 scrollByPage(-1);
-            } else if (rightArrowBounds.contains(pointer)){
+            } else if (rightArrowBounds.contains(pointer)) {
                 scrollByPage(1);
-            }
-            else {
+            } else {
                 int clickedIndex = getHoveredIndex();
                 if (clickedIndex >= 0) {
                     selectedIndex = clickedIndex;
@@ -264,6 +276,8 @@ public class LevelSelectScene implements Screen {
         drawArrow(false, scroll > 1f);
         drawArrow(true, scroll < maxScroll - 1f);
 
+        drawMenuButton();
+
         batch.end();
         viewport.reset();
     }
@@ -298,6 +312,9 @@ public class LevelSelectScene implements Screen {
 
     private int getHoveredIndex() {
         viewport.screenToCanvas(Gdx.input.getX(), Gdx.input.getY(), pointer);
+        if (getMenuButtonBounds().contains(pointer.x, pointer.y)) {
+            return -1;
+        }
 
         float hoverRad = width * (60f / 1280f);
         for (int ii = 0; ii < totalLevels; ii++) {
@@ -326,6 +343,39 @@ public class LevelSelectScene implements Screen {
     private void scrollByPage(int direction) {
         scroll += direction * PAGE_SIZE * levelSpacing();
         clampScroll();
+    }
+
+    private Rectangle getMenuButtonBounds() {
+        if (menuButtonTexture == null) {
+            return new Rectangle(0, 0, 0, 0);
+        }
+        float UI = CanvasRender.layoutScale();
+        float marginTop = MENU_BTN_TOP_MARGIN_REF * UI;
+        float marginRight = MENU_BTN_RIGHT_MARGIN_REF * UI;
+        float maxW = width * MENU_BTN_MAX_W_FRAC;
+        float s = maxW / Math.max(1f, menuButtonTexture.getWidth());
+        float bw = menuButtonTexture.getWidth() * s;
+        float bh = menuButtonTexture.getHeight() * s;
+        float x = width - marginRight - bw;
+        float y = height - marginTop - bh;
+        return new Rectangle(x, y, bw, bh);
+    }
+
+    private void drawMenuButton() {
+        if (menuButtonTexture == null) {
+            return;
+        }
+        Rectangle b = getMenuButtonBounds();
+        viewport.screenToCanvas(Gdx.input.getX(), Gdx.input.getY(), pointer);
+        boolean hover = b.contains(pointer.x, pointer.y);
+        float tScale = hover ? 1f : MENU_IDLE_SCALE;
+        float dw = b.width * tScale;
+        float dh = b.height * tScale;
+        float dx = b.x + (b.width - dw) / 2f;
+        float dy = b.y + (b.height - dh) / 2f;
+        batch.setColor(hover ? MENU_HOVER_TINT : Color.WHITE);
+        batch.draw(menuButtonTexture, dx, dy, dw, dh);
+        batch.setColor(Color.WHITE);
     }
 
     private void drawArrow(boolean isRight, boolean active) {

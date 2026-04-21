@@ -25,27 +25,83 @@ package edu.cornell.cis3152.physics.screen;
 import com.badlogic.gdx.*;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.math.Affine2;
+import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.utils.ScreenUtils;
 import edu.cornell.cis3152.physics.CanvasRender;
+import edu.cornell.cis3152.physics.GameAudio;
+import edu.cornell.cis3152.physics.graphics.GifFrames;
 import edu.cornell.gdiac.assets.*;
 import edu.cornell.gdiac.graphics.SpriteBatch;
+import edu.cornell.gdiac.graphics.TextAlign;
+import edu.cornell.gdiac.graphics.TextLayout;
 import edu.cornell.gdiac.util.ScreenListener;
+
+import java.io.IOException;
 
 /**
  * Class that provides a loading screen for the state of the game.
  *
- * This is a fairly generic loading screen that shows the GDIAC logo and a
- * progress bar. Once all assets are loaded, the progress bar is replaced
- * by a play button. You are free to adopt this to your needs.
+ * Main menu and asset loading: background, animated title {@link GifFrames}, progress bar, then sprite PLAY / OPTIONS.
  */
-public class LoadingScene implements Screen, InputProcessor {
+public class LoadingScene implements Screen {
+
+    public static final int MENU_PLAY = 0;
+    public static final int MENU_OPTIONS = 1;
+    private static final int MENU_BUTTON_COUNT = 2;
+
+    /** Hard cap: max button width vs logical canvas (inner menu panel scale). */
+    private static final float MENU_BUTTON_PANEL_MAX_WIDTH_FRAC = 0.34f;
+    /** Extra linear scale on button size (1 = use cap as-is; 0.6 = 60% width/height). */
+    private static final float MENU_BUTTON_SCALE = 0.6f;
+    /** Also never wider than this fraction of the title’s fitted bbox (when a title exists). */
+    private static final float MENU_BUTTON_WIDTH_VS_TITLE = 0.98f;
+    /** If no title GIF, same as panel cap. */
+    private static final float MENU_BUTTON_FALLBACK_MAX_WIDTH_FRAC = MENU_BUTTON_PANEL_MAX_WIDTH_FRAC;
+    /** Gap between title bottom and top of PLAY stack (canvas pixels, scaled). */
+    private static final float MENU_GAP_BELOW_TITLE = 12f;
+    /** Gap between PLAY and OPTIONS (canvas pixels, scaled). */
+    private static final float MENU_GAP_BETWEEN = 22f;
+    /** Extra shift downward for PLAY/OPTIONS stack (reference px × {@link CanvasRender#layoutScale()}, y-up). */
+    private static final float MENU_BUTTON_EXTRA_DOWN_REF = 22f;
+    /** Min bottom edge for OPTIONS when the stack would clip off-screen (fraction of canvas height, y-up). */
+    private static final float MENU_BUTTON_STACK_AREA_BOTTOM_FRAC = 0.10f;
+    /** Fallback: vertical center of stack when title is missing (y-up, 0–1). */
+    private static final float MENU_STACK_CENTER_Y_FRAC = 0.30f;
+    /** Main menu sprites: slightly smaller when idle; full size when hovered or keyboard-selected. */
+    private static final float MENU_MAIN_IDLE_SCALE = 0.92f;
+    /** Darken on hover (keyboard or mouse). */
+    private static final Color MENU_MAIN_HOVER_TINT = new Color(0.52f, 0.52f, 0.55f, 1f);
+    private static final Color OPTIONS_SCRIM = new Color(0f, 0f, 0f, 0.55f);
+    /** Options → How to play: panel behind text (RGB + alpha). */
+    private static final Color HELP_PANEL_FILL = new Color(0.07f, 0.09f, 0.11f, 0.88f);
+    private static final Color HELP_PANEL_BORDER = new Color(0.42f, 0.45f, 0.50f, 0.72f);
+    private static final int OPT_MUSIC = 0;
+    private static final int OPT_SOUND = 1;
+    private static final int OPT_HELP = 2;
     /** Default budget for asset loader (do nothing but load 60 fps) */
     private static int DEFAULT_BUDGET = 15;
+
+    private static final String TITLE_GIF_INTERNAL = "loading/GameLogo_animated.gif";
+    /** Fallback per-frame duration if a GIF frame omits delay metadata. */
+    private static final float TITLE_DEFAULT_FRAME_SEC = 1f / 12f;
+    /**
+     * Max title width/height vs canvas. After opaque crop the logo is wide; a full-width cap blows up scale
+     * and steals vertical room from the menu stack.
+     */
+    private static final float TITLE_MAX_WIDTH_FRAC = 0.72f;
+    private static final float TITLE_MAX_HEIGHT_FRAC = 0.38f;
+    /** Title position: center X as fraction of canvas width (0–1). */
+    private static final float TITLE_CENTER_X_FRAC = 0.5f;
+    /** Title position: center Y as fraction of canvas height (0–1); higher = title + menu stack move up. */
+    private static final float TITLE_CENTER_Y_FRAC = 0.72f;
 
     // There are TWO asset managers.
     // One to load the loading screen. The other to load the assets
@@ -60,8 +116,6 @@ public class LoadingScene implements Screen, InputProcessor {
     private SpriteBatch batch;
     /** Shared letterboxed viewport */
     private CanvasRender viewport;
-    /** Affine transform for displaying images */
-    private Affine2 affine;
     /** Listener that will update the player mode when we are done */
     private ScreenListener listener;
 
@@ -77,15 +131,32 @@ public class LoadingScene implements Screen, InputProcessor {
     private float scale;
     /** Current progress (0 to 1) of the asset manager */
     private float progress;
-    /** The current state of the play button */
-    private int   pressState;
     /** The amount of time to devote to loading assets (as opposed to on screen hints, etc.) */
     private int   budget;
 
     /** Whether or not this player mode is still active */
     private boolean active;
-    /** Reusable pointer buffer */
+
+    private GifFrames titleGif;
+    private float titleAnimTime;
+
+    private BitmapFont menuFont;
+    private Texture pixel;
+    private final TextLayout optionsStubLayout = new TextLayout();
+    /** {@link TextLayout#getWidth()} does not match rendered line width for help text; measure with {@link GlyphLayout}. */
+    private final GlyphLayout helpPanelMeasure = new GlyphLayout();
     private final Vector2 pointer = new Vector2();
+    private int menuSelectedIndex;
+    private int menuChosenOption = -1;
+    private boolean optionsOpen;
+    private boolean optionsHelpOpen;
+    private boolean mainAssetsFinalized;
+    /** Set when Play is chosen; {@link ScreenListener#exitScreen} runs after {@link #draw()} this frame. */
+    private boolean pendingExitToGame;
+    private boolean upPrev;
+    private boolean downPrev;
+    private boolean confirmPrev;
+    private boolean clickPrev;
 
     /**
      * Returns the budget for the asset loader.
@@ -118,12 +189,30 @@ public class LoadingScene implements Screen, InputProcessor {
     }
 
     /**
-     * Returns true if all assets are loaded and the player is ready to go.
-     *
-     * @return true if the player is ready to go
+     * Transitions into the main game after {@link #getAssets()} has finished loading.
+     * Invoke from the main menu Play button (or equivalent) once that UI exists.
      */
-    public boolean isReady() {
-        return pressState == 2;
+    public void notifyPlayPressed() {
+        if (progress < 1.0f || listener == null) {
+            return;
+        }
+        assets.finishLoading();
+        pendingExitToGame = true;
+    }
+
+    /**
+     * Reset menu UI when returning from {@link GameMode} without disposing this screen (avoids reloading boot assets / title GIF).
+     */
+    public void prepareReturnFromGame() {
+        optionsOpen = false;
+        optionsHelpOpen = false;
+        menuChosenOption = -1;
+        menuSelectedIndex = MENU_PLAY;
+        pendingExitToGame = false;
+        upPrev = false;
+        downPrev = false;
+        confirmPrev = false;
+        clickPrev = false;
     }
 
     /**
@@ -164,35 +253,71 @@ public class LoadingScene implements Screen, InputProcessor {
      * @param millis The loading budget in milliseconds
      */
     public LoadingScene(String file, SpriteBatch batch, CanvasRender viewport, int millis) {
+        initBoot(batch, viewport, millis);
+        progress = 0;
+        assets = new AssetDirectory(file);
+        assets.loadAssets();
+        active = true;
+    }
+
+    /**
+     * Title screen when main game assets are already loaded (e.g. return from level select).
+     * Skips the progress bar and async load.
+     */
+    public LoadingScene(AssetDirectory preloadedMainAssets, SpriteBatch batch, CanvasRender viewport, int millis) {
+        initBoot(batch, viewport, millis);
+        assets = preloadedMainAssets;
+        progress = 1.0f;
+        mainAssetsFinalized = true;
+        active = true;
+    }
+
+    private void initBoot(SpriteBatch batch, CanvasRender viewport, int millis) {
         this.batch = batch;
         this.viewport = viewport;
         budget = millis;
 
-        // We need these files loaded immediately
-        internal = new AssetDirectory( "loading/boot.json" );
+        internal = new AssetDirectory("loading/boot.json");
         internal.loadAssets();
         internal.finishLoading();
 
-        constants = internal.getEntry( "constants", JsonValue.class );
-        resize(Gdx.graphics.getWidth(),Gdx.graphics.getHeight());
+        constants = internal.getEntry("constants", JsonValue.class);
+        resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
-        // No progress so far.
-        progress = 0;
-        pressState = 0;
+        try {
+            titleGif = GifFrames.load(
+                    Gdx.files.internal(TITLE_GIF_INTERNAL),
+                    TITLE_DEFAULT_FRAME_SEC,
+                    Texture.TextureFilter.Nearest);
+        } catch (IOException e) {
+            Gdx.app.error("LoadingScene", "Could not load title GIF: " + TITLE_GIF_INTERNAL, e);
+        }
 
-        affine = new Affine2();
-        Gdx.input.setInputProcessor( this );
+        Pixmap pm = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
+        pm.setColor(Color.WHITE);
+        pm.fill();
+        pixel = new Texture(pm);
+        pm.dispose();
 
-        // Start loading the REAL assets
-        assets = new AssetDirectory( file );
-        assets.loadAssets();
-        active = true;
+        menuFont = internal.getEntry("menu", BitmapFont.class);
+        menuFont.getData().setScale(0.45f * CanvasRender.layoutScale());
+        optionsStubLayout.setFont(menuFont);
+        optionsStubLayout.setAlignment(TextAlign.middleCenter);
+        optionsStubLayout.setColor(Color.WHITE);
     }
 
     /**
      * Called when this screen should release all resources.
      */
     public void dispose() {
+        if (titleGif != null) {
+            titleGif.dispose();
+            titleGif = null;
+        }
+        if (pixel != null) {
+            pixel.dispose();
+            pixel = null;
+        }
         internal.unloadAssets();
         internal.dispose();
     }
@@ -212,6 +337,67 @@ public class LoadingScene implements Screen, InputProcessor {
             this.progress = assets.getProgress();
             if (progress >= 1.0f) {
                 this.progress = 1.0f;
+            }
+        }
+        if (progress >= 1.0f && !mainAssetsFinalized) {
+            assets.finishLoading();
+            mainAssetsFinalized = true;
+        }
+        titleAnimTime += delta;
+        updateMainMenu();
+    }
+
+    private void updateMainMenu() {
+        if (optionsOpen) {
+            updateOptionsOverlay();
+            return;
+        }
+
+        if (progress < 1.0f) {
+            return;
+        }
+
+        boolean upPressed = Gdx.input.isKeyPressed(Input.Keys.UP);
+        boolean downPressed = Gdx.input.isKeyPressed(Input.Keys.DOWN);
+        boolean confirmPressed = Gdx.input.isKeyPressed(Input.Keys.ENTER)
+                || Gdx.input.isKeyPressed(Input.Keys.SPACE);
+        boolean clickPressed = Gdx.input.isButtonPressed(Input.Buttons.LEFT);
+
+        if (upPressed && !upPrev) {
+            menuSelectedIndex = (menuSelectedIndex + MENU_BUTTON_COUNT - 1) % MENU_BUTTON_COUNT;
+        }
+        if (downPressed && !downPrev) {
+            menuSelectedIndex = (menuSelectedIndex + 1) % MENU_BUTTON_COUNT;
+        }
+
+        if (confirmPressed && !confirmPrev) {
+            menuChosenOption = menuSelectedIndex;
+        }
+
+        if (clickPressed && !clickPrev) {
+            int clicked = getHoveredMenuIndex();
+            if (clicked >= 0) {
+                menuChosenOption = clicked;
+            }
+        } else {
+            int hovered = getHoveredMenuIndex();
+            if (hovered >= 0) {
+                menuSelectedIndex = hovered;
+            }
+        }
+
+        upPrev = upPressed;
+        downPrev = downPressed;
+        confirmPrev = confirmPressed;
+        clickPrev = clickPressed;
+
+        if (menuChosenOption >= 0) {
+            int choice = menuChosenOption;
+            menuChosenOption = -1;
+            switch (choice) {
+                case MENU_PLAY -> notifyPlayPressed();
+                case MENU_OPTIONS -> optionsOpen = true;
+                default -> { /* ignore */ }
             }
         }
     }
@@ -235,25 +421,21 @@ public class LoadingScene implements Screen, InputProcessor {
         batch.begin(camera);
         batch.setColor( Color.WHITE );
 
-        // Height lock the logo
-        Texture texture = internal.getEntry( "splash", Texture.class );
-        batch.draw(texture,0, 0, width, height);
+        Texture texture = internal.getEntry( "mainMenuBackground", Texture.class );
+        batch.draw(texture, 0, 0, width, height);
+
+        drawTitle();
 
         if (progress < 1.0f) {
             drawProgress();
-        } else {
-            float cx = width/2;
-            float cy = (int)(constants.getFloat( "bar.height" )*height);
-            float s = constants.getFloat("button.scale")*scale;
-            Color tint = (pressState == 1 ? Color.GRAY : Color.WHITE);
-//            texture = internal.getEntry("play",Texture.class);
-//
-//            SpriteBatch.computeTransform( affine, texture.getWidth() / 2, texture.getHeight() / 2,
-//                                          cx, cy, 0, s, s );
-//
-//            batch.setColor( tint );
-//            batch.draw( texture, affine );
+        } else if (!optionsOpen) {
+            drawMainMenu();
         }
+
+        if (optionsOpen) {
+            drawOptionsOverlay();
+        }
+
         batch.end();
         viewport.reset();
     }
@@ -265,6 +447,289 @@ public class LoadingScene implements Screen, InputProcessor {
      * a rectangle in a middle. We adjust the size of the rectangle in the
      * middle to represent the amount of progress.
      */
+    private void drawTitle() {
+        Rectangle r = computeTitleCanvasRect();
+        if (r.width <= 0f) {
+            return;
+        }
+        TextureRegion tr = titleGif.getKeyFrame(titleAnimTime);
+        batch.setColor(Color.WHITE);
+        batch.draw(tr, r.x, r.y, r.width, r.height);
+    }
+
+    /**
+     * Title quad in canvas space (bottom-left origin, y-up), matching {@link #drawTitle()}.
+     * Width/height are zero if there is no title.
+     */
+    private Rectangle computeTitleCanvasRect() {
+        if (titleGif == null || titleGif.getFrameCount() == 0) {
+            return new Rectangle(0, 0, 0, 0);
+        }
+        TextureRegion tr = titleGif.getKeyFrame(titleAnimTime);
+        float rw = Math.max(1, tr.getRegionWidth());
+        float rh = Math.max(1, tr.getRegionHeight());
+        float maxW = width * TITLE_MAX_WIDTH_FRAC;
+        float maxH = height * TITLE_MAX_HEIGHT_FRAC;
+        float s = Math.min(maxW / rw, maxH / rh);
+        s = MathUtils.clamp(s, 0.01f, 100f);
+        float drawW = rw * s;
+        float drawH = rh * s;
+        float cx = width * TITLE_CENTER_X_FRAC;
+        float cy = height * TITLE_CENTER_Y_FRAC;
+        float x = cx - drawW / 2f;
+        float y = cy - drawH / 2f;
+        if (drawW <= width) {
+            x = MathUtils.clamp(x, 0f, width - drawW);
+        }
+        if (drawH <= height) {
+            y = MathUtils.clamp(y, 0f, height - drawH);
+        }
+        return new Rectangle(x, y, drawW, drawH);
+    }
+
+    private Rectangle getMenuButtonBounds(int index) {
+        Texture ref = internal.getEntry("menuPlay", Texture.class);
+        int tw = ref.getWidth();
+        int th = ref.getHeight();
+        float layout = CanvasRender.layoutScale();
+        Rectangle titleR = computeTitleCanvasRect();
+        float panelCap = width * MENU_BUTTON_PANEL_MAX_WIDTH_FRAC;
+        float maxW = panelCap;
+        if (titleR.width > 1f) {
+            maxW = Math.min(panelCap, titleR.width * MENU_BUTTON_WIDTH_VS_TITLE);
+        } else {
+            maxW = width * MENU_BUTTON_FALLBACK_MAX_WIDTH_FRAC;
+        }
+        maxW = Math.min(maxW, width * 0.98f);
+        maxW *= MENU_BUTTON_SCALE;
+        float s = maxW / tw;
+        float bw = tw * s;
+        float bh = th * s;
+        float gapBelowTitle = MENU_GAP_BELOW_TITLE * layout;
+        float gapBetween = MENU_GAP_BETWEEN * layout;
+        float nudgeDown = MENU_BUTTON_EXTRA_DOWN_REF * layout;
+        float yPlay;
+        float yOptions;
+        float totalH = MENU_BUTTON_COUNT * bh + (MENU_BUTTON_COUNT - 1) * gapBetween;
+        if (titleR.height > 0f) {
+            float playTopMax = titleR.y - gapBelowTitle - nudgeDown;
+            float minBottom = height * MENU_BUTTON_STACK_AREA_BOTTOM_FRAC;
+            float room = playTopMax - minBottom;
+            if (room > 1f && totalH > room) {
+                float factor = room / totalH;
+                bh *= factor;
+                bw *= factor;
+                totalH = MENU_BUTTON_COUNT * bh + (MENU_BUTTON_COUNT - 1) * gapBetween;
+            }
+            yPlay = playTopMax - bh;
+            yOptions = yPlay - gapBetween - bh;
+        } else {
+            float centerY = height * MENU_STACK_CENTER_Y_FRAC;
+            float startY = centerY + totalH / 2f;
+            yPlay = startY - bh - nudgeDown;
+            yOptions = yPlay - gapBetween - bh;
+        }
+        if (yOptions < 4f) {
+            float lift = 4f - yOptions;
+            yPlay += lift;
+            yOptions += lift;
+        }
+        float anchorX = titleR.width > 0f
+                ? titleR.x + titleR.width * 0.5f
+                : width * TITLE_CENTER_X_FRAC;
+        float x = anchorX - bw * 0.5f;
+        x = MathUtils.clamp(x, 0f, Math.max(0f, width - bw));
+        float y = (index == MENU_PLAY) ? yPlay : yOptions;
+        return new Rectangle(x, y, bw, bh);
+    }
+
+    private int getHoveredMenuIndex() {
+        viewport.screenToCanvas(Gdx.input.getX(), Gdx.input.getY(), pointer);
+        for (int i = 0; i < MENU_BUTTON_COUNT; i++) {
+            if (getMenuButtonBounds(i).contains(pointer.x, pointer.y)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private void drawMainMenu() {
+        Texture playTex = internal.getEntry("menuPlay", Texture.class);
+        Texture optionsTex = internal.getEntry("menuOptions", Texture.class);
+        int mouseHover = getHoveredMenuIndex();
+        for (int i = 0; i < MENU_BUTTON_COUNT; i++) {
+            Rectangle b = getMenuButtonBounds(i);
+            // Only the actual mouse position drives hover styling; keyboard focus uses default look.
+            boolean hover = mouseHover == i;
+            float tScale = hover ? 1f : MENU_MAIN_IDLE_SCALE;
+            float dw = b.width * tScale;
+            float dh = b.height * tScale;
+            float dx = b.x + (b.width - dw) / 2f;
+            float dy = b.y + (b.height - dh) / 2f;
+            batch.setColor(hover ? MENU_MAIN_HOVER_TINT : Color.WHITE);
+            Texture tex = (i == MENU_PLAY) ? playTex : optionsTex;
+            batch.draw(tex, dx, dy, dw, dh);
+        }
+        batch.setColor(Color.WHITE);
+    }
+
+    private void updateOptionsOverlay() {
+        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
+            if (optionsHelpOpen) {
+                optionsHelpOpen = false;
+            } else {
+                optionsOpen = false;
+                optionsHelpOpen = false;
+            }
+            return;
+        }
+        if (!Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
+            return;
+        }
+        if (optionsHelpOpen) {
+            return;
+        }
+        viewport.screenToCanvas(Gdx.input.getX(), Gdx.input.getY(), pointer);
+        Rectangle[] r = computeOptionIconBounds();
+        if (r[OPT_MUSIC].contains(pointer.x, pointer.y)) {
+            GameAudio.toggleMusic();
+        } else if (r[OPT_SOUND].contains(pointer.x, pointer.y)) {
+            GameAudio.toggleSfx();
+        } else if (r[OPT_HELP].contains(pointer.x, pointer.y)) {
+            optionsHelpOpen = true;
+        }
+    }
+
+    private Rectangle[] computeOptionIconBounds() {
+        Texture ref = internal.getEntry("optionsMusic", Texture.class);
+        int tw = ref.getWidth();
+        int th = ref.getHeight();
+        float sz = Math.min(width, height) * 0.16f;
+        float s = sz / Math.max(1, Math.max(tw, th));
+        float wIcon = tw * s;
+        float hIcon = th * s;
+        float gap = Math.min(width, height) * 0.065f;
+        float totalW = 3f * wIcon + 2f * gap;
+        float startX = (width - totalW) / 2f;
+        float cy = height * 0.48f;
+        float y = cy - hIcon / 2f;
+        return new Rectangle[] {
+                new Rectangle(startX, y, wIcon, hIcon),
+                new Rectangle(startX + wIcon + gap, y, wIcon, hIcon),
+                new Rectangle(startX + 2f * (wIcon + gap), y, wIcon, hIcon),
+        };
+    }
+
+    private void drawOptionPuck(Texture tex, Rectangle bounds, boolean hovered, Color baseTint) {
+        float tScale = hovered ? 1f : MENU_MAIN_IDLE_SCALE;
+        float dw = bounds.width * tScale;
+        float dh = bounds.height * tScale;
+        float dx = bounds.x + (bounds.width - dw) / 2f;
+        float dy = bounds.y + (bounds.height - dh) / 2f;
+        Color c = baseTint.cpy();
+        if (hovered) {
+            c.r *= MENU_MAIN_HOVER_TINT.r;
+            c.g *= MENU_MAIN_HOVER_TINT.g;
+            c.b *= MENU_MAIN_HOVER_TINT.b;
+        }
+        batch.setColor(c);
+        batch.draw(tex, dx, dy, dw, dh);
+        batch.setColor(Color.WHITE);
+    }
+
+    private void drawOptionsOverlay() {
+        batch.setColor(OPTIONS_SCRIM);
+        batch.draw(pixel, 0, 0, width, height);
+        batch.setColor(Color.WHITE);
+        if (optionsHelpOpen) {
+            drawHelpPanel();
+            return;
+        }
+        Rectangle[] r = computeOptionIconBounds();
+        Texture musicTex = internal.getEntry("optionsMusic", Texture.class);
+        Texture soundOn = internal.getEntry("optionsSoundOn", Texture.class);
+        Texture soundOff = internal.getEntry("optionsSoundOff", Texture.class);
+        Texture helpTex = internal.getEntry("optionsHelp", Texture.class);
+        Texture soundTex = GameAudio.isSfxOn() ? soundOn : soundOff;
+        viewport.screenToCanvas(Gdx.input.getX(), Gdx.input.getY(), pointer);
+        Color musicTint = GameAudio.isMusicOn() ? Color.WHITE : new Color(0.5f, 0.5f, 0.52f, 1f);
+        drawOptionPuck(musicTex, r[OPT_MUSIC], r[OPT_MUSIC].contains(pointer.x, pointer.y), musicTint);
+        drawOptionPuck(soundTex, r[OPT_SOUND], r[OPT_SOUND].contains(pointer.x, pointer.y), Color.WHITE);
+        drawOptionPuck(helpTex, r[OPT_HELP], r[OPT_HELP].contains(pointer.x, pointer.y), Color.WHITE);
+        optionsStubLayout.setAlignment(TextAlign.middleCenter);
+        optionsStubLayout.setColor(Color.WHITE);
+        optionsStubLayout.setText("Press Esc to close");
+        optionsStubLayout.layout();
+        batch.drawText(optionsStubLayout, width / 2f, height * 0.26f);
+    }
+
+    /**
+     * Matches {@link PauseMenuScene} control list: same font scale, spacing, and positions (proportional to canvas).
+     */
+    private void drawHelpPanel() {
+        BitmapFont helpFont = null;
+        if (assets != null && assets.hasEntry("shared-retro", BitmapFont.class)) {
+            helpFont = assets.getEntry("shared-retro", BitmapFont.class);
+        }
+        if (helpFont == null) {
+            helpFont = menuFont;
+        }
+        float UI = CanvasRender.layoutScale();
+        float scaleSave = helpFont.getData().scaleX;
+        helpFont.getData().setScale(0.5f * UI);
+        optionsStubLayout.setFont(helpFont);
+        optionsStubLayout.setAlignment(TextAlign.middleCenter);
+
+        float lineStep = 40f * UI;
+        float padX = 28f * UI;
+        float padY = 22f * UI;
+        float border = Math.max(1.5f, 2f * UI);
+        String[] lines = PauseMenuScene.HOW_TO_PLAY_LINES;
+        int rowCount = lines.length + 1;
+        float totalH = rowCount * lineStep;
+
+        helpPanelMeasure.setText(helpFont, PauseMenuScene.HOW_TO_PLAY_TITLE);
+        float maxW = helpPanelMeasure.width;
+        for (String line : lines) {
+            helpPanelMeasure.setText(helpFont, line);
+            maxW = Math.max(maxW, helpPanelMeasure.width);
+        }
+
+        float panelW = maxW + 2f * padX;
+        float maxPanelW = width - 24f * UI;
+        if (panelW > maxPanelW) {
+            panelW = maxPanelW;
+        }
+        float panelH = totalH + 2f * padY;
+        float panelX = (width - panelW) / 2f;
+        float centerY = height * 0.5f;
+        float panelY = centerY - panelH / 2f;
+
+        batch.setColor(HELP_PANEL_BORDER);
+        batch.draw(pixel, panelX - border, panelY - border, panelW + 2f * border, panelH + 2f * border);
+        batch.setColor(HELP_PANEL_FILL);
+        batch.draw(pixel, panelX, panelY, panelW, panelH);
+        batch.setColor(Color.WHITE);
+
+        float yTitle = centerY + (rowCount - 1) * lineStep * 0.5f;
+        optionsStubLayout.setColor(Color.WHITE);
+        optionsStubLayout.setText(PauseMenuScene.HOW_TO_PLAY_TITLE);
+        optionsStubLayout.layout();
+        batch.drawText(optionsStubLayout, width / 2f, yTitle);
+        float cy = yTitle - lineStep;
+        for (String line : lines) {
+            optionsStubLayout.setColor(new Color(0.84f, 0.84f, 0.80f, 1f));
+            optionsStubLayout.setText(line);
+            optionsStubLayout.layout();
+            batch.drawText(optionsStubLayout, width / 2f, cy);
+            cy -= lineStep;
+        }
+
+        helpFont.getData().setScale(scaleSave);
+        optionsStubLayout.setFont(menuFont);
+        optionsStubLayout.setColor(Color.WHITE);
+    }
+
     private void drawProgress() {
         float w = (int)(constants.getFloat( "bar.width" )*width);
         float cx = width/2;
@@ -320,11 +785,10 @@ public class LoadingScene implements Screen, InputProcessor {
         if (active) {
             update(delta);
             draw();
-
-            // We are are ready, notify our listener
-            if (isReady() && listener != null) {
-                listener.exitScreen(this, 0);
-            }
+        }
+        if (pendingExitToGame && listener != null) {
+            pendingExitToGame = false;
+            listener.exitScreen(this, 0);
         }
     }
 
@@ -395,157 +859,6 @@ public class LoadingScene implements Screen, InputProcessor {
      */
     public void setScreenListener(ScreenListener listener) {
         this.listener = listener;
-    }
-
-    // PROCESSING PLAYER INPUT
-    /**
-     * Called when the screen was touched or a mouse button was pressed.
-     *
-     * This method checks to see if the play button is available and if the click
-     * is in the bounds of the play button. If so, it signals the that the button
-     * has been pressed and is currently down. Any mouse button is accepted.
-     *
-     * @param screenX the x-coordinate of the mouse on the screen
-     * @param screenY the y-coordinate of the mouse on the screen
-     * @param pointer the button or touch finger number
-     * @return whether to hand the event to other listeners.
-     */
-    public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-        if (progress < 1.0f || pressState == 2) {
-            return true;
-        }
-
-        viewport.screenToCanvas(screenX, screenY, this.pointer);
-        float canvasX = this.pointer.x;
-        float canvasY = this.pointer.y;
-
-        // Play button is a circle.
-        // TODO replace with png of start/resume here
-//        float cx = width/2;
-//        float cy = (int)(constants.getFloat( "bar.height" )*height);
-//        float s = constants.getFloat( "button.scale" )*scale;
-//        float radius = s*internal.getEntry("play",Texture.class).getWidth()/2.0f;
-//        float dist = (screenX-cx)*(screenX-cx)+(screenY-cy)*(screenY-cy);
-//        if (dist < radius*radius) {
-//            pressState = 1;
-//        }
-        float regionWidth = width / 7f;
-        float regionHeight = height / 11f;
-        float cx = width / 2f;
-        float cy = height * 0.45f;
-
-        float minX = cx - regionWidth / 2f;
-        float maxX = cx + regionWidth / 2f;
-        float minY = cy - regionHeight / 2f;
-        float maxY = cy + regionHeight / 2f;
-
-        if (canvasX >= minX && canvasX <= maxX && canvasY >= minY && canvasY <= maxY) {
-            pressState = 1;
-        }
-        return false;
-    }
-
-    /**
-     * Called when a finger was lifted or a mouse button was released.
-     *
-     * This method checks to see if the play button is currently pressed down.
-     * If so, it signals the that the player is ready to go.
-     *
-     * @param screenX the x-coordinate of the mouse on the screen
-     * @param screenY the y-coordinate of the mouse on the screen
-     * @param pointer the button or touch finger number
-     * @return whether to hand the event to other listeners.
-     */
-    public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-        if (pressState == 1) {
-            pressState = 2;
-            return false;
-        }
-        return true;
-    }
-
-    // UNSUPPORTED METHODS FROM InputProcessor
-
-    /**
-     * Called when a key is pressed (UNSUPPORTED)
-     *
-     * @param keycode the key pressed
-     * @return whether to hand the event to other listeners.
-     */
-    public boolean keyDown(int keycode) {
-        return true;
-    }
-
-    /**
-     * Called when a key is typed (UNSUPPORTED)
-     *
-     * @param keycode the key typed
-     * @return whether to hand the event to other listeners.
-     */
-    public boolean keyTyped(char character) {
-        return true;
-    }
-
-    /**
-     * Called when a key is released (UNSUPPORTED)
-     *
-     * @param keycode the key released
-     * @return whether to hand the event to other listeners.
-     */
-    public boolean keyUp(int keycode) {
-        return true;
-    }
-
-    /**
-     * Called when the mouse was moved without any buttons being pressed. (UNSUPPORTED)
-     *
-     * @param screenX the x-coordinate of the mouse on the screen
-     * @param screenY the y-coordinate of the mouse on the screen
-     * @return whether to hand the event to other listeners.
-     */
-    public boolean mouseMoved(int screenX, int screenY) {
-        return true;
-    }
-
-    /**
-     * Called when the mouse wheel was scrolled. (UNSUPPORTED)
-     *
-     * @param dx the amount of horizontal scroll
-     * @param dy the amount of vertical scroll
-     *
-     * @return whether to hand the event to other listeners.
-     */
-    public boolean scrolled(float dx, float dy) {
-        return true;
-    }
-
-    /**
-     * Called when the touch gesture is cancelled (UNSUPPORTED)
-     *
-     * Reason may be from OS interruption to touch becoming a large surface such
-     * as the user cheek. Relevant on Android and iOS only. The button parameter
-     * will be Input.Buttons.LEFT on iOS.
-     *
-     * @param screenX the x-coordinate of the mouse on the screen
-     * @param screenY the y-coordinate of the mouse on the screen
-     * @param pointer the button or touch finger number
-     * @param button  the button
-     * @return whether to hand the event to other listeners.
-     */
-    public boolean touchCancelled(int screenX, int screenY, int pointer, int button) {
-        return true;
-    }
-
-    /**
-     * Called when the mouse or finger was dragged. (UNSUPPORTED)
-     *
-     * @param screenX the x-coordinate of the mouse on the screen
-     * @param screenY the y-coordinate of the mouse on the screen
-     * @param pointer the button or touch finger number
-     * @return whether to hand the event to other listeners.
-     */
-    public boolean touchDragged(int screenX, int screenY, int pointer) {
-        return true;
     }
 
 }

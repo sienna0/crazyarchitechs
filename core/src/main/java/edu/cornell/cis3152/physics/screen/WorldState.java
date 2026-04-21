@@ -23,6 +23,8 @@ public class WorldState {
     private boolean showRange;
     private boolean pauseIconHovered;
     private boolean pauseIconWasHovered;
+    private boolean settingsIconHovered;
+    private boolean settingsIconWasHovered;
 
     /**
      * Clears placed pictures, highlights, selection, range UI, and pause-hover flags so a
@@ -36,6 +38,8 @@ public class WorldState {
         showRange = false;
         pauseIconHovered = false;
         pauseIconWasHovered = false;
+        settingsIconHovered = false;
+        settingsIconWasHovered = false;
     }
 
     public Array<Picture> getPictures() {
@@ -92,5 +96,21 @@ public class WorldState {
 
     public void setPauseIconWasHovered(boolean pauseIconWasHovered) {
         this.pauseIconWasHovered = pauseIconWasHovered;
+    }
+
+    public boolean isSettingsIconHovered() {
+        return settingsIconHovered;
+    }
+
+    public void setSettingsIconHovered(boolean settingsIconHovered) {
+        this.settingsIconHovered = settingsIconHovered;
+    }
+
+    public boolean wasSettingsIconHovered() {
+        return settingsIconWasHovered;
+    }
+
+    public void setSettingsIconWasHovered(boolean settingsIconWasHovered) {
+        this.settingsIconWasHovered = settingsIconWasHovered;
     }
 }

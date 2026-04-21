@@ -102,13 +102,13 @@ public class FrogRoot extends Game implements ScreenListener {
     public void dispose() {
         // Call dispose on our children
         setScreen(null);
-        if (loading != null) {
-            loading.dispose();
-            loading = null;
-        }
         if (gameMode != null) {
             gameMode.dispose();
             gameMode = null;
+        }
+        if (loading != null) {
+            loading.dispose();
+            loading = null;
         }
 
         if (batch != null) {
@@ -159,12 +159,20 @@ public class FrogRoot extends Game implements ScreenListener {
     public void exitScreen(Screen screen, int exitCode) {
         if (screen == loading) {
             directory = loading.getAssets();
-            loading.dispose();
-            loading = null;
-
-            gameMode = new GameMode(directory, batch, viewport);
-            gameMode.setScreenListener(this);
+            if (gameMode == null) {
+                gameMode = new GameMode(directory, batch, viewport);
+                gameMode.setScreenListener(this);
+            }
             setScreen(gameMode);
+        } else if (screen == gameMode) {
+            if (loading != null) {
+                loading.prepareReturnFromGame();
+                setScreen(loading);
+            } else {
+                loading = new LoadingScene(directory, batch, viewport, 1);
+                loading.setScreenListener(this);
+                setScreen(loading);
+            }
         }
     }
 

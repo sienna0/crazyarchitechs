@@ -30,6 +30,7 @@ public class GameMode implements Screen, ScreenListener {
     private LevelController levelController;
     private LevelSelectScene levelSelectScene;
     private PauseMenuScene pauseMenuScene;
+    private GameplayOptionsOverlay gameplayOptionsOverlay;
     private WinScene winScene;
     private LoseScene loseScene;
 
@@ -41,6 +42,8 @@ public class GameMode implements Screen, ScreenListener {
     private boolean paused;
     private boolean showingWin;
     private boolean showingLose;
+    /** Level select Menu/Esc: defer {@link ScreenListener#exitScreen} until after {@link #draw()} (avoid disposing mid-render). */
+    private boolean pendingReturnToTitle;
 
 //    private float playerX;
 ////    private float playerY;
@@ -60,6 +63,7 @@ public class GameMode implements Screen, ScreenListener {
         this.levelController = new LevelController(assets, batch, viewport);
         this.levelSelectScene = new LevelSelectScene(assets, batch, viewport, levelController.getTotalLevels());
         pauseMenuScene = new PauseMenuScene(assets, batch, viewport);
+        gameplayOptionsOverlay = new GameplayOptionsOverlay(assets, batch, viewport);
         winScene = new WinScene(assets, batch, viewport);
         loseScene = new LoseScene(assets, batch, viewport);
 
@@ -131,11 +135,26 @@ public class GameMode implements Screen, ScreenListener {
                     levelController.getCurrentScene().show();
                 }
             } else if (levelSelectScene.consumeExitRequested() && listener != null) {
-                listener.exitScreen(this, 0);
+                pendingReturnToTitle = true;
             }
         } else {
-            boolean pauseToggle = Gdx.input.isKeyJustPressed(Input.Keys.P);
-            if (!pauseToggle && levelController.getCurrentScene() != null) {
+            if (gameplayOptionsOverlay.isOpen()) {
+                gameplayOptionsOverlay.update();
+                if (!gameplayOptionsOverlay.isOpen() && levelController.getCurrentScene() != null) {
+                    levelController.getCurrentScene().setGamePaused(false);
+                }
+            } else if (levelController.getCurrentScene() != null
+                    && levelController.getCurrentScene().consumeSettingsClick()) {
+                gameplayOptionsOverlay.show();
+                levelController.getCurrentScene().setGamePaused(true);
+            }
+
+            boolean blockPauseForOptions = gameplayOptionsOverlay.isOpen();
+            boolean pauseToggle = !blockPauseForOptions && Gdx.input.isKeyJustPressed(Input.Keys.P);
+            if (!pauseToggle && !blockPauseForOptions) {
+                pauseToggle = Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE);
+            }
+            if (!pauseToggle && !blockPauseForOptions && levelController.getCurrentScene() != null) {
                 pauseToggle = levelController.getCurrentScene().consumePauseClick();
             }
             if (pauseToggle) {
@@ -197,7 +216,7 @@ public class GameMode implements Screen, ScreenListener {
                 }
             }
             PhysicsScene currentScene = levelController.getCurrentScene();
-            if (currentScene instanceof LevelBaseScene levelScene && levelScene.consumeHazardRestart()) {
+            if (!blockPauseForOptions && currentScene instanceof LevelBaseScene levelScene && levelScene.consumeHazardRestart()) {
                 showingLose = false;
                 loseScene.hide();
                 levelController.loadLevel(levelController.getCurrentLevel());
@@ -217,6 +236,9 @@ public class GameMode implements Screen, ScreenListener {
             PhysicsScene currentScene = levelController.getCurrentScene();
             if (currentScene != null) {
                 currentScene.render(Gdx.graphics.getDeltaTime());
+            }
+            if (gameplayOptionsOverlay.isOpen()) {
+                gameplayOptionsOverlay.draw();
             }
             if (paused) {
                 pauseMenuScene.render(Gdx.graphics.getDeltaTime());
@@ -241,6 +263,10 @@ public class GameMode implements Screen, ScreenListener {
             update(delta);
             draw();
         }
+        if (pendingReturnToTitle && listener != null) {
+            pendingReturnToTitle = false;
+            listener.exitScreen(this, 0);
+        }
     }
 
     /**
@@ -263,6 +289,9 @@ public class GameMode implements Screen, ScreenListener {
         }
         if (levelController != null && levelController.getCurrentScene() != null) {
             levelController.getCurrentScene().resize(width, height);
+        }
+        if (gameplayOptionsOverlay != null) {
+            gameplayOptionsOverlay.resize(width, height);
         }
     }
 
@@ -299,9 +328,21 @@ public class GameMode implements Screen, ScreenListener {
 
     @Override
     public void dispose() {
+        if (levelController != null) {
+            levelController.dispose();
+            levelController = null;
+        }
         if (levelSelectScene != null) {
             levelSelectScene.dispose();
             levelSelectScene = null;
+        }
+        if (pauseMenuScene != null) {
+            pauseMenuScene.dispose();
+            pauseMenuScene = null;
+        }
+        if (gameplayOptionsOverlay != null) {
+            gameplayOptionsOverlay.dispose();
+            gameplayOptionsOverlay = null;
         }
         if (winScene != null) {
             winScene.dispose();

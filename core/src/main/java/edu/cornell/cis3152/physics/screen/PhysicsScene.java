@@ -102,10 +102,17 @@ public abstract class PhysicsScene implements Screen {
 
     protected boolean gamePaused;
     protected boolean pauseClicked;
+    protected boolean settingsClicked;
 
     public boolean consumePauseClick() {
         boolean val = pauseClicked;
         pauseClicked = false;
+        return val;
+    }
+
+    public boolean consumeSettingsClick() {
+        boolean val = settingsClicked;
+        settingsClicked = false;
         return val;
     }
     /**
@@ -348,6 +355,14 @@ public abstract class PhysicsScene implements Screen {
      *
      * @return whether to process the update loop
      */
+    /**
+     * If true, Escape / {@link InputController#didExit()} calls {@link #EXIT_QUIT}.
+     * Override and return {@code true} only if a scene should return to the parent menu on Escape.
+     */
+    protected boolean escapeQuitsViaExitScreen() {
+        return false;
+    }
+
     public boolean preUpdate(float dt) {
         InputController input = InputController.getInstance();
         input.sync(bounds, scale, viewport, camera);
@@ -366,7 +381,7 @@ public abstract class PhysicsScene implements Screen {
         }
 
         // Now it is time to maybe switch screens.
-        if (input.didExit()) {
+        if (input.didExit() && escapeQuitsViaExitScreen()) {
             pause();
             listener.exitScreen(this, EXIT_QUIT);
             return false;

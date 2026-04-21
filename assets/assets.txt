@@ -1,6 +1,14 @@
 META-INF/MANIFEST.MF
 assets.json
+loading/GameLogo_animated.gif
 loading/boot.json
+loading/main_menu_background.png
+loading/menu_options.png
+loading/menu_play.png
+loading/options_help.png
+loading/options_music.png
+loading/options_sound_off.png
+loading/options_sound_on.png
 loading/play.png
 loading/progress.png
 loading/splash.png
@@ -27,6 +35,7 @@ platform/picture_ice_with_cloud.png
 platform/picture_ice_with_honey.png
 platform/plop.wav
 platform/rock.png
+platform/settings_icon.png
 platform/tileset.png
 platform/walltile.png
 platform/zuko.png
@@ -58,6 +67,10 @@ shared/levelbackgroundfuture.png
 shared/lily1.png
 shared/lily2.png
 shared/lily3.png
+shared/pause_help.png
+shared/pause_menu.png
+shared/pause_restart.png
+shared/pause_resume.png
 shared/pulley_carry.png
 shared/pulley_string.png
 shared/pulley_top.png

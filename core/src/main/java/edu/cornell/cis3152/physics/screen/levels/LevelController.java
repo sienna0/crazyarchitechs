@@ -141,4 +141,12 @@ public class LevelController {
     public int getTotalLevels() {
         return totalLevels;
     }
+
+    /** Release the current level scene (e.g. when returning to the title screen). */
+    public void dispose() {
+        if (currentScene != null) {
+            currentScene.dispose();
+            currentScene = null;
+        }
+    }
 }

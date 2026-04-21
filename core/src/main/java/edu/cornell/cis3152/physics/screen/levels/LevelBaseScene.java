@@ -17,6 +17,7 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.utils.ObjectSet;
 import edu.cornell.cis3152.physics.CanvasRender;
+import edu.cornell.cis3152.physics.GameAudio;
 import edu.cornell.cis3152.physics.InputController;
 import edu.cornell.cis3152.physics.screen.PhysicsScene;
 import edu.cornell.cis3152.physics.screen.WorldState;
@@ -49,8 +50,6 @@ import java.util.List;
  */
 public class LevelBaseScene extends PhysicsScene implements ContactListener {
     private static final float UI = CanvasRender.layoutScale();
-    private static final float PAUSE_ICON_SIZE = 56.0f * UI;
-    private static final float PAUSE_ICON_MARGIN = 15f * UI;
     private static final float TRANSITION_ENTRY_X = 1.25f;
     private static final float TRANSITION_WALK_MULTIPLIER = 0.4f;
     private static final float CAMERA_ZOOM = 0.75f;
@@ -59,6 +58,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     private Texture backgroundTexture;
 
     private Texture slotTexture;
+    private Texture settingsIconTexture;
     private Texture pauseIconTexture;
     /** The jump sound. We only want to play once. */
     private SoundEffect jumpSound;
@@ -127,6 +127,9 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         if (backgroundTexture == null) {
             backgroundTexture = requireTexture("shared-background", "shared/background.png");
         }
+        if (settingsIconTexture == null) {
+            settingsIconTexture = requireTexture("platform-settings", "platform/settings_icon.png");
+        }
         if (pauseIconTexture == null) {
             pauseIconTexture = requireTexture("platform-pause", "platform/pause_icon.png");
         }
@@ -162,7 +165,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
                 stuckPictureTextures = loadStuckPictureTextures();
             }
             renderer = new LevelRenderer(
-                    worldState, slotTexture, pauseIconTexture, markerPixel,
+                    worldState, slotTexture, settingsIconTexture, pauseIconTexture, markerPixel,
                     stuckPictureTextures,
                     stickDist, takeDist
             );
@@ -448,20 +451,40 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         updateGooAnimation(dt);
         photoSystem.update(dt);
         viewport.screenToCanvas(Gdx.input.getX(), Gdx.input.getY(), worldState.getPauseMouseCache());
-        float iconSize = PAUSE_ICON_SIZE;
-        float iconX = viewport.getWidth() - iconSize - PAUSE_ICON_MARGIN;
-        float iconY = viewport.getHeight() - iconSize - PAUSE_ICON_MARGIN;
+        float pauseRight = viewport.getWidth() - LevelHud.margin();
+        float pauseTop = viewport.getHeight() - LevelHud.margin();
         Vector2 pauseMouseCache = worldState.getPauseMouseCache();
-        boolean pauseIconHovered = pauseMouseCache.x >= iconX && pauseMouseCache.x <= iconX + iconSize
-                && pauseMouseCache.y >= iconY && pauseMouseCache.y <= iconY + iconSize;
+        float pauseHit = LevelHud.hoverIconSize() * LevelHud.iconDrawScale();
+        float pauseLeft = pauseRight - pauseHit;
+        float pauseBottom = pauseTop - pauseHit;
+        boolean pauseIconHovered = pauseMouseCache.x >= pauseLeft && pauseMouseCache.x <= pauseRight
+                && pauseMouseCache.y >= pauseBottom && pauseMouseCache.y <= pauseTop;
+
+        float settingsHit = LevelHud.hoverIconSize() * LevelHud.iconDrawScale();
+        float settingsRight = pauseLeft - LevelHud.iconGap();
+        float settingsLeft = settingsRight - settingsHit;
+        float settingsBottom = pauseTop - settingsHit;
+        boolean settingsIconHovered = settingsIconTexture != null
+                && pauseMouseCache.x >= settingsLeft && pauseMouseCache.x <= settingsRight
+                && pauseMouseCache.y >= settingsBottom && pauseMouseCache.y <= pauseTop;
+        worldState.setSettingsIconHovered(settingsIconHovered);
+        if (settingsIconHovered && !worldState.wasSettingsIconHovered()) {
+            SoundEffectManager.getInstance().play("hover", hoverSound,
+                    GameAudio.effectiveSfxVolume(volume * 0.4f));
+        }
+        worldState.setSettingsIconWasHovered(settingsIconHovered);
+
         worldState.setPauseIconHovered(pauseIconHovered);
 
         if (pauseIconHovered && !worldState.wasPauseIconHovered()) {
-            SoundEffectManager.getInstance().play("hover", hoverSound, volume * 0.4f);
+            SoundEffectManager.getInstance().play("hover", hoverSound,
+                    GameAudio.effectiveSfxVolume(volume * 0.4f));
         }
         worldState.setPauseIconWasHovered(pauseIconHovered);
 
-        if (pauseIconHovered && Gdx.input.justTouched()) {
+        if (settingsIconHovered && Gdx.input.justTouched()) {
+            settingsClicked = true;
+        } else if (pauseIconHovered && Gdx.input.justTouched()) {
             pauseClicked = true;
         }
 
@@ -492,7 +515,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         photoSystem.applyLiftSprings(sprites);
         avatar.applyForce();
         if (avatar.isJumping()) {
-            SoundEffectManager.getInstance().play("jump", jumpSound, volume);
+            SoundEffectManager.getInstance().play("jump", jumpSound, GameAudio.effectiveSfxVolume(volume));
             avatar.startJumpAnimation();
         }
     }
