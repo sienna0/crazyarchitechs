@@ -145,6 +145,13 @@ public class Zuko extends ObstacleSprite {
         animator.startJumpAnimation();
     }
 
+    /**
+     * Starts Zuko's death melt animation
+     */
+    public void startDeathMeltAnimation() {
+        animator.startDeathMeltAnimation();
+    }
+
 
 
     /**
@@ -302,7 +309,7 @@ public class Zuko extends ObstacleSprite {
             setTexture(animator.getBaseTexture());
         }
 
-        if (animator.isPlayingJump()) {
+        if (animator.isPlayingJump() && !animator.isPlayingPhoto() && !animator.isPlayingDeathMelt()) {
             float yOffset = (jumpDrawHeight - drawSize) / 2.0f;
             mesh.set(-drawSize/2.0f, -jumpDrawHeight/2.0f + yOffset, drawSize, jumpDrawHeight);
         } else {
@@ -369,6 +376,10 @@ public class Zuko extends ObstacleSprite {
 
     public void setWalkAnimation(Texture sheet, int rows, int cols, int size) {
         animator.setWalkAnimation(sheet, rows, cols, size);
+    }
+
+    public void setDeathMeltAnimation(Texture sheet, int rows, int cols, int size) {
+        animator.setDeathMeltAnimation(sheet, rows, cols, size);
     }
 
     public void setTongueSegment(Texture texture) {

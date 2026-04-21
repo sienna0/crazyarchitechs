@@ -32,6 +32,8 @@ platform/walltile.png
 platform/zuko.png
 platform/zuko2.png
 platform/zuko2walk.png
+platform/zukodead.png
+platform/zukodeathmelt.png
 platform/zukojump.png
 platform/zukojump1.png
 platform/zukojumpupdated.png

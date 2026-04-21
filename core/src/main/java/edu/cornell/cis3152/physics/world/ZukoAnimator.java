@@ -35,6 +35,17 @@ public class ZukoAnimator {
     /** The duration of each walk frame */
     private float walkFrameDuration = 0.14f;
 
+    /** The SpriteSheet for Zuko's melting death animation */
+    private SpriteSheet deathMeltSheet;
+    /** The duration of the melting death animation */
+    private float deathMeltAnimationTime = 0f;
+    /** The duration of each melting death frame */
+    private float deathMeltFrameDuration = 0.065f;
+    /** Whether the animation is playing or not */
+    private boolean playingDeathMelt = false;
+    /** Animation delay **/
+    private int deathDelay = 6;
+
     /** The Texture of one segment of Zuko's tongue */
     private Texture tongueSegment;
     /** The progress of the tongue to the target. 0 = fully retracted, 1 = fully extended */
@@ -111,6 +122,24 @@ public class ZukoAnimator {
     }
 
     /**
+     * Starts Zuko's jump animation
+     */
+    public void startDeathMeltAnimation() {
+        playingDeathMelt = true;
+        deathMeltAnimationTime = 0f;
+    }
+
+    /**
+     * Sets the jump animation SpriteSheet for Zuko
+     * @param sheet
+     * @param rows
+     * @param cols
+     */
+    public void setDeathMeltAnimation(Texture sheet, int rows, int cols, int size) {
+        deathMeltSheet = new SpriteSheet(sheet, rows, cols, size);
+    }
+
+    /**
      * Sets the tongue segment texture
      */
     public void setTongueSegment(Texture texture) {
@@ -160,7 +189,22 @@ public class ZukoAnimator {
     }
 
     public void update(float dt, boolean isGrounded, float velocityX) {
+        if (playingDeathMelt && deathMeltSheet != null) {
+            deathMeltAnimationTime += dt;
+            int frame = (int)(deathMeltAnimationTime / deathMeltFrameDuration);
+            if (frame >= deathMeltSheet.getSize()) {
+                if (deathDelay > 0) {
+                    deathDelay--;
+                } else {
+                    playingDeathMelt = false;
+                    deathMeltSheet.setFrame(0);
+                }
+            } else {
+                deathMeltSheet.setFrame(frame);
+            }
+        }
         if (playingPhoto && photoSheet != null) {
+            playingJump = false;
             photoAnimationTime += dt;
             int frame = (int)(photoAnimationTime / photoFrameDuration);
             if (frame >= photoSheet.getSize()) {
@@ -214,10 +258,15 @@ public class ZukoAnimator {
     public SpriteSheet getActiveSheet(boolean isGrounded, float velocityX) {
         if (playingPhoto && photoSheet != null) return photoSheet;
         if (playingJump && jumpSheet != null) return jumpSheet;
+        if (playingDeathMelt && deathMeltSheet != null) return deathMeltSheet;
         if (walkSheet != null && isGrounded && Math.abs(velocityX) > 0.1f) return walkSheet;
         return null;
     }
 
     public boolean isPlayingJump() { return playingJump; }
+
+    public boolean isPlayingDeathMelt() { return playingDeathMelt; }
+
+    public boolean isPlayingPhoto() { return playingPhoto; }
 
 }

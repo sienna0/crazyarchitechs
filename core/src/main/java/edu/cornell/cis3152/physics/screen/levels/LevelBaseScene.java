@@ -94,6 +94,9 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     private float gooAnimFrameDuration = 0.26f;
 
     private boolean pendingHazardRestart = false;
+    private float hazardTimer = 0f;
+    private boolean hazardTriggered = false;
+    private static final float HAZARD_DELAY = 0.9f;
     private boolean enteringFromPreviousLevel = false;
     private float entryTargetX = 0f;
     private float entryTargetY = 0f;
@@ -428,6 +431,17 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
      */
     @Override
     public void update(float dt) {
+        if (hazardTriggered) {
+            hazardTimer += dt;
+            avatar.setMovement(0f);
+            avatar.setJumping(false);
+
+            if (hazardTimer >= HAZARD_DELAY) {
+                pendingHazardRestart = true;
+                hazardTriggered = false;
+            }
+            return;
+        }
         updateGooAnimation(dt);
         photoSystem.update(dt);
         viewport.screenToCanvas(Gdx.input.getX(), Gdx.input.getY(), worldState.getPauseMouseCache());
@@ -585,7 +599,14 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             // See if surface is fatal
             if ((bd1 == avatar && bd2 instanceof Surface surface && surface.isFatal()) ||
                     (bd2 == avatar && bd1 instanceof Surface surface2 && surface2.isFatal())) {
-                pendingHazardRestart = true;
+                if (!hazardTriggered && !pendingHazardRestart) {
+                    hazardTriggered = true;
+                    hazardTimer = 0f;
+                    avatar.startDeathMeltAnimation();
+                    avatar.setMovement(0f);
+                    avatar.setJumping(false);
+                    avatar.stopMotion();
+                }
                 return;
             }
 
@@ -696,8 +717,10 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
 
     /** Returns whether Zuko is standing on a fatal tile */
     public boolean consumeHazardRestart() {
-        boolean result = pendingHazardRestart;
-        pendingHazardRestart = false;
-        return result;
+        if (pendingHazardRestart) {
+            pendingHazardRestart = false;
+            return true;
+        }
+        return false;
     }
 }
