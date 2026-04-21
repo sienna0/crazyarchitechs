@@ -15,7 +15,6 @@ package edu.cornell.cis3152.physics;
 
 import com.badlogic.gdx.*;
 import edu.cornell.cis3152.physics.screen.LoadingScene;
-import edu.cornell.cis3152.physics.screen.PhysicsScene;
 import edu.cornell.gdiac.util.*;
 import edu.cornell.gdiac.assets.*;
 import edu.cornell.gdiac.graphics.*;
@@ -32,6 +31,7 @@ import edu.cornell.gdiac.graphics.*;
  * architecture specification.
  */
 public class FrogRoot extends Game implements ScreenListener {
+
     /** AssetManager to load game assets (textures, sounds, etc.) */
     AssetDirectory directory;
     /** Shared sprite batch for drawing */
@@ -65,6 +65,33 @@ public class FrogRoot extends Game implements ScreenListener {
         loading = new LoadingScene("assets.json", batch, viewport, 1);
         loading.setScreenListener(this);
         setScreen(loading);
+    }
+
+    /** Sets windowed size on desktop (exits fullscreen if needed). Temporary until display options exist. */
+    private void setDesktopWindowSize(int width, int height) {
+        if (Gdx.app.getType() != Application.ApplicationType.Desktop) {
+            return;
+        }
+        Gdx.graphics.setWindowedMode(width, height);
+    }
+
+    /**
+     * Desktop window presets (Mac vs Windows logical sizes via {@link DesktopDisplayLayout}):
+     * {@code Y} 640×360, {@code U} “720p-class”, {@code I} “1080p-class”.
+     */
+    @Override
+    public void render() {
+        if (Gdx.input.isKeyJustPressed(Input.Keys.Y)) {
+            setDesktopWindowSize(
+                    DesktopDisplayLayout.smallWindowWidth(), DesktopDisplayLayout.smallWindowHeight());
+        } else if (Gdx.input.isKeyJustPressed(Input.Keys.U)) {
+            setDesktopWindowSize(
+                    DesktopDisplayLayout.mediumWindowWidth(), DesktopDisplayLayout.mediumWindowHeight());
+        } else if (Gdx.input.isKeyJustPressed(Input.Keys.I)) {
+            setDesktopWindowSize(
+                    DesktopDisplayLayout.largeWindowWidth(), DesktopDisplayLayout.largeWindowHeight());
+        }
+        super.render();
     }
 
     /**

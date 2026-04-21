@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Affine2;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import edu.cornell.cis3152.physics.CanvasRender;
 import edu.cornell.cis3152.physics.screen.WorldState;
@@ -22,18 +23,25 @@ import edu.cornell.gdiac.physics2.Obstacle;
  * Uses screen-space coordinates for HUD elements.
  */
 class LevelRenderer {
-    /** World-space size for stuck combo art ({@code picture_*_with_*.png}). */
-    private static final float STUCK_COMBO_SIZE = 34.0f;
-    /** Legacy Polaroid inner size if combo art is unavailable. */
-    private static final float STUCK_PICTURE_SIZE = 22.0f;
+    private static final float UI = CanvasRender.layoutScale();
+
+    /**
+     * Stuck sticker span relative to the block's drawable mesh (min of width/height in world pixels).
+     * Keeps the icon similar to vanilla blocks at any resolution.
+     */
+    private static final float STUCK_STICKER_BLOCK_FRACTION = 0.40f;
+
+    /** Legacy Polaroid reference inner width (world px at old tuning); borders scale with this. */
+    private static final float STUCK_PICTURE_REF_INNER = 22.0f;
     private static final float STUCK_PICTURE_BORDER = 2.0f;
     private static final float STUCK_PICTURE_INNER_PADDING = 4.0f;
-    private static final float INVENTORY_BAR_HEIGHT = 56.0f;
-    private static final float INVENTORY_PADDING = 8.0f;
+    private static final float INVENTORY_BAR_HEIGHT = 56.0f * UI;
+    private static final float INVENTORY_PADDING = 8.0f * UI;
     /** Slot size is capped so the HUD stays reasonable with few inventory slots. */
-    private static final float MAX_SLOT_SIZE = 40.0f;
-    private static final float PAUSE_ICON_SIZE = 56.0f;
-    private static final float PAUSE_ICON_HOVER_SIZE = 64.0f;
+    private static final float MAX_SLOT_SIZE = 40.0f * UI;
+    private static final float PAUSE_ICON_SIZE = 56.0f * UI;
+    private static final float PAUSE_ICON_HOVER_SIZE = 64.0f * UI;
+    private static final float PAUSE_ICON_MARGIN = 15f * UI;
 
     private final WorldState worldState;
     private final Texture slotTexture;
@@ -102,8 +110,8 @@ class LevelRenderer {
         if (pauseIconTexture != null) {
             float baseSize = PAUSE_ICON_SIZE;
             float iconSize = worldState.isPauseIconHovered() ? PAUSE_ICON_HOVER_SIZE : baseSize;
-            float baseX = viewport.getWidth() - baseSize - 15f;
-            float baseY = viewport.getHeight() - baseSize - 15f;
+            float baseX = viewport.getWidth() - baseSize - PAUSE_ICON_MARGIN;
+            float baseY = viewport.getHeight() - baseSize - PAUSE_ICON_MARGIN;
             float iconX = baseX - (iconSize - baseSize) / 2f;
             float iconY = baseY - (iconSize - baseSize) / 2f;
             batch.draw(pauseIconTexture, iconX, iconY, iconSize, iconSize);
@@ -191,6 +199,18 @@ class LevelRenderer {
     }
 
     /**
+     * World-space sticker size for a block: fraction of its mesh so it scales with {@code physicsUnits} and art size.
+     */
+    private float computeStuckStickerSize(GameObject target) {
+        Rectangle b = target.getMesh().computeBounds();
+        float span = Math.min(Math.abs(b.width), Math.abs(b.height));
+        if (span < 1e-3f) {
+            span = 28f * UI;
+        }
+        return span * STUCK_STICKER_BLOCK_FRACTION;
+    }
+
+    /**
      * Draws combo art on surfaces that have a stuck picture (e.g. {@code picture_cloud_with_ice.png}).
      */
     private void drawPlacedPictures(SpriteBatch batch) {
@@ -207,10 +227,12 @@ class LevelRenderer {
             float centerY = obstacle.getY() * units;
             float rotation = obstacle.getAngle() * MathUtils.radiansToDegrees;
 
+            float stickerInner = computeStuckStickerSize(target);
+
             Texture combo = resolveStuckComboTexture(subject, target);
             if (combo != null) {
                 batch.setColor(Color.WHITE);
-                float sz = STUCK_COMBO_SIZE;
+                float sz = stickerInner * (34f / STUCK_PICTURE_REF_INNER) * 0.82f;
                 batch.draw(combo,
                         centerX - (sz * 0.5f),
                         centerY - (sz * 0.5f),
@@ -230,13 +252,17 @@ class LevelRenderer {
                 continue;
             }
 
-            drawStuckPictureLayer(batch, centerX, centerY, STUCK_PICTURE_SIZE + (STUCK_PICTURE_BORDER * 2.0f), Color.BLACK, rotation);
-            drawStuckPictureLayer(batch, centerX, centerY, STUCK_PICTURE_SIZE, new Color(0.96f, 0.95f, 0.91f, 1.0f), rotation);
-            drawStuckPictureLayer(batch, centerX, centerY, STUCK_PICTURE_SIZE - (STUCK_PICTURE_INNER_PADDING * 2.0f), picture.getColor(), rotation);
+            float k = stickerInner / STUCK_PICTURE_REF_INNER;
+            float outer = stickerInner + (STUCK_PICTURE_BORDER * 2.0f * k);
+            float mid = stickerInner;
+            float innerTint = Math.max(4f * UI, stickerInner - (STUCK_PICTURE_INNER_PADDING * 2.0f * k));
+            drawStuckPictureLayer(batch, centerX, centerY, outer, Color.BLACK, rotation);
+            drawStuckPictureLayer(batch, centerX, centerY, mid, new Color(0.96f, 0.95f, 0.91f, 1.0f), rotation);
+            drawStuckPictureLayer(batch, centerX, centerY, innerTint, picture.getColor(), rotation);
 
             Texture subjectTexture = picture.getTexture();
             if (subjectTexture != null) {
-                float textureSize = STUCK_PICTURE_SIZE - (STUCK_PICTURE_INNER_PADDING * 2.0f) - 4.0f;
+                float textureSize = Math.max(2f * UI, innerTint - (4.0f * k));
                 batch.setColor(Color.WHITE);
                 batch.draw(subjectTexture,
                         centerX - (textureSize * 0.5f),
@@ -297,7 +323,8 @@ class LevelRenderer {
         float barX = viewport.getWidth() / 2 - barWidth / 2;
         float startX = barX + padding;
         float startY = barY + (barHeight - slotSize) / 2f;
-        float selectedRaise = 8f;
+        float selectedRaise = 8f * UI;
+        float slotInset = 4f * UI;
 
         for (int ii = 0; ii < size; ii++) {
             float slotX = startX + ii * (slotSize + padding);
@@ -310,7 +337,8 @@ class LevelRenderer {
                 batch.setColor(picture.getColor());
                 batch.draw(slotTexture, slotX, slotY, slotSize, slotSize);
                 batch.setColor(Color.WHITE);
-                batch.draw(picture.getSubject().getTexture(), slotX + 4f, slotY + 4f, slotSize - 8f, slotSize - 8f);
+                batch.draw(picture.getSubject().getTexture(), slotX + slotInset, slotY + slotInset,
+                        slotSize - 2f * slotInset, slotSize - 2f * slotInset);
             }
         }
         batch.setColor(Color.WHITE);

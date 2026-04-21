@@ -66,7 +66,7 @@ public class PauseMenuScene implements Screen {
         pm.fill();
         pixel = new Texture(pm);
         pm.dispose();
-        font.getData().setScale(0.5f);
+        font.getData().setScale(0.5f * CanvasRender.layoutScale());
         titleLayout = new TextLayout();
         titleLayout.setFont(font);
         titleLayout.setAlignment(TextAlign.middleCenter);
@@ -110,7 +110,7 @@ public class PauseMenuScene implements Screen {
             if (escapePressed && !escapePrev) {
                 showingControls = false;
             }
-            if (clickPressed && !clickPrev && isBackButtonHovered()) {
+            if (clickPressed && !clickPrev && isBackButtonHovered(CanvasRender.layoutScale())) {
                 showingControls = false;
             }
         } else {
@@ -131,14 +131,14 @@ public class PauseMenuScene implements Screen {
             }
 
             if (clickPressed && !clickPrev) {
-                int clicked = getHoveredIndex();
+                int clicked = getHoveredIndex(CanvasRender.layoutScale());
                 if (clicked == 2) {
                     showingControls = true;
                 } else if (clicked >= 0) {
                     chosenOption = clicked < 2 ? clicked : clicked - 1;
                 }
             } else {
-                int hovered = getHoveredIndex();
+                int hovered = getHoveredIndex(CanvasRender.layoutScale());
                 if (hovered >= 0) selectedIndex = hovered;
             }
         }
@@ -149,7 +149,8 @@ public class PauseMenuScene implements Screen {
     }
 
     private void draw() {
-        font.getData().setScale(0.5f);
+        float UI = CanvasRender.layoutScale();
+        font.getData().setScale(0.5f * UI);
         camera.update();
         viewport.apply();
         batch.begin(camera);
@@ -163,22 +164,22 @@ public class PauseMenuScene implements Screen {
         batch.draw(pixel, panelX, panelY, panelWidth, panelHeight);
 
         if (showingControls) {
-            drawControls();
+            drawControls(UI);
         } else {
-            drawButtons( panelHeight);
+            drawButtons(panelHeight, UI);
         }
 
         batch.end();
         viewport.reset();
     }
 
-    private void drawButtons( float panelHeight) {
+    private void drawButtons(float panelHeight, float UI) {
         titleLayout.setText("PAUSED");
         titleLayout.layout();
         batch.drawText(titleLayout, width / 2f, (float) (panelHeight * 0.85));
 
         for (int i = 0; i < LABELS.length; i++) {
-            Rectangle b = getButtonBounds(i);
+            Rectangle b = getButtonBounds(i, UI);
             boolean selected = i == selectedIndex;
             batch.setColor(selected
                     ? new Color(0.80f, 0.31f, 0.18f, 1f)
@@ -188,26 +189,27 @@ public class PauseMenuScene implements Screen {
             optionLayout.setColor(selected ? Color.WHITE : new Color(0.84f, 0.84f, 0.80f, 1f));
             optionLayout.setText(LABELS[i]);
             optionLayout.layout();
-            batch.drawText(optionLayout, width / 2f, b.y + b.height / 2f + 18f);
+            batch.drawText(optionLayout, width / 2f, b.y + b.height / 2f + 18f * UI);
         }
     }
 
-     private void drawControls() {
+    private void drawControls(float UI) {
         titleLayout.setText("HOW TO PLAY");
         titleLayout.layout();
         batch.drawText(titleLayout, width / 2f, height * 0.85f);
 
         float cy = height * 0.75f;
+        float lineStep = 40f * UI;
         for (String line : CONTROLS) {
             optionLayout.setColor(new Color(0.84f, 0.84f, 0.80f, 1f));
             optionLayout.setText(line);
             optionLayout.layout();
             batch.drawText(optionLayout, width / 2f, cy);
-            cy -= 40f;
+            cy -= lineStep;
         }
 
-        Rectangle back = getBackButtonBounds();
-        boolean hovered = isBackButtonHovered();
+        Rectangle back = getBackButtonBounds(UI);
+        boolean hovered = isBackButtonHovered(UI);
         batch.setColor(hovered
                 ? new Color(0.80f, 0.31f, 0.18f, 1f)
                 : new Color(0.23f, 0.29f, 0.33f, 0.9f));
@@ -216,13 +218,13 @@ public class PauseMenuScene implements Screen {
         optionLayout.setColor(Color.WHITE);
         optionLayout.setText("< BACK");
         optionLayout.layout();
-        batch.drawText(optionLayout, back.x + back.width / 2f, back.y + back.height / 2f + 18f);
+        batch.drawText(optionLayout, back.x + back.width / 2f, back.y + back.height / 2f + 18f * UI);
     }
 
-    private Rectangle getButtonBounds(int index) {
-        float bw = Math.min(width * 0.35f, 350f);
-        float bh = 60f;
-        float gap = 15f;
+    private Rectangle getButtonBounds(int index, float UI) {
+        float bw = Math.min(width * 0.35f, 350f * UI);
+        float bh = 60f * UI;
+        float gap = 15f * UI;
         float totalH = LABELS.length * bh + (LABELS.length - 1) * gap;
         float startY = height / 2f + totalH / 2f;
         float x = (width - bw) / 2f;
@@ -230,20 +232,20 @@ public class PauseMenuScene implements Screen {
         return new Rectangle(x, y, bw, bh);
     }
 
-    private Rectangle getBackButtonBounds() {
-        return new Rectangle(40f, 40f, 160f, 50f);
-
+    private Rectangle getBackButtonBounds(float UI) {
+        float m = 40f * UI;
+        return new Rectangle(m, m, 160f * UI, 50f * UI);
     }
 
-    private boolean isBackButtonHovered() {
+    private boolean isBackButtonHovered(float UI) {
         viewport.screenToCanvas(Gdx.input.getX(), Gdx.input.getY(), pointer);
-        return getBackButtonBounds().contains(pointer.x, pointer.y);
+        return getBackButtonBounds(UI).contains(pointer.x, pointer.y);
     }
 
-    private int getHoveredIndex() {
+    private int getHoveredIndex(float UI) {
         viewport.screenToCanvas(Gdx.input.getX(), Gdx.input.getY(), pointer);
         for (int i = 0; i < LABELS.length; i++) {
-            if (getButtonBounds(i).contains(pointer.x, pointer.y)) return i;
+            if (getButtonBounds(i, UI).contains(pointer.x, pointer.y)) return i;
         }
         return -1;
     }
