@@ -67,6 +67,10 @@ shared/levelbackgroundfuture.png
 shared/lily1.png
 shared/lily2.png
 shared/lily3.png
+shared/parallax-demon-woods-bg.png
+shared/parallax-demon-woods-close-trees.png
+shared/parallax-demon-woods-far-trees.png
+shared/parallax-demon-woods-mid-trees.png
 shared/pause_help.png
 shared/pause_menu.png
 shared/pause_restart.png

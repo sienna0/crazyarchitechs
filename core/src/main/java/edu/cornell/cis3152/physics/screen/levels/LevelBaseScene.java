@@ -54,8 +54,24 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     private static final float TRANSITION_WALK_MULTIPLIER = 0.4f;
     private static final float CAMERA_ZOOM = 0.75f;
     private static final float PULLEY_ROPE_WHEEL_INSET = 2.0f / 16.0f;
+    private static final String[] PARALLAX_TEXTURE_KEYS = {
+            "shared-parallax-demon-woods-bg",
+            "shared-parallax-demon-woods-far-trees",
+            "shared-parallax-demon-woods-mid-trees",
+            "shared-parallax-demon-woods-close-trees"
+    };
+    private static final String[] PARALLAX_TEXTURE_PATHS = {
+            "shared/parallax-demon-woods-bg.png",
+            "shared/parallax-demon-woods-far-trees.png",
+            "shared/parallax-demon-woods-mid-trees.png",
+            "shared/parallax-demon-woods-close-trees.png"
+    };
+    private static final float PARALLAX_SCALE = 2.0f;
+    private static final float[] PARALLAX_SPEEDS = {0.025f, 0.09f, 0.16f, 0.26f};
+    // private static final float[] PARALLAX_VERTICAL_SPEEDS = {0.0005f, 0.02f, 0.035f, 0.55f};
+    private static final float[] PARALLAX_VERTICAL_SPEEDS = {0, 0, 0, 0};
 
-    private Texture backgroundTexture;
+    private Texture[] parallaxTextures;
 
     private Texture slotTexture;
     private Texture settingsIconTexture;
@@ -124,8 +140,11 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             hoverSound = directory.getEntry("platform-hover", SoundEffect.class);
             volume = constants.getFloat("volume", 1.0f);
         }
-        if (backgroundTexture == null) {
-            backgroundTexture = requireTexture("shared-background", "shared/background.png");
+        if (parallaxTextures == null) {
+            parallaxTextures = new Texture[PARALLAX_TEXTURE_KEYS.length];
+            for (int ii = 0; ii < parallaxTextures.length; ii++) {
+                parallaxTextures[ii] = requireTexture(PARALLAX_TEXTURE_KEYS[ii], PARALLAX_TEXTURE_PATHS[ii]);
+            }
         }
         if (settingsIconTexture == null) {
             settingsIconTexture = requireTexture("platform-settings", "platform/settings_icon.png");
@@ -220,17 +239,65 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
 
     @Override
     protected void drawFixedBackground(SpriteBatch batch) {
-        if (backgroundTexture != null) {
-            batch.setColor(Color.WHITE);
-            batch.draw(backgroundTexture, 0, 0, viewport.getWidth(), viewport.getHeight());
-        }
+        // Gameplay backgrounds are drawn in world space so they can parallax with the camera.
     }
 
     @Override
     protected void drawBackground(SpriteBatch batch) {
+        drawParallaxBackground(batch);
         if (renderer != null && levelData != null) {
             renderer.drawLevelTiles(batch, levelData, height / bounds.height);
         }
+    }
+
+    private void drawParallaxBackground(SpriteBatch batch) {
+        if (parallaxTextures == null || camera == null) {
+            return;
+        }
+
+        float visibleWidth = camera.viewportWidth * camera.zoom;
+        float visibleHeight = camera.viewportHeight * camera.zoom;
+        float visibleLeft = camera.position.x - visibleWidth * 0.5f;
+        float visibleBottom = camera.position.y - visibleHeight * 0.5f - 100;
+        float scrollX = avatar == null ? camera.position.x : avatar.getPosition().x * scale.x;
+        float scrollY = avatar == null ? camera.position.y : avatar.getPosition().y * scale.y;
+
+        batch.setColor(Color.WHITE);
+        for (int ii = 0; ii < parallaxTextures.length; ii++) {
+            Texture texture = parallaxTextures[ii];
+            if (texture == null || texture.getWidth() <= 0 || texture.getHeight() <= 0) {
+                continue;
+            }
+
+            float scaleToView = (visibleHeight / texture.getHeight()) * PARALLAX_SCALE;
+            float layerWidth = texture.getWidth() * scaleToView;
+            float layerHeight = texture.getHeight() * scaleToView;
+            // float xOffset = positiveMod(scrollX * PARALLAX_SPEEDS[ii], layerWidth);
+            float xOffset = positiveMod(camera.position.x * PARALLAX_SPEEDS[ii], layerWidth);
+            float yOffset = positiveMod(scrollY * PARALLAX_VERTICAL_SPEEDS[ii], layerHeight);
+            float startX = visibleLeft - xOffset;
+            float startY = visibleBottom - yOffset;
+
+            while (startX > visibleLeft) {
+                startX -= layerWidth;
+            }
+            while (startY > visibleBottom) {
+                startY -= layerHeight;
+            }
+            for (float y = startY; y < visibleBottom + visibleHeight; y += layerHeight) {
+                for (float x = startX; x < visibleLeft + visibleWidth; x += layerWidth) {
+                    batch.draw(texture, x, y, layerWidth, layerHeight);
+                }
+            }
+        }
+    }
+
+    private float positiveMod(float value, float modulus) {
+        if (modulus <= 0f) {
+            return 0f;
+        }
+        float result = value % modulus;
+        return result < 0f ? result + modulus : result;
     }
 
     @Override
