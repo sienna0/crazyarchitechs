@@ -66,12 +66,17 @@ public final class GifFrames implements Disposable {
             if (n <= 0) {
                 throw new IOException("GIF has no frames");
             }
+            BufferedImage[] frames = new BufferedImage[n];
+            for (int i = 0; i < n; i++) {
+                frames[i] = reader.read(i);
+            }
+            int[] crop = unionOpaqueCropPx(frames);
             TextureRegion[] regions = new TextureRegion[n];
             float[] delays = new float[n];
             Texture[] textures = new Texture[n];
             for (int i = 0; i < n; i++) {
-                BufferedImage img = reader.read(i);
                 delays[i] = readGraphicControlDelaySeconds(reader, i, defaultFrameSeconds);
+                BufferedImage img = applyCrop(frames[i], crop);
                 textures[i] = bufferedImageToTexture(img, filter);
                 regions[i] = new TextureRegion(textures[i]);
             }
@@ -143,6 +148,86 @@ public final class GifFrames implements Disposable {
             // Malformed metadata
         }
         return defaultSeconds;
+    }
+
+    /**
+     * Smallest axis-aligned rect (in pixel coords, top-left origin) that contains every non-transparent
+     * pixel in every frame. Removes empty GIF margins so layout uses visible art, not the full canvas.
+     */
+    private static int[] unionOpaqueCropPx(BufferedImage[] frames) {
+        if (frames.length == 0) {
+            return null;
+        }
+        int w0 = frames[0].getWidth();
+        int h0 = frames[0].getHeight();
+        for (int i = 1; i < frames.length; i++) {
+            if (frames[i].getWidth() != w0 || frames[i].getHeight() != h0) {
+                return null;
+            }
+        }
+        int minX = Integer.MAX_VALUE;
+        int minY = Integer.MAX_VALUE;
+        int maxX = Integer.MIN_VALUE;
+        int maxY = Integer.MIN_VALUE;
+        for (BufferedImage frame : frames) {
+            int[] b = opaqueBoundsPx(frame);
+            if (b == null) {
+                continue;
+            }
+            minX = Math.min(minX, b[0]);
+            minY = Math.min(minY, b[1]);
+            maxX = Math.max(maxX, b[2]);
+            maxY = Math.max(maxY, b[3]);
+        }
+        if (minX > maxX) {
+            return null;
+        }
+        if (minX <= 0 && minY <= 0 && maxX >= w0 - 1 && maxY >= h0 - 1) {
+            return null;
+        }
+        return new int[] { minX, minY, maxX - minX + 1, maxY - minY + 1 };
+    }
+
+    /** Inclusive max x,y in top-left coordinates, or null if image has no opaque pixels. */
+    private static int[] opaqueBoundsPx(BufferedImage img) {
+        int w = img.getWidth();
+        int h = img.getHeight();
+        int minX = w;
+        int minY = h;
+        int maxX = -1;
+        int maxY = -1;
+        for (int y = 0; y < h; y++) {
+            for (int x = 0; x < w; x++) {
+                int a = (img.getRGB(x, y) >>> 24) & 0xff;
+                if (a > 8) {
+                    minX = Math.min(minX, x);
+                    minY = Math.min(minY, y);
+                    maxX = Math.max(maxX, x);
+                    maxY = Math.max(maxY, y);
+                }
+            }
+        }
+        if (maxX < minX) {
+            return null;
+        }
+        return new int[] { minX, minY, maxX, maxY };
+    }
+
+    private static BufferedImage applyCrop(BufferedImage img, int[] crop) {
+        if (crop == null) {
+            return img;
+        }
+        int x = crop[0];
+        int y = crop[1];
+        int cw = crop[2];
+        int ch = crop[3];
+        if (x == 0 && y == 0 && cw == img.getWidth() && ch == img.getHeight()) {
+            return img;
+        }
+        if (x < 0 || y < 0 || x + cw > img.getWidth() || y + ch > img.getHeight()) {
+            return img;
+        }
+        return img.getSubimage(x, y, cw, ch);
     }
 
     private static Texture bufferedImageToTexture(BufferedImage image, Texture.TextureFilter filter) {

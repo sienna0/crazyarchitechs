@@ -5,6 +5,36 @@
             "minfilter" : "linear",
             "magfilter" : "linear"
         },
+        "menuPlay": {
+            "file": "loading/menu_play.png",
+            "minfilter": "nearest",
+            "magfilter": "nearest"
+        },
+        "menuOptions": {
+            "file": "loading/menu_options.png",
+            "minfilter": "nearest",
+            "magfilter": "nearest"
+        },
+        "optionsMusic": {
+            "file": "loading/options_music.png",
+            "minfilter": "nearest",
+            "magfilter": "nearest"
+        },
+        "optionsSoundOn": {
+            "file": "loading/options_sound_on.png",
+            "minfilter": "nearest",
+            "magfilter": "nearest"
+        },
+        "optionsSoundOff": {
+            "file": "loading/options_sound_off.png",
+            "minfilter": "nearest",
+            "magfilter": "nearest"
+        },
+        "optionsHelp": {
+            "file": "loading/options_help.png",
+            "minfilter": "nearest",
+            "magfilter": "nearest"
+        },
 		"play":     {
 			"file" : "loading/play.png",
             "minfilter" : "linear",

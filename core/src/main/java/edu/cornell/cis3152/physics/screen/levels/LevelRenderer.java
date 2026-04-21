@@ -39,12 +39,9 @@ class LevelRenderer {
     private static final float INVENTORY_PADDING = 8.0f * UI;
     /** Slot size is capped so the HUD stays reasonable with few inventory slots. */
     private static final float MAX_SLOT_SIZE = 40.0f * UI;
-    private static final float PAUSE_ICON_SIZE = 56.0f * UI;
-    private static final float PAUSE_ICON_HOVER_SIZE = 64.0f * UI;
-    private static final float PAUSE_ICON_MARGIN = 15f * UI;
-
     private final WorldState worldState;
     private final Texture slotTexture;
+    private final Texture settingsIconTexture;
     private final Texture pauseIconTexture;
     private final Texture markerPixel;
     /** [target surface][photographed subject] — matches {@code picture_<surface>_with_<photo>.png}. */
@@ -55,6 +52,7 @@ class LevelRenderer {
 
     LevelRenderer(WorldState worldState,
                   Texture slotTexture,
+                  Texture settingsIconTexture,
                   Texture pauseIconTexture,
                   Texture markerPixel,
                   Texture[][] stuckPictureTextures,
@@ -62,6 +60,7 @@ class LevelRenderer {
                   float takeDistance) {
         this.worldState = worldState;
         this.slotTexture = slotTexture;
+        this.settingsIconTexture = settingsIconTexture;
         this.pauseIconTexture = pauseIconTexture;
         this.markerPixel = markerPixel;
         this.stuckPictureTextures = stuckPictureTextures;
@@ -107,14 +106,25 @@ class LevelRenderer {
         drawInventory(batch, viewport, avatar);
         batch.setColor(Color.WHITE);
 
+        float baseSize = LevelHud.baseIconSize();
+        float pauseRight = viewport.getWidth() - LevelHud.margin();
+        float pauseTop = viewport.getHeight() - LevelHud.margin();
+
+        float pIcon = worldState.isPauseIconHovered() ? LevelHud.hoverIconSize() : baseSize;
+        float pauseDraw = pIcon * LevelHud.iconDrawScale();
+        float pauseX = pauseRight - pauseDraw;
+        float pauseY = pauseTop - pauseDraw;
+
+        if (settingsIconTexture != null) {
+            float sIcon = worldState.isSettingsIconHovered() ? LevelHud.hoverIconSize() : baseSize;
+            float settingsDraw = sIcon * LevelHud.iconDrawScale();
+            float settingsLeft = pauseX - LevelHud.iconGap() - settingsDraw;
+            float iconYSettings = pauseTop - settingsDraw;
+            batch.draw(settingsIconTexture, settingsLeft, iconYSettings, settingsDraw, settingsDraw);
+        }
+
         if (pauseIconTexture != null) {
-            float baseSize = PAUSE_ICON_SIZE;
-            float iconSize = worldState.isPauseIconHovered() ? PAUSE_ICON_HOVER_SIZE : baseSize;
-            float baseX = viewport.getWidth() - baseSize - PAUSE_ICON_MARGIN;
-            float baseY = viewport.getHeight() - baseSize - PAUSE_ICON_MARGIN;
-            float iconX = baseX - (iconSize - baseSize) / 2f;
-            float iconY = baseY - (iconSize - baseSize) / 2f;
-            batch.draw(pauseIconTexture, iconX, iconY, iconSize, iconSize);
+            batch.draw(pauseIconTexture, pauseX, pauseY, pauseDraw, pauseDraw);
         }
 
         batch.end();

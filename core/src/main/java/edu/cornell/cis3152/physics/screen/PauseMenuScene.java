@@ -11,40 +11,65 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import edu.cornell.cis3152.physics.CanvasRender;
-import edu.cornell.gdiac.graphics.SpriteBatch;
 import edu.cornell.gdiac.assets.AssetDirectory;
+import edu.cornell.gdiac.graphics.SpriteBatch;
 import edu.cornell.gdiac.graphics.TextAlign;
 import edu.cornell.gdiac.graphics.TextLayout;
 
+/**
+ * Pause overlay: sprite buttons matching the main menu (idle slightly smaller / bright; hover full size / darker).
+ */
 public class PauseMenuScene implements Screen {
 
-    public static final int RESUME      = 0;
-    public static final int RESTART     = 1;
-    public static final int QUIT        = 2;
+    public static final int RESUME = 0;
+    public static final int RESTART = 1;
+    public static final int QUIT = 2;
+
+    private static final int BTN_RESUME = 0;
+    private static final int BTN_RESTART = 1;
+    private static final int BTN_HELP = 2;
+    private static final int BTN_MENU = 3;
+    private static final int MENU_BUTTON_COUNT = 4;
+
+    /** Same visual language as {@link LoadingScene} main menu. */
+    private static final float PAUSE_BTN_MAX_WIDTH_FRAC = 0.38f;
+    private static final float PAUSE_BTN_SCALE = 0.55f;
+    private static final float PAUSE_BTN_GAP_REF = 20f;
+    private static final float MENU_IDLE_SCALE = 0.92f;
+    private static final Color MENU_HOVER_TINT = new Color(0.52f, 0.52f, 0.55f, 1f);
 
     private CanvasRender viewport;
     private SpriteBatch batch;
     private OrthographicCamera camera;
     private BitmapFont font;
     private Texture pixel;
+    private final Texture pauseResume;
+    private final Texture pauseRestart;
+    private final Texture pauseHelp;
+    private final Texture pauseMenu;
     private boolean active;
 
     private int width;
     private int height;
 
-    private static final String[] LABELS = { "RESUME", "RESTART LEVEL", "HOW TO PLAY", "QUIT TO MENU" };
-    private int selectedIndex = 0;
-    private int chosenOption  = -1;
+    private int selectedIndex;
+    private int chosenOption = -1;
 
-    private boolean showingControls = false;
+    private boolean showingControls;
 
-    private boolean upPrev, downPrev, confirmPrev, escapePrev, clickPrev;
+    private boolean upPrev;
+    private boolean downPrev;
+    private boolean confirmPrev;
+    private boolean escapePrev;
+    private boolean clickPrev;
     private final Vector2 pointer = new Vector2();
 
     private final TextLayout titleLayout;
     private final TextLayout optionLayout;
 
-    private static final String[] CONTROLS = {
+    /** Shared with main-menu options help; keep in sync with pause “How to play”. */
+    public static final String HOW_TO_PLAY_TITLE = "HOW TO PLAY";
+    public static final String[] HOW_TO_PLAY_LINES = {
             "A / D  —  Move",
             "W  —  Jump",
             "LEFT CLICK  —  Take picture",
@@ -58,7 +83,16 @@ public class PauseMenuScene implements Screen {
     public PauseMenuScene(AssetDirectory assets, SpriteBatch batch, CanvasRender viewport) {
         this.viewport = viewport;
         this.batch = batch;
-        this.font   = assets.getEntry("shared-retro", BitmapFont.class);
+        this.font = assets.getEntry("shared-retro", BitmapFont.class);
+        this.pauseResume = assets.getEntry("shared-pause-resume", Texture.class);
+        this.pauseRestart = assets.getEntry("shared-pause-restart", Texture.class);
+        this.pauseHelp = assets.getEntry("shared-pause-help", Texture.class);
+        this.pauseMenu = assets.getEntry("shared-pause-menu", Texture.class);
+        for (Texture t : new Texture[] {pauseResume, pauseRestart, pauseHelp, pauseMenu}) {
+            if (t != null) {
+                t.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+            }
+        }
         this.camera = new OrthographicCamera();
 
         Pixmap pm = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
@@ -79,6 +113,30 @@ public class PauseMenuScene implements Screen {
         resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
     }
 
+    private Texture textureForMenuIndex(int index) {
+        return switch (index) {
+            case BTN_RESUME -> pauseResume;
+            case BTN_RESTART -> pauseRestart;
+            case BTN_HELP -> pauseHelp;
+            case BTN_MENU -> pauseMenu;
+            default -> pauseResume;
+        };
+    }
+
+    /** Maps menu row index to {@link #consumeChoice()} value, or -1 for Help (opens overlay). */
+    private int choiceForMenuIndex(int menuIndex) {
+        if (menuIndex == BTN_RESUME) {
+            return RESUME;
+        }
+        if (menuIndex == BTN_RESTART) {
+            return RESTART;
+        }
+        if (menuIndex == BTN_MENU) {
+            return QUIT;
+        }
+        return -1;
+    }
+
     public int consumeChoice() {
         int result = chosenOption;
         chosenOption = -1;
@@ -86,65 +144,81 @@ public class PauseMenuScene implements Screen {
     }
 
     @Override
-    public void show() { active = true; selectedIndex = 0; showingControls = false; }
+    public void show() {
+        active = true;
+        selectedIndex = 0;
+        showingControls = false;
+    }
 
     @Override
-    public void hide() { active = false; }
+    public void hide() {
+        active = false;
+    }
 
     @Override
     public void render(float delta) {
-        if (!active) return;
+        if (!active) {
+            return;
+        }
         update();
         draw();
     }
 
     private void update() {
-        boolean upPressed      = Gdx.input.isKeyPressed(Input.Keys.UP);
-        boolean downPressed    = Gdx.input.isKeyPressed(Input.Keys.DOWN);
+        float UI = CanvasRender.layoutScale();
+        boolean upPressed = Gdx.input.isKeyPressed(Input.Keys.UP);
+        boolean downPressed = Gdx.input.isKeyPressed(Input.Keys.DOWN);
         boolean confirmPressed = Gdx.input.isKeyPressed(Input.Keys.ENTER)
                 || Gdx.input.isKeyPressed(Input.Keys.SPACE);
-        boolean escapePressed  = Gdx.input.isKeyPressed(Input.Keys.ESCAPE);
-        boolean clickPressed   = Gdx.input.isButtonPressed(Input.Buttons.LEFT);
+        boolean escapePressed = Gdx.input.isKeyPressed(Input.Keys.ESCAPE);
+        boolean clickPressed = Gdx.input.isButtonPressed(Input.Buttons.LEFT);
 
         if (showingControls) {
             if (escapePressed && !escapePrev) {
                 showingControls = false;
             }
-            if (clickPressed && !clickPrev && isBackButtonHovered(CanvasRender.layoutScale())) {
+            if (clickPressed && !clickPrev && isBackButtonHovered(UI)) {
                 showingControls = false;
             }
         } else {
-            if (upPressed && !upPrev)
-                selectedIndex = (selectedIndex + LABELS.length - 1) % LABELS.length;
-            if (downPressed && !downPrev)
-                selectedIndex = (selectedIndex + 1) % LABELS.length;
+            if (upPressed && !upPrev) {
+                selectedIndex = (selectedIndex + MENU_BUTTON_COUNT - 1) % MENU_BUTTON_COUNT;
+            }
+            if (downPressed && !downPrev) {
+                selectedIndex = (selectedIndex + 1) % MENU_BUTTON_COUNT;
+            }
 
-            if (escapePressed && !escapePrev)
+            if (escapePressed && !escapePrev) {
                 chosenOption = RESUME;
+            }
 
             if (confirmPressed && !confirmPrev) {
-                if (selectedIndex == 2) {
+                if (selectedIndex == BTN_HELP) {
                     showingControls = true;
                 } else {
-                    chosenOption = selectedIndex < 2 ? selectedIndex : selectedIndex - 1;
+                    chosenOption = choiceForMenuIndex(selectedIndex);
                 }
             }
 
             if (clickPressed && !clickPrev) {
-                int clicked = getHoveredIndex(CanvasRender.layoutScale());
-                if (clicked == 2) {
+                int clicked = getHoveredMenuIndex(UI);
+                if (clicked == BTN_HELP) {
                     showingControls = true;
                 } else if (clicked >= 0) {
-                    chosenOption = clicked < 2 ? clicked : clicked - 1;
+                    chosenOption = choiceForMenuIndex(clicked);
                 }
             } else {
-                int hovered = getHoveredIndex(CanvasRender.layoutScale());
-                if (hovered >= 0) selectedIndex = hovered;
+                int hovered = getHoveredMenuIndex(UI);
+                if (hovered >= 0) {
+                    selectedIndex = hovered;
+                }
             }
         }
 
-        upPrev = upPressed; downPrev = downPressed;
-        confirmPrev = confirmPressed; escapePrev = escapePressed;
+        upPrev = upPressed;
+        downPrev = downPressed;
+        confirmPrev = confirmPressed;
+        escapePrev = escapePressed;
         clickPrev = clickPressed;
     }
 
@@ -155,52 +229,95 @@ public class PauseMenuScene implements Screen {
         viewport.apply();
         batch.begin(camera);
 
-        float panelWidth  = width;
-        float panelHeight = height;
-        float panelX = 0;
-        float panelY = 0;
-
         batch.setColor(new Color(0.2f, 0.45f, 0.2f, 0.6f));
-        batch.draw(pixel, panelX, panelY, panelWidth, panelHeight);
+        batch.draw(pixel, 0, 0, width, height);
 
         if (showingControls) {
             drawControls(UI);
         } else {
-            drawButtons(panelHeight, UI);
+            drawMenuButtons(UI);
         }
 
         batch.end();
         viewport.reset();
     }
 
-    private void drawButtons(float panelHeight, float UI) {
+    private void drawMenuButtons(float UI) {
         titleLayout.setText("PAUSED");
         titleLayout.layout();
-        batch.drawText(titleLayout, width / 2f, (float) (panelHeight * 0.85));
+        batch.drawText(titleLayout, width / 2f, height * 0.88f);
 
-        for (int i = 0; i < LABELS.length; i++) {
-            Rectangle b = getButtonBounds(i, UI);
-            boolean selected = i == selectedIndex;
-            batch.setColor(selected
-                    ? new Color(0.80f, 0.31f, 0.18f, 1f)
-                    : new Color(0.0f, 0.0f, 0.0f, 0f));
-            batch.draw(pixel, b.x, b.y, b.width, b.height);
-
-            optionLayout.setColor(selected ? Color.WHITE : new Color(0.84f, 0.84f, 0.80f, 1f));
-            optionLayout.setText(LABELS[i]);
-            optionLayout.layout();
-            batch.drawText(optionLayout, width / 2f, b.y + b.height / 2f + 18f * UI);
+        int mouseHover = getHoveredMenuIndex(UI);
+        for (int i = 0; i < MENU_BUTTON_COUNT; i++) {
+            Rectangle b = getMenuButtonBounds(i, UI);
+            Texture tex = textureForMenuIndex(i);
+            if (tex == null) {
+                continue;
+            }
+            boolean hover = mouseHover == i;
+            float tScale = hover ? 1f : MENU_IDLE_SCALE;
+            float dw = b.width * tScale;
+            float dh = b.height * tScale;
+            float dx = b.x + (b.width - dw) / 2f;
+            float dy = b.y + (b.height - dh) / 2f;
+            batch.setColor(hover ? MENU_HOVER_TINT : Color.WHITE);
+            batch.draw(tex, dx, dy, dw, dh);
         }
+        batch.setColor(Color.WHITE);
+    }
+
+    private Rectangle getMenuButtonBounds(int index, float UI) {
+        Texture tex = textureForMenuIndex(index);
+        if (tex == null) {
+            return new Rectangle(0, 0, 0, 0);
+        }
+        float maxW = width * PAUSE_BTN_MAX_WIDTH_FRAC * PAUSE_BTN_SCALE;
+        float gap = PAUSE_BTN_GAP_REF * UI;
+        float[] hArr = new float[MENU_BUTTON_COUNT];
+        float[] wArr = new float[MENU_BUTTON_COUNT];
+        float totalH = 0f;
+        for (int i = 0; i < MENU_BUTTON_COUNT; i++) {
+            Texture t = textureForMenuIndex(i);
+            float tw = t != null ? t.getWidth() : 1;
+            float th = t != null ? t.getHeight() : 1;
+            float s = maxW / Math.max(1f, tw);
+            wArr[i] = tw * s;
+            hArr[i] = th * s;
+            totalH += hArr[i];
+            if (i < MENU_BUTTON_COUNT - 1) {
+                totalH += gap;
+            }
+        }
+        float yTop = height * 0.52f + totalH * 0.5f;
+        float yCursor = yTop;
+        for (int j = 0; j < index; j++) {
+            yCursor -= hArr[j] + gap;
+        }
+        float bw = wArr[index];
+        float bh = hArr[index];
+        float x = (width - bw) / 2f;
+        float y = yCursor - bh;
+        return new Rectangle(x, y, bw, bh);
+    }
+
+    private int getHoveredMenuIndex(float UI) {
+        viewport.screenToCanvas(Gdx.input.getX(), Gdx.input.getY(), pointer);
+        for (int i = 0; i < MENU_BUTTON_COUNT; i++) {
+            if (getMenuButtonBounds(i, UI).contains(pointer.x, pointer.y)) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     private void drawControls(float UI) {
-        titleLayout.setText("HOW TO PLAY");
+        titleLayout.setText(HOW_TO_PLAY_TITLE);
         titleLayout.layout();
         batch.drawText(titleLayout, width / 2f, height * 0.85f);
 
         float cy = height * 0.75f;
         float lineStep = 40f * UI;
-        for (String line : CONTROLS) {
+        for (String line : HOW_TO_PLAY_LINES) {
             optionLayout.setColor(new Color(0.84f, 0.84f, 0.80f, 1f));
             optionLayout.setText(line);
             optionLayout.layout();
@@ -219,17 +336,7 @@ public class PauseMenuScene implements Screen {
         optionLayout.setText("< BACK");
         optionLayout.layout();
         batch.drawText(optionLayout, back.x + back.width / 2f, back.y + back.height / 2f + 18f * UI);
-    }
-
-    private Rectangle getButtonBounds(int index, float UI) {
-        float bw = Math.min(width * 0.35f, 350f * UI);
-        float bh = 60f * UI;
-        float gap = 15f * UI;
-        float totalH = LABELS.length * bh + (LABELS.length - 1) * gap;
-        float startY = height / 2f + totalH / 2f;
-        float x = (width - bw) / 2f;
-        float y = startY - index * (bh + gap) - bh;
-        return new Rectangle(x, y, bw, bh);
+        batch.setColor(Color.WHITE);
     }
 
     private Rectangle getBackButtonBounds(float UI) {
@@ -242,24 +349,23 @@ public class PauseMenuScene implements Screen {
         return getBackButtonBounds(UI).contains(pointer.x, pointer.y);
     }
 
-    private int getHoveredIndex(float UI) {
-        viewport.screenToCanvas(Gdx.input.getX(), Gdx.input.getY(), pointer);
-        for (int i = 0; i < LABELS.length; i++) {
-            if (getButtonBounds(i, UI).contains(pointer.x, pointer.y)) return i;
-        }
-        return -1;
-    }
-
     @Override
     public void resize(int width, int height) {
-        this.width  = (int) viewport.getWidth();
+        this.width = (int) viewport.getWidth();
         this.height = (int) viewport.getHeight();
         camera.setToOrtho(false, this.width, this.height);
     }
 
-    @Override public void pause()   {}
-    @Override public void resume()  {}
-    @Override public void dispose() {
+    @Override
+    public void pause() {
+    }
+
+    @Override
+    public void resume() {
+    }
+
+    @Override
+    public void dispose() {
         pixel.dispose();
     }
 }

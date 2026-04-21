@@ -6,6 +6,7 @@ import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.JsonValue;
+import edu.cornell.cis3152.physics.GameAudio;
 import edu.cornell.cis3152.physics.InputController;
 import edu.cornell.cis3152.physics.screen.WorldState;
 import edu.cornell.cis3152.physics.world.GameObject;
@@ -264,7 +265,8 @@ class PhotoSystem {
         Picture picture = new Picture(target);
         worldState.getPictures().add(picture);
         avatar.getPictureInventory().addPicture(picture);
-        SoundEffectManager.getInstance().play("plop", plopSound, Math.min(1.0f, volume * 1.75f));
+        SoundEffectManager.getInstance().play("plop", plopSound,
+                GameAudio.effectiveSfxVolume(Math.min(1.0f, volume * 1.75f)));
     }
 
     /**
@@ -374,7 +376,7 @@ class PhotoSystem {
         }
 
         avatar.startTongueAnimation(target.getObstacle().getX(), target.getObstacle().getY());
-        SoundEffectManager.getInstance().play("fire", fireSound, volume);
+        SoundEffectManager.getInstance().play("fire", fireSound, GameAudio.effectiveSfxVolume(volume));
     }
 
     /**
@@ -396,7 +398,7 @@ class PhotoSystem {
             avatar.setCurrentPlatform(target);
         }
         avatar.startTongueAnimation(target.getObstacle().getX(), target.getObstacle().getY());
-        SoundEffectManager.getInstance().play("plop", plopSound, volume);
+        SoundEffectManager.getInstance().play("plop", plopSound, GameAudio.effectiveSfxVolume(volume));
     }
 
     /**
