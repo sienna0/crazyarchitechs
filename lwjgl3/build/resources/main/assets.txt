@@ -79,5 +79,6 @@ shared/pulley_carry.png
 shared/pulley_string.png
 shared/pulley_top.png
 shared/pulley_top1.png
+shared/star.png
 shared/treetile.png
 shared/water.png

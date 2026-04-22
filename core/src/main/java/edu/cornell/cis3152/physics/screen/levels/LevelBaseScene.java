@@ -119,6 +119,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     private boolean enteringFromPreviousLevel = false;
     private float entryTargetX = 0f;
     private float entryTargetY = 0f;
+    private int photosUsed;
 
     /**
      * Lazily creates sound handles, textures, {@link WorldState}, contact tracking,
@@ -370,6 +371,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         worldState.reset();
 
         populateLevel();
+        photosUsed = 0;
     }
 
     /**
@@ -576,6 +578,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         photoSystem.handlePictureAction(input, target, avatar, clickedSlot, world);
 
         if (photoSystem.isPictureTaken()) {
+            photosUsed++;
             photoSystem.clearPictureTaken();
         }
 
@@ -816,4 +819,6 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         }
         return false;
     }
+
+    public int getPhotosUsed() {return photosUsed;}
 }

@@ -37,6 +37,8 @@ public class LevelController {
     /** Current level screen */
     private PhysicsScene currentScene;
 
+    private final LevelProgress levelProgress;
+
     /**
      * Constructor. Discovers available levels by counting levelN keys in constants.
      */
@@ -49,6 +51,7 @@ public class LevelController {
         totalLevels = countLevels(assets);
 
         loadLevel(currentLevel);
+        levelProgress = new LevelProgress(totalLevels);
     }
 
     /**
@@ -77,6 +80,7 @@ public class LevelController {
      */
     public void loadLevel(int level) {
         if (level >= 1 && level <= totalLevels) {
+
             currentScene = new LevelBaseScene(assets);
         } else {
             System.out.println("no level");
@@ -149,4 +153,14 @@ public class LevelController {
             currentScene = null;
         }
     }
+
+    public void markCurrentBeaten() {
+        levelProgress.beatLevel(currentLevel, ((LevelBaseScene) currentScene).getPhotosUsed());
+
+    }
+
+    public boolean isBeaten(int level) {return levelProgress.isBeaten(level);}
+
+    public LevelProgress getLevelProgress() {return levelProgress;}
+    public int getLevelScore(int level) {return levelProgress.getLevelScore(level);}
 }
