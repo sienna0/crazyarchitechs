@@ -122,4 +122,15 @@ public class Inventory {
             pictureInventory.add(new Picture(i));
         }
     }
+
+    public int getAutoSelectIndex() {
+        int filled = -1;
+        for (Picture pic : pictureInventory) {
+            if (pic.hasSubject) {
+                if (filled != -1) return -1;
+                filled = pic.getId();
+            }
+        }
+        return filled;
+    }
 }
