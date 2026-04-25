@@ -43,7 +43,7 @@ public class GameObject extends ObstacleSprite {
     /** Rest position for spring-based float motion */
     private final Vector2 floatHome = new Vector2();
     /** Percentage gray for clouds based on height. Only defined for clouds. */
-    private float cloudColorLerp = 0.0f;
+    private Color cloudColor = Color.WHITE;
 
     private boolean hasPicture = false;
 
@@ -147,11 +147,10 @@ public class GameObject extends ObstacleSprite {
         if (object == Obj.CLOUD)
         {
             // Set gray level of cloud
-            setCloudColorLerp(MathUtils.clamp((y - 2.0f) / (16.0f - 2.0f), 0.3f, 1.0f));
-            float cloudLerp = getCloudColorLerp();
-            Color tint = new Color(cloudLerp, cloudLerp, cloudLerp, 1f);
-
-            for (int i = 0; i < 4; i++)
+            float cloudLerp = MathUtils.clamp((y - 3.0f) / (14.0f - 3.0f), 0.0f, 1.0f) * 0.5f + 0.5f;
+            Color tint = new Color(cloudLerp, cloudLerp, MathUtils.clamp(cloudLerp + 0.1f, 0.0f, 1.0f), 1f);
+            setCloudColor(tint);
+            for (int i = 0; i < 3; i++)
             {
                 mesh.setColor(i, tint);
             }
@@ -186,12 +185,12 @@ public class GameObject extends ObstacleSprite {
         floatHome.set(x, y);
     }
 
-    public float getCloudColorLerp() {
-        return cloudColorLerp;
+    public Color getCloudColor() {
+        return cloudColor;
     }
 
-    public void setCloudColorLerp(float x) {
-        cloudColorLerp = x;
+    public void setCloudColor(Color c) {
+        cloudColor = c;
     }
 
     public boolean hasPicture() { return hasPicture; }

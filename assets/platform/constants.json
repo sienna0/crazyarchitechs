@@ -4153,5 +4153,99 @@
         "pos": [2.5, 5.0]
       }
     }
+  },
+  "level22": {
+    "walls": {
+      "tile": 128.0,
+      "friction": 0.1,
+      "density": 0.0,
+      "restitution": 0.1,
+      "debug": "#ffffff",
+      "positions": []
+    },
+    "platforms": {
+      "tile": 128.0,
+      "friction": 0.7,
+      "density": 0.0,
+      "restitution": 0.1,
+      "debug": "#ffffff",
+      "positions": []
+    },
+    "floors": {
+      "tile": 128.0,
+      "friction": 0.7,
+      "density": 0.0,
+      "restitution": 0.1,
+      "debug": "#5a8a3c",
+      "positions": []
+    },
+    "goo": {
+      "tile": 128.0,
+      "friction": 0.7,
+      "density": 0.0,
+      "restitution": 0.1,
+      "debug": "#5a8a3c",
+      "fatal": true,
+      "positions": []
+    },
+    "tilemap": [
+      {"tx": 0.0, "ty": 0.0, "col": 1.0, "row": 0.0},
+      {"tx": 1.0, "ty": 0.0, "col": 1.0, "row": 0.0},
+      {"tx": 2.0, "ty": 0.0, "col": 1.0, "row": 0.0},
+      {"tx": 3.0, "ty": 0.0, "col": 1.0, "row": 0.0},
+      {"tx": 4.0, "ty": 0.0, "col": 1.0, "row": 0.0},
+      {"tx": 5.0, "ty": 0.0, "col": 1.0, "row": 0.0},
+      {"tx": 6.0, "ty": 0.0, "col": 1.0, "row": 0.0},
+      {"tx": 7.0, "ty": 0.0, "col": 1.0, "row": 0.0},
+      {"tx": 8.0, "ty": 0.0, "col": 1.0, "row": 0.0}
+    ],
+    "playerSettings": {
+      "inventory_size": 10.0,
+      "film_count": 100000.0,
+      "picture_cooldown": 10.0,
+      "max_sight_distance": 9.0
+    },
+    "objectLocations": {
+      "honey": [
+        [6.0, 1.5]
+      ],
+      "cloud": [
+        [9.5, 0.5],
+        [9.5, 1.5],
+        [9.5, 2.5],
+        [9.5, 3.5],
+        [9.5, 4.5],
+        [9.5, 5.5],
+        [9.5, 6.5],
+        [9.5, 7.5],
+        [9.5, 8.5],
+        [9.5, 9.5],
+        [9.5, 10.5],
+        [9.5, 11.5],
+        [9.5, 12.5],
+        [9.5, 13.5],
+        [9.5, 14.5],
+        [9.5, 15.5],
+        [9.5, 16.5],
+        [9.5, 17.5]
+      ],
+      "ice": [],
+      "zukosprite": [],
+      "pulley_top": [],
+      "pulley_carry": [],
+      "goal": {
+        "pos": [28.0, 11.5],
+        "size": 3.0,
+        "density": 0.0,
+        "friction": 0.0,
+        "restitution": 0.0
+      },
+      "zuko": {
+        "pos": [2.5, 5.0]
+      },
+      "zukoPos": {
+        "pos": [2.5, 5.0]
+      }
+    }
   }
 }
