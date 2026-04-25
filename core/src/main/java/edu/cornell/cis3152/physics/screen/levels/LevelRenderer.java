@@ -353,8 +353,7 @@ class LevelRenderer {
                 GameObject inventoryObject = picture.getSubject();
                 if (inventoryObject.object == Obj.CLOUD)
                 {
-                    float cloudLerp = inventoryObject.getCloudColorLerp();
-                    batch.setColor(cloudLerp, cloudLerp, cloudLerp, 1f);
+                    batch.setColor(inventoryObject.getCloudColor());
                 }
                 batch.draw(inventoryObject.getTexture(), slotX + slotInset, slotY + slotInset,
                         slotSize - 2f * slotInset, slotSize - 2f * slotInset);
