@@ -67,7 +67,7 @@ class PhotoSystem {
      */
     public void handlePictureShortcuts(InputController input, Zuko avatar) {
         if (input.didDropPhoto() && worldState.getActivePicture() != null) {
-            if (avatar.getPictureInventory().getAutoSelectIndex() != -1) {
+            if (avatar.getPictureInventory().getAutoSelectIndex() != -1 && avatar.getPictureInventory().getSize() == 1) {
                 return;
             }
             Picture picture = avatar.getPictureInventory().getPicture(worldState.getSelectedSlotIndex());
@@ -142,7 +142,7 @@ class PhotoSystem {
                         worldState.setSelectedSlotIndex(clickedSlot);
                         worldState.setActivePicture(slotPicture);
                     } else {
-                        if (avatar.getPictureInventory().getAutoSelectIndex() != -1) {
+                        if (avatar.getPictureInventory().getAutoSelectIndex() != -1 && avatar.getPictureInventory().getSize() == 1) {
                             return;
                         }
                         worldState.setSelectedSlotIndex(-1);
