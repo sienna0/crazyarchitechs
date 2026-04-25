@@ -1,6 +1,8 @@
 package edu.cornell.cis3152.physics.world;
 
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
@@ -40,6 +42,8 @@ public class GameObject extends ObstacleSprite {
     private BoxObstacle body;
     /** Rest position for spring-based float motion */
     private final Vector2 floatHome = new Vector2();
+    /** Percentage gray for clouds based on height. Only defined for clouds. */
+    private float cloudColorLerp = 0.0f;
 
     private boolean hasPicture = false;
 
@@ -139,6 +143,19 @@ public class GameObject extends ObstacleSprite {
         float drawW = w * units;
         float drawH = h * units;
         mesh.set(-drawW / 2.0f, -drawH / 2.0f, drawW, drawH);
+
+        if (object == Obj.CLOUD)
+        {
+            // Set gray level of cloud
+            setCloudColorLerp(MathUtils.clamp((y - 2.0f) / (16.0f - 2.0f), 0.3f, 1.0f));
+            float cloudLerp = getCloudColorLerp();
+            Color tint = new Color(cloudLerp, cloudLerp, cloudLerp, 1f);
+
+            for (int i = 0; i < 4; i++)
+            {
+                mesh.setColor(i, tint);
+            }
+        }
     }
 
     public float getGravityScale() {
@@ -167,6 +184,14 @@ public class GameObject extends ObstacleSprite {
 
     public void setFloatHome(float x, float y) {
         floatHome.set(x, y);
+    }
+
+    public float getCloudColorLerp() {
+        return cloudColorLerp;
+    }
+
+    public void setCloudColorLerp(float x) {
+        cloudColorLerp = x;
     }
 
     public boolean hasPicture() { return hasPicture; }
