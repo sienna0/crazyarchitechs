@@ -10,6 +10,7 @@ import com.badlogic.gdx.math.Vector2;
 import edu.cornell.cis3152.physics.CanvasRender;
 import edu.cornell.cis3152.physics.screen.WorldState;
 import edu.cornell.cis3152.physics.world.GameObject;
+import edu.cornell.cis3152.physics.world.Obj;
 import edu.cornell.cis3152.physics.world.Picture;
 import edu.cornell.cis3152.physics.world.Zuko;
 import edu.cornell.gdiac.graphics.SpriteBatch;
@@ -347,8 +348,18 @@ class LevelRenderer {
                 batch.setColor(picture.getColor());
                 batch.draw(slotTexture, slotX, slotY, slotSize, slotSize);
                 batch.setColor(Color.WHITE);
-                batch.draw(picture.getSubject().getTexture(), slotX + slotInset, slotY + slotInset,
+
+                // Check if picture was a cloud. If it was, then tint it based on height.
+                GameObject inventoryObject = picture.getSubject();
+                if (inventoryObject.object == Obj.CLOUD)
+                {
+                    float cloudLerp = inventoryObject.getCloudColorLerp();
+                    batch.setColor(cloudLerp, cloudLerp, cloudLerp, 1f);
+                }
+                batch.draw(inventoryObject.getTexture(), slotX + slotInset, slotY + slotInset,
                         slotSize - 2f * slotInset, slotSize - 2f * slotInset);
+
+                batch.setColor(Color.WHITE);
             }
         }
         batch.setColor(Color.WHITE);
