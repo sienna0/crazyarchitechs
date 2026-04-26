@@ -1,5 +1,6 @@
-FrogToGrapher - Gameplay Prototype README.txt
+FrogToGrapher - Beta Release README.txt
 Team 3 Crazy Architechs
+
 Contributors
 Sienna Li (sl3493)
 Nigel Tatem (nt387)
@@ -9,26 +10,46 @@ Ore Adeniyi (oaa42)
 Nicholas Letendre (nzl3)
 
 Overview
-This prototype demonstrates the core gameplay mechanic of transferring object attributes using a magical camera. Players can take photos of objects to capture attributes (heavy, slippery, etc.) and apply them to other objects to solve levels.
+Frogtographer is a puzzle platformer where Zuko, a frog photographer, uses her magical camera to
+transfer physical properties between objects and solve levels. Take a photo of a honey block to
+capture its stickiness, then stick that photo onto another object to change how it behaves.
+Reach the goal door at the end of each level.
+
+Running the Game
+Choose the JAR for your platform and double-click it, or run from a terminal:
+
+    java -jar Physics-1.0.0-mac.jar      (macOS)
+    java -jar Physics-1.0.0-win.jar      (Windows)
+    java -jar Physics-1.0.0-linux.jar    (Linux)
+
+Requires Java 17 or later.
 
 Features Implemented
-- Player movement and jumping (used from Lab 4)
+- Player movement and jumping
 - Three level designs with varying difficulty
 - Photo taking and sticking
-- Basic object physics interactions
-- Simple sound effects for camera and photo sticking
+- Object physics interactions (honey, ice, cloud)
+- Fly collectibles hidden throughout levels
+- Parallax scrolling background
+- Pause and options menus
+
+Object Types
+- Honey  - sticky surface, slows horizontal movement
+- Ice    - frictionless, objects slide freely
+- Cloud  - floats upward, cancels gravity on the target
 
 Controls
-Left and Right Arrow Keys - Horizontal movement
-Up Arrow Key - Jump
-Left Click - Take photo
-Right Click - Stick photo
-Tab Key - See range
-C key - Cycle through camera mode
-1 - Normal mode
-2 - Thermal mode
-3 - Texture mode
+A / D or Left / Right Arrow Keys    - Move left and right
+W, Space, or Up Arrow               - Jump
+Mouse                               - Aim crosshair
+Left Click (no photo selected)      - Take photo of object in range
+Left Click (photo selected)         - Stick photo onto object in range
+Right Click                         - Remove photo from object
+Q                                   - Drop selected photo
+1 / 2 / 3 or click slot            - Select inventory slot
+Tab                                 - Toggle range indicators
+Left Click on fly                   - Collect fly with Zuko's tongue
 
 Known Bugs
-- Zuko may be able to cling to the side of an object if it is rotated
-- Photos may not move with the object at times
+- Zuko may be able to cling to the side of a rotated object
+- Photos may not move perfectly with a moving object at times
