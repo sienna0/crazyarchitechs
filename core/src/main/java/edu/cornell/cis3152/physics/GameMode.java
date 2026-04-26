@@ -61,7 +61,7 @@ public class GameMode implements Screen, ScreenListener {
         this.batch = batch;
         this.viewport = viewport;
         this.levelController = new LevelController(assets, batch, viewport);
-        this.levelSelectScene = new LevelSelectScene(assets, batch, viewport, levelController.getTotalLevels());
+        this.levelSelectScene = new LevelSelectScene(assets, batch, viewport, levelController.getTotalLevels(), levelController);
         pauseMenuScene = new PauseMenuScene(assets, batch, viewport);
         gameplayOptionsOverlay = new GameplayOptionsOverlay(assets, batch, viewport);
         winScene = new WinScene(assets, batch, viewport);
@@ -105,6 +105,7 @@ public class GameMode implements Screen, ScreenListener {
             showingLevelSelect = true;
             levelSelectScene.show();
         } else if (exitCode == PhysicsScene.EXIT_WIN) {
+            levelController.markCurrentBeaten();
             levelController.nextLevel();
             levelController.setScreenListener(this);
             showingLevelSelect = false;

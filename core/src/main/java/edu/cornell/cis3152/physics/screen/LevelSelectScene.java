@@ -12,6 +12,7 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.ScreenUtils;
 import edu.cornell.cis3152.physics.CanvasRender;
+import edu.cornell.cis3152.physics.screen.levels.LevelController;
 import edu.cornell.gdiac.assets.AssetDirectory;
 import edu.cornell.gdiac.graphics.SpriteBatch;
 import edu.cornell.gdiac.graphics.TextAlign;
@@ -86,7 +87,10 @@ public class LevelSelectScene implements Screen {
     private static final float MENU_IDLE_SCALE = 0.92f;
     private static final Color MENU_HOVER_TINT = new Color(0.52f, 0.52f, 0.55f, 1f);
 
-    public LevelSelectScene(AssetDirectory assets, SpriteBatch batch, CanvasRender viewport, int totalLevels) {
+    private final LevelController controller;
+    private final Texture starTexture;
+
+    public LevelSelectScene(AssetDirectory assets, SpriteBatch batch, CanvasRender viewport, int totalLevels, LevelController controller) {
         this.batch = batch;
         this.viewport = viewport;
         this.totalLevels = totalLevels;
@@ -141,6 +145,10 @@ public class LevelSelectScene implements Screen {
 
         leftArrowBounds = new Rectangle();
         rightArrowBounds = new Rectangle();
+
+        this.starTexture = assets.getEntry("shared-star", Texture.class);
+        this.controller = controller;
+
         resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
     }
 
@@ -260,6 +268,24 @@ public class LevelSelectScene implements Screen {
                 batch.setColor(selected ? Color.WHITE : new Color(0.82f, 0.82f, 0.82f, 1.0f));
                 batch.draw(lilyTexture, pos.x - size/2, pos.y - size /2, size, size);
             }
+
+            if (starTexture != null && controller.isBeaten(ii + 1)) {
+                float starSize = size * 0.35f;                 // ~45% of the lily
+                float sx = pos.x + size * 0.25f - starSize / 2;  // offset toward top-right
+                float sy = pos.y + size * 0.25f - starSize / 2;
+                batch.setColor(Color.WHITE);                    // don't inherit the lily tint
+                batch.draw(starTexture, sx, sy, starSize, starSize);
+            }
+            int score = controller.getLevelScore(ii + 1);
+            if (score != -1) {
+                font.getData().setScale(0.5f * CanvasRender.layoutScale());
+                optionLayout.setColor(Color.WHITE);
+                optionLayout.setText(String.valueOf(score));
+                optionLayout.layout();
+                float numLift = -size * 0.25f;   // below the lily's center
+                batch.drawText(optionLayout, pos.x, pos.y + numLift);
+            }
+
 
             font.getData().setScale(0.85f * CanvasRender.layoutScale());
             optionLayout.setColor(Color.WHITE);

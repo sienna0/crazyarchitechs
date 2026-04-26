@@ -30,16 +30,41 @@
             "wrapU": "repeated",
             "wrapV": "repeated"
         },
+        "shared-star" : "shared/star.png",
         "shared-lily-1": "shared/lily1.png",
         "shared-lily-2": "shared/lily2.png",
         "shared-lily-3": "shared/lily3.png",
         "shared-blank-lily": "shared/blanklily.png",
         "shared-background": "shared/background.png",
+        "shared-parallax-demon-woods-bg": "shared/parallax-demon-woods-bg.png",
+        "shared-parallax-demon-woods-far-trees": "shared/parallax-demon-woods-far-trees.png",
+        "shared-parallax-demon-woods-mid-trees": "shared/parallax-demon-woods-mid-trees.png",
+        "shared-parallax-demon-woods-close-trees": "shared/parallax-demon-woods-close-trees.png",
         "shared-level-background": "shared/levelbackground.png",
         "shared-pulley-top": "shared/pulley_top.png",
         "shared-pulley-string": "shared/pulley_string.png",
         "shared-pulley-carry": "shared/pulley_carry.png",
         "shared-water": "shared/water.png",
+        "shared-pause-resume": {
+            "file": "shared/pause_resume.png",
+            "minfilter": "nearest",
+            "magfilter": "nearest"
+        },
+        "shared-pause-restart": {
+            "file": "shared/pause_restart.png",
+            "minfilter": "nearest",
+            "magfilter": "nearest"
+        },
+        "shared-pause-help": {
+            "file": "shared/pause_help.png",
+            "minfilter": "nearest",
+            "magfilter": "nearest"
+        },
+        "shared-pause-menu": {
+            "file": "shared/pause_menu.png",
+            "minfilter": "nearest",
+            "magfilter": "nearest"
+        },
         "shared-goal":   "platform/walltile.png",
         "platform-traci"    : "platform/zuko.png",
         "platform-updatedwalk"     : "platform/zukowalk.png",
@@ -53,6 +78,31 @@
         "platform-honey"    : "platform/honey.png",
         "platform-cloud"    : "platform/cloud.png",
         "platform-pause"    : "platform/pause_icon.png",
+        "platform-settings": {
+            "file": "platform/settings_icon.png",
+            "minfilter": "nearest",
+            "magfilter": "nearest"
+        },
+        "shared-options-music": {
+            "file": "loading/options_music.png",
+            "minfilter": "nearest",
+            "magfilter": "nearest"
+        },
+        "shared-options-sound-on": {
+            "file": "loading/options_sound_on.png",
+            "minfilter": "nearest",
+            "magfilter": "nearest"
+        },
+        "shared-options-sound-off": {
+            "file": "loading/options_sound_off.png",
+            "minfilter": "nearest",
+            "magfilter": "nearest"
+        },
+        "shared-options-help": {
+            "file": "loading/options_help.png",
+            "minfilter": "nearest",
+            "magfilter": "nearest"
+        },
         "platform-picture-cloud-with-honey": "platform/picture_cloud_with_honey.png",
         "platform-picture-cloud-with-ice": "platform/picture_cloud_with_ice.png",
         "platform-picture-honey-with-cloud": "platform/picture_honey_with_cloud.png",

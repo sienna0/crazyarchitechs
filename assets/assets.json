@@ -30,11 +30,16 @@
             "wrapU": "repeated",
             "wrapV": "repeated"
         },
+        "shared-star" : "shared/star.png",
         "shared-lily-1": "shared/lily1.png",
         "shared-lily-2": "shared/lily2.png",
         "shared-lily-3": "shared/lily3.png",
         "shared-blank-lily": "shared/blanklily.png",
         "shared-background": "shared/background.png",
+        "shared-parallax-demon-woods-bg": "shared/parallax-demon-woods-bg.png",
+        "shared-parallax-demon-woods-far-trees": "shared/parallax-demon-woods-far-trees.png",
+        "shared-parallax-demon-woods-mid-trees": "shared/parallax-demon-woods-mid-trees.png",
+        "shared-parallax-demon-woods-close-trees": "shared/parallax-demon-woods-close-trees.png",
         "shared-inventory": {
             "file": "shared/inventory.png",
             "minfilter": "nearest",

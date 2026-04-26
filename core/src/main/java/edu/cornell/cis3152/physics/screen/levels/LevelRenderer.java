@@ -11,6 +11,7 @@ import edu.cornell.cis3152.physics.CanvasRender;
 import edu.cornell.cis3152.physics.screen.WorldState;
 import edu.cornell.cis3152.physics.world.FlyCollectible;
 import edu.cornell.cis3152.physics.world.GameObject;
+import edu.cornell.cis3152.physics.world.Obj;
 import edu.cornell.cis3152.physics.world.Picture;
 import edu.cornell.cis3152.physics.world.Zuko;
 import edu.cornell.gdiac.graphics.SpriteBatch;
@@ -371,8 +372,13 @@ class LevelRenderer {
 
             if (picture != null && picture.hasSubject()) {
                 batch.setColor(Color.WHITE);
-                batch.draw(picture.getSubject().getTexture(), slotX + frameInnerPad, slotY + frameInnerPad,
+                GameObject inventoryObject = picture.getSubject();
+                if (inventoryObject.object == Obj.CLOUD) {
+                    batch.setColor(inventoryObject.getCloudColor());
+                }
+                batch.draw(inventoryObject.getTexture(), slotX + frameInnerPad, slotY + frameInnerPad,
                         slotSize - 2f * frameInnerPad, slotSize - 2f * frameInnerPad);
+                batch.setColor(Color.WHITE);
             }
             batch.setColor(Color.WHITE);
             batch.draw(inventoryTexture, slotX, slotY, slotSize, slotSize);

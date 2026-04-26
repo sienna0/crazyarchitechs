@@ -67,6 +67,9 @@ class PhotoSystem {
      */
     public void handlePictureShortcuts(InputController input, Zuko avatar) {
         if (input.didDropPhoto() && worldState.getActivePicture() != null) {
+            if (avatar.getPictureInventory().getAutoSelectIndex() != -1 && avatar.getPictureInventory().getSize() == 1) {
+                return;
+            }
             Picture picture = avatar.getPictureInventory().getPicture(worldState.getSelectedSlotIndex());
             if (picture != null) {
                 picture.clearSubject();
@@ -139,6 +142,9 @@ class PhotoSystem {
                         worldState.setSelectedSlotIndex(clickedSlot);
                         worldState.setActivePicture(slotPicture);
                     } else {
+                        if (avatar.getPictureInventory().getAutoSelectIndex() != -1 && avatar.getPictureInventory().getSize() == 1) {
+                            return;
+                        }
                         worldState.setSelectedSlotIndex(-1);
                         worldState.setActivePicture(null);
                     }
@@ -265,6 +271,11 @@ class PhotoSystem {
         Picture picture = new Picture(target);
         worldState.getPictures().add(picture);
         avatar.getPictureInventory().addPicture(picture);
+        int autoIdx = avatar.getPictureInventory().getAutoSelectIndex();
+        if (autoIdx != -1) {
+            worldState.setSelectedSlotIndex(autoIdx);
+            worldState.setActivePicture(avatar.getPictureInventory().getPicture(autoIdx));
+        }
         SoundEffectManager.getInstance().play("plop", plopSound,
                 GameAudio.effectiveSfxVolume(Math.min(1.0f, volume * 1.75f)));
     }
@@ -371,6 +382,11 @@ class PhotoSystem {
         worldState.setActivePicture(null);
         worldState.setSelectedSlotIndex(-1);
 
+        int autoIdx = avatar.getPictureInventory().getAutoSelectIndex();
+        if (autoIdx != -1) {
+            worldState.setSelectedSlotIndex(autoIdx);
+            worldState.setActivePicture(avatar.getPictureInventory().getPicture(autoIdx));
+        }
         if (avatar.getCurrentPlatform() == target) {
             avatar.setCurrentPlatform(target);
         }
