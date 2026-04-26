@@ -16,13 +16,12 @@ capture its stickiness, then stick that photo onto another object to change how 
 Reach the goal door at the end of each level.
 
 Running the Game
-Choose the JAR for your platform and double-click it, or run from a terminal:
+Run from a terminal (macOS blocks unsigned JARs from double-clicking):
 
-    java -jar Physics-1.0.0-mac.jar      (macOS)
-    java -jar Physics-1.0.0-win.jar      (Windows)
-    java -jar Physics-1.0.0-linux.jar    (Linux)
+    java -jar Physics-1.0.0-mac.jar
 
-Requires Java 17 or later.
+Requires Java 17 or later. If you don't have Java 17, download it from:
+https://adoptium.net/
 
 Features Implemented
 - Player movement and jumping
