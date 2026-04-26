@@ -9,12 +9,14 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import edu.cornell.cis3152.physics.CanvasRender;
 import edu.cornell.cis3152.physics.screen.WorldState;
+import edu.cornell.cis3152.physics.world.FlyCollectible;
 import edu.cornell.cis3152.physics.world.GameObject;
 import edu.cornell.cis3152.physics.world.Picture;
 import edu.cornell.cis3152.physics.world.Zuko;
 import edu.cornell.gdiac.graphics.SpriteBatch;
 import edu.cornell.gdiac.math.PathFactory;
 import edu.cornell.gdiac.physics2.Obstacle;
+import java.util.ArrayList;
 
 /**
  * Responsible for all non-physics rendering: HUD inventory bar, stuck-picture overlays (surface-with-photo combo art),
@@ -39,8 +41,11 @@ class LevelRenderer {
     private static final float INVENTORY_PADDING = 8.0f * UI;
     /** Slot size is capped so the HUD stays reasonable with few inventory slots. */
     private static final float MAX_SLOT_SIZE = 40.0f * UI;
+    /** Flat strip behind the inventory row (not gray — avoids a second “border”). */
+    private static final Color INVENTORY_BAR_BACK = new Color(0.1f, 0.08f, 0.07f, 0.92f);
     private final WorldState worldState;
-    private final Texture slotTexture;
+    /** Empty slots, and frame overlay on filled slots ({@code shared/inventory.png}). */
+    private final Texture inventoryTexture;
     private final Texture settingsIconTexture;
     private final Texture pauseIconTexture;
     private final Texture markerPixel;
@@ -49,9 +54,14 @@ class LevelRenderer {
     private final float stickDistance;
     private final float takeDistance;
     private final Affine2 highlightTransform = new Affine2();
+    private ArrayList<FlyCollectible> inRangeFlies = new ArrayList<>();
+
+    void setInRangeFlies(ArrayList<FlyCollectible> flies) {
+        this.inRangeFlies = flies != null ? flies : new ArrayList<>();
+    }
 
     LevelRenderer(WorldState worldState,
-                  Texture slotTexture,
+                  Texture inventoryTexture,
                   Texture settingsIconTexture,
                   Texture pauseIconTexture,
                   Texture markerPixel,
@@ -59,7 +69,7 @@ class LevelRenderer {
                   float stickDistance,
                   float takeDistance) {
         this.worldState = worldState;
-        this.slotTexture = slotTexture;
+        this.inventoryTexture = inventoryTexture;
         this.settingsIconTexture = settingsIconTexture;
         this.pauseIconTexture = pauseIconTexture;
         this.markerPixel = markerPixel;
@@ -88,6 +98,11 @@ class LevelRenderer {
             drawHighlight(batch, go);
         }
 
+        batch.setColor(Color.GOLD);
+        for (FlyCollectible fly : inRangeFlies) {
+            drawFlyHighlight(batch, fly);
+        }
+
         if (worldState.isShowRange()) {
             drawRanges(batch, avatar);
         }
@@ -101,8 +116,9 @@ class LevelRenderer {
         int invSize = avatar.getPictureInventory().getSize();
         float slotSz = Math.min(MAX_SLOT_SIZE, INVENTORY_BAR_HEIGHT - 2 * INVENTORY_PADDING);
         float dynBarWidth = invSize * slotSz + (invSize + 1) * INVENTORY_PADDING;
-        batch.setColor(new Color(0.3f, 0.3f, 0.3f, 0.8f));
-        batch.draw(slotTexture, viewport.getWidth() / 2 - dynBarWidth / 2.0f, 0, dynBarWidth, INVENTORY_BAR_HEIGHT);
+        float barX = viewport.getWidth() / 2 - dynBarWidth / 2.0f;
+        batch.setColor(INVENTORY_BAR_BACK);
+        batch.draw(markerPixel, barX, 0, dynBarWidth, INVENTORY_BAR_HEIGHT);
         drawInventory(batch, viewport, avatar);
         batch.setColor(Color.WHITE);
 
@@ -177,6 +193,17 @@ class LevelRenderer {
             highlightTransform.preTranslate(position.x * units, position.y * units + offset);
             batch.outline(obj.getOutline(), highlightTransform);
         }
+    }
+
+    private void drawFlyHighlight(SpriteBatch batch, FlyCollectible fly) {
+        Obstacle obj = fly.getObstacle();
+        float units = obj.getPhysicsUnits();
+        float angle = obj.getAngle();
+        Vector2 position = obj.getPosition();
+        highlightTransform.idt();
+        highlightTransform.preRotate((float) (angle * 180.0f / Math.PI));
+        highlightTransform.preTranslate(position.x * units, position.y * units);
+        batch.outline(obj.getOutline(), highlightTransform);
     }
 
     /**
@@ -334,22 +361,21 @@ class LevelRenderer {
         float startX = barX + padding;
         float startY = barY + (barHeight - slotSize) / 2f;
         float selectedRaise = 8f * UI;
-        float slotInset = 4f * UI;
+        // Inner margin for subject art vs. frame hole (inventory.png is 200×200 with ~44px border).
+        float frameInnerPad = slotSize * 0.22f;
 
         for (int ii = 0; ii < size; ii++) {
             float slotX = startX + ii * (slotSize + padding);
             float slotY = ii == worldState.getSelectedSlotIndex() ? startY + selectedRaise : startY;
             Picture picture = avatar.getPictureInventory().getPicture(ii);
 
-            batch.setColor(Color.GRAY);
-            batch.draw(slotTexture, slotX, slotY, slotSize, slotSize);
             if (picture != null && picture.hasSubject()) {
-                batch.setColor(picture.getColor());
-                batch.draw(slotTexture, slotX, slotY, slotSize, slotSize);
                 batch.setColor(Color.WHITE);
-                batch.draw(picture.getSubject().getTexture(), slotX + slotInset, slotY + slotInset,
-                        slotSize - 2f * slotInset, slotSize - 2f * slotInset);
+                batch.draw(picture.getSubject().getTexture(), slotX + frameInnerPad, slotY + frameInnerPad,
+                        slotSize - 2f * frameInnerPad, slotSize - 2f * frameInnerPad);
             }
+            batch.setColor(Color.WHITE);
+            batch.draw(inventoryTexture, slotX, slotY, slotSize, slotSize);
         }
         batch.setColor(Color.WHITE);
     }

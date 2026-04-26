@@ -90,7 +90,7 @@ const makeLevel = () => ({
   goo:       { tile:128.0, friction:0.7, density:0.0, restitution:0.1, debug:"#5a8a3c", fatal:true, positions:[], orientations:[] },
   tilemap:   [],
   objectLocations: {
-    rock:[], cloud:[], ice:[], zukosprite:[],
+    rock:[], cloud:[], ice:[], fly:[], zukosprite:[],
     goal: { pos:[28.0,11.5], size:3.0, density:0.0, friction:0.0, restitution:0.0 },
     zuko: { pos:[2.5,5.0], inner:[0.7,0.95], size:1.5, force:20.0, damping:10.0,
             density:0.5, friction:4.0, maxspeed:5.0, jump_force:4.0, jump_cool:30,
@@ -178,6 +178,7 @@ function loadFromJson(parsed){
     while(lev.goo.orientations.length<lev.goo.positions.length) lev.goo.orientations.push(0);
     if(!lev.tilemap) lev.tilemap=[];
     if(!lev.objectLocations.zukosprite) lev.objectLocations.zukosprite=[];
+    if(!lev.objectLocations.fly) lev.objectLocations.fly=[];
   }
   levels=newLevels;
   currentLevel=Object.keys(levels)[0];
@@ -215,6 +216,7 @@ function draw(){
   ob.rock.forEach((p,i)=>drawObj(p[0],p[1],'🪨','#b0c0d0',selected&&selected.type==='rock'&&selected.index===i,0.6));
   ob.cloud.forEach((p,i)=>drawObj(p[0],p[1],'☁','#c0d8ff',selected&&selected.type==='cloud'&&selected.index===i,1.2));
   ob.ice.forEach((p,i)=>drawObj(p[0],p[1],'🧊','#80d8ff',selected&&selected.type==='ice'&&selected.index===i,0.6));
+  (ob.fly||[]).forEach((p,i)=>drawObj(p[0],p[1],'🪰','#90ee90',selected&&selected.type==='fly'&&selected.index===i,0.35));
   (ob.zukosprite||[]).forEach((p,i)=>{
     const px=wx(p[0]),py=wy(p[1]),sz=SCALE*0.9,sel=selected&&selected.type==='zukosprite'&&selected.index===i;
     if(sel){ctx.beginPath();ctx.arc(px,py,sz/2+3,0,Math.PI*2);ctx.fillStyle='rgba(255,255,100,0.25)';ctx.fill();ctx.strokeStyle='#ffe050';ctx.lineWidth=2;ctx.stroke();}
@@ -235,7 +237,7 @@ function hitTest(gX,gY){
   const ob=levels[currentLevel].objectLocations;
   if(Math.hypot(gX-ob.zuko.pos[0],gY-ob.zuko.pos[1])<ob.zuko.size/2+0.3) return {type:'zuko'};
   if(Math.hypot(gX-ob.goal.pos[0],gY-ob.goal.pos[1])<ob.goal.size/2+0.3) return {type:'goal'};
-  for(const type of ['rock','cloud','ice','zukosprite']){const r=type==='cloud'?1.5:0.9;for(let i=(ob[type]||[]).length-1;i>=0;i--)if(Math.hypot(gX-ob[type][i][0],gY-ob[type][i][1])<r)return {type,index:i};}
+  for(const type of ['rock','cloud','ice','fly','zukosprite']){const r=type==='cloud'?1.5:type==='fly'?0.5:0.9;for(let i=(ob[type]||[]).length-1;i>=0;i--)if(Math.hypot(gX-ob[type][i][0],gY-ob[type][i][1])<r)return {type,index:i};}
   return null;
 }
 function polyHit(pts,x,y,m){const b=polyBounds(pts);return x>=b.x0-m&&x<=b.x1+m&&y>=b.y0-m&&y<=b.y1+m;}
@@ -252,7 +254,7 @@ canvas.addEventListener('mousedown',e=>{
     for(let i=lev.platforms.positions.length-1;i>=0;i--){if(polyHit(lev.platforms.positions[i],gX,gY,0.2)){lev.platforms.positions.splice(i,1);if(selected&&selected.type==='platform'&&selected.index===i)selected=null;buildSidebar();draw();updateJson();return;}}
     for(let i=(lev.floors?.positions||[]).length-1;i>=0;i--){if(polyHit(lev.floors.positions[i],gX,gY,0.2)){lev.floors.positions.splice(i,1);if(selected&&selected.type==='floor'&&selected.index===i)selected=null;buildSidebar();draw();updateJson();return;}}
     for(let i=(lev.goo?.positions||[]).length-1;i>=0;i--){if(polyHit(lev.goo.positions[i],gX,gY,0.2)){lev.goo.positions.splice(i,1);lev.goo.orientations.splice(i,1);if(selected&&selected.type==='goo'&&selected.index===i)selected=null;buildSidebar();draw();updateJson();return;}}
-    for(const type of ['rock','cloud','ice','zukosprite']){const r=type==='cloud'?1.5:0.9;const arr=lev.objectLocations[type]||[];for(let i=arr.length-1;i>=0;i--){if(Math.hypot(gX-arr[i][0],gY-arr[i][1])<r){arr.splice(i,1);if(selected&&selected.type===type&&selected.index===i)selected=null;buildSidebar();draw();updateJson();return;}}}
+    for(const type of ['rock','cloud','ice','fly','zukosprite']){const r=type==='cloud'?1.5:type==='fly'?0.5:0.9;const arr=lev.objectLocations[type]||[];for(let i=arr.length-1;i>=0;i--){if(Math.hypot(gX-arr[i][0],gY-arr[i][1])<r){arr.splice(i,1);if(selected&&selected.type===type&&selected.index===i)selected=null;buildSidebar();draw();updateJson();return;}}}
     const tx=Math.floor(gX),ty=Math.floor(gY);
     const tidx=(lev.tilemap||[]).findIndex(t=>t.tx===tx&&t.ty===ty);if(tidx!==-1){lev.tilemap.splice(tidx,1);draw();updateJson();return;}
     return;
@@ -275,14 +277,14 @@ canvas.addEventListener('mousedown',e=>{
     else {lev.tilemap[ex].col=selectedTile.col;lev.tilemap[ex].row=selectedTile.row;}
     draw();updateJson();return;
   }
-  if(['platform','rock','cloud','ice','zukosprite'].includes(activeTool)){
+  if(['platform','rock','cloud','ice','fly','zukosprite'].includes(activeTool)){
     if(activeTool==='platform'){const nx=snap(gX),ny=snap(gY);lev.platforms.positions.push([nx,ny,nx+3,ny,nx+3,ny+0.5,nx,ny+0.5]);selected={type:'platform',index:lev.platforms.positions.length-1};}
     else{(ob[activeTool]=ob[activeTool]||[]).push([snap(gX),snap(gY)]);selected={type:activeTool,index:ob[activeTool].length-1};}
     buildSidebar();draw();updateJson();return;
   }
   const hit=hitTest(gX,gY);
   if(hit){selected=hit;dragging=true;dragStartWorld={x:gX,y:gY};
-    if(['rock','cloud','ice','zukosprite'].includes(hit.type))dragStartObj=[...(ob[hit.type]||[])[hit.index]];
+    if(['rock','cloud','ice','fly','zukosprite'].includes(hit.type))dragStartObj=[...(ob[hit.type]||[])[hit.index]];
     else if(hit.type==='goal')dragStartObj=[...ob.goal.pos];
     else if(hit.type==='zuko')dragStartObj=[...ob.zuko.pos];
     buildSidebar();draw();updateJson();return;
@@ -305,7 +307,7 @@ canvas.addEventListener('mousemove',e=>{
   }
   if(!dragging||!selected||!dragStartWorld)return;
   const dx=gX-dragStartWorld.x, dy=gY-dragStartWorld.y, lev=levels[currentLevel], ob=lev.objectLocations;
-  if(['rock','cloud','ice','zukosprite'].includes(selected.type)){const arr2=ob[selected.type]||[];arr2[selected.index][0]=snap(dragStartObj[0]+dx);arr2[selected.index][1]=snap(dragStartObj[1]+dy);}
+  if(['rock','cloud','ice','fly','zukosprite'].includes(selected.type)){const arr2=ob[selected.type]||[];arr2[selected.index][0]=snap(dragStartObj[0]+dx);arr2[selected.index][1]=snap(dragStartObj[1]+dy);}
   else if(selected.type==='goal'){ob.goal.pos[0]=snap(dragStartObj[0]+dx);ob.goal.pos[1]=snap(dragStartObj[1]+dy);}
   else if(selected.type==='zuko'){ob.zuko.pos[0]=snap(dragStartObj[0]+dx);ob.zuko.pos[1]=snap(dragStartObj[1]+dy);}
   else if(['platform','wall','floor','goo'].includes(selected.type)){const arr=selected.type==='platform'?lev.platforms.positions[selected.index]:selected.type==='floor'?lev.floors.positions[selected.index]:selected.type==='goo'?lev.goo.positions[selected.index]:lev.walls.positions[selected.index];for(let i=0;i<arr.length;i+=2)arr[i]=snap(dragStartObj[i]+dx);for(let i=1;i<arr.length;i+=2)arr[i]=snap(dragStartObj[i]+dy);}
@@ -348,7 +350,7 @@ function buildSidebar(){
   ls.appendChild(ab);sb.appendChild(ls);
   const ts=document.createElement('div');ts.className='sidebar-section';ts.innerHTML='<h3>tool</h3>';
   const tr=document.createElement('div');tr.className='tools-row';
-  [['select','↖'],['platform','▬'],['floor','🟩'],['goo','☠'],['rock','🪨'],['cloud','☁'],['ice','🧊'],['zukosprite','🐸'],['tile','▦']].forEach(([t,icon])=>{const b=document.createElement('button');b.className='tool-btn'+(activeTool===t?' active':'');b.innerHTML=`${icon} ${t}`;b.onclick=()=>{activeTool=t;buildSidebar();};tr.appendChild(b);});
+  [['select','↖'],['platform','▬'],['floor','🟩'],['goo','☠'],['rock','🪨'],['cloud','☁'],['ice','🧊'],['fly','🪰'],['zukosprite','🐸'],['tile','▦']].forEach(([t,icon])=>{const b=document.createElement('button');b.className='tool-btn'+(activeTool===t?' active':'');b.innerHTML=`${icon} ${t}`;b.onclick=()=>{activeTool=t;buildSidebar();};tr.appendChild(b);});
   ts.appendChild(tr);
   if(activeTool==='goo'){
     const orientRow=document.createElement('div');orientRow.className='prop-row';orientRow.style.marginTop='6px';

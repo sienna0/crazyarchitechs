@@ -53,6 +53,7 @@ class LevelPopulation {
         List<GameObject> honeys = new ArrayList<>();
         List<GameObject> ices = new ArrayList<>();
         List<GameObject> clouds = new ArrayList<>();
+        List<edu.cornell.cis3152.physics.world.FlyCollectible> flies = new ArrayList<>();
 
         List<TextureRegion> tileRegions    = new ArrayList<>();
         /** [x, y] screen-space position in pixels for each tile, in the same order as tileRegions. */
@@ -241,6 +242,18 @@ class LevelPopulation {
             cloud.setTexture(cloudTexture);
             spriteAdder.accept(cloud);
             result.clouds.add(cloud);
+        }
+
+        Texture flyTexture = textureResolver.apply("shared-fly", "shared/frogtographer_flies_anim.png");
+        JsonValue flyPositions = objectLocations.get("fly");
+        if (flyPositions != null) {
+            for (int ii = 0; ii < flyPositions.size; ii++) {
+                float[] pos = flyPositions.get(ii).asFloatArray();
+                edu.cornell.cis3152.physics.world.FlyCollectible fly =
+                        new edu.cornell.cis3152.physics.world.FlyCollectible(units, pos[0], pos[1], flyTexture, ii);
+                spriteAdder.accept(fly);
+                result.flies.add(fly);
+            }
         }
 
         addPulleyAssembly(result, objectLocations, units, world);

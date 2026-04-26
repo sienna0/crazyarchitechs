@@ -408,4 +408,8 @@ public class Zuko extends ObstacleSprite {
         movement.setFacingRight(value);
     }
 
+    public boolean isTongueActive() {
+        return animator.isTongueActive();
+    }
+
 }

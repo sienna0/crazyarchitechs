@@ -35,6 +35,16 @@
         "shared-lily-3": "shared/lily3.png",
         "shared-blank-lily": "shared/blanklily.png",
         "shared-background": "shared/background.png",
+        "shared-inventory": {
+            "file": "shared/inventory.png",
+            "minfilter": "nearest",
+            "magfilter": "nearest"
+        },
+        "shared-fly": {
+            "file": "shared/frogtographer_flies_anim.png",
+            "minfilter": "nearest",
+            "magfilter": "nearest"
+        },
         "shared-level-background": "shared/levelbackground.png",
         "shared-pulley-top": "shared/pulley_top.png",
         "shared-pulley-string": "shared/pulley_string.png",
@@ -113,7 +123,7 @@
         "platform-jump"     : "platform/jump.wav",
         "platform-pew"      : "platform/pew.wav",
         "platform-plop"     : "platform/plop.wav",
-        "platform-hover"    : "platform/hover.wav"
+        "platform-hover"    : "platform/hover.wav",
     },
     "fonts": {
         "shared-retro": {

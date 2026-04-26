@@ -291,4 +291,6 @@ public class ZukoAnimator {
 
     public boolean isPlayingPhoto() { return playingPhoto; }
 
+    public boolean isTongueActive() { return tongueState != 0f; }
+
 }

@@ -16,6 +16,8 @@ import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.utils.ObjectSet;
+import edu.cornell.cis3152.physics.world.FlyCollectible;
+import java.util.ArrayList;
 import edu.cornell.cis3152.physics.CanvasRender;
 import edu.cornell.cis3152.physics.GameAudio;
 import edu.cornell.cis3152.physics.InputController;
@@ -57,7 +59,8 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
 
     private Texture backgroundTexture;
 
-    private Texture slotTexture;
+    /** Slot frame + overlay for inventory thumbnails ({@code shared/inventory.png}). */
+    private Texture inventoryTexture;
     private Texture settingsIconTexture;
     private Texture pauseIconTexture;
     /** The jump sound. We only want to play once. */
@@ -95,6 +98,17 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     private int gooAnimCycle;
     /** From {@code constants.json} {@code goo.frame_duration_sec}. */
     private float gooAnimFrameDuration = 0.26f;
+
+    /** Flies collected so far in the current level. */
+    private int flyCount = 0;
+    /** Total flies placed in the current level. */
+    private int flyTotal = 0;
+    /** Fly waiting to be collected once Zuko's tongue finishes retracting. */
+    private FlyCollectible pendingFlyCollection = null;
+    /** Whether the tongue was active last frame (for edge-detection). */
+    private boolean tonguePreviouslyActive = false;
+    /** Collect range in physics units — matches take_picture_distance. */
+    private float flyCollectRange = 9.0f;
 
     private boolean pendingHazardRestart = false;
     private float hazardTimer = 0f;
@@ -140,8 +154,8 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             markerPixel = new Texture(markerPixmap);
             markerPixmap.dispose();
         }
-        if (slotTexture == null) {
-            slotTexture = markerPixel;
+        if (inventoryTexture == null) {
+            inventoryTexture = requireTexture("shared-inventory", "shared/inventory.png");
         }
         if (levelPopulation == null) {
             levelPopulation = new LevelPopulation(constants, this::requireTexture, this::addSprite);
@@ -157,6 +171,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             float springK   = gp != null ? gp.getFloat("lift_spring_stiffness", 6.0f) : 6.0f;
             float springD   = gp != null ? gp.getFloat("lift_spring_damping", 3.5f) : 3.5f;
 
+            flyCollectRange = takeDist;
             photoSystem = new PhotoSystem(
                     worldState, stickDist, takeDist, springK, springD,
                     volume, fireSound, plopSound, constants.get("zuko")
@@ -165,7 +180,8 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
                 stuckPictureTextures = loadStuckPictureTextures();
             }
             renderer = new LevelRenderer(
-                    worldState, slotTexture, settingsIconTexture, pauseIconTexture, markerPixel,
+                    worldState, inventoryTexture, settingsIconTexture,
+                    pauseIconTexture, markerPixel,
                     stuckPictureTextures,
                     stickDist, takeDist
             );
@@ -319,7 +335,17 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         avatar = levelData.avatar;
         gooAnimPhaseTimer = 0f;
         gooAnimCycle = 0;
+        flyCount = 0;
+        flyTotal = levelData.flies.size();
+        pendingFlyCollection = null;
+        tonguePreviouslyActive = false;
     }
+
+    /** Returns the number of flies collected in the current level. */
+    public int getFlyCount() { return flyCount; }
+
+    /** Returns the total number of flies placed in the current level. */
+    public int getFlyTotal() { return flyTotal; }
 
     private void applyGooTextureRegions() {
         if (levelData == null || levelData.gooFrames == null || levelData.gooDecors.isEmpty()) {
@@ -512,12 +538,105 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             photoSystem.clearPictureTaken();
         }
 
+        // Fly tongue-completion: collect when tongue finishes retracting
+        boolean tongueActive = avatar.isTongueActive();
+        if (tonguePreviouslyActive && !tongueActive && pendingFlyCollection != null) {
+            flyCount++;
+            pendingFlyCollection.markCollected();
+            pendingFlyCollection = null;
+        }
+        tonguePreviouslyActive = tongueActive;
+
+        // Fly click detection (only when no active picture and no pending collection)
+        if (input.didLeftClick() && worldState.getActivePicture() == null
+                && clickedSlot < 0 && pendingFlyCollection == null) {
+            Vector2 crosshair = input.getCrossHair();
+            FlyCollectible clickedFly = findFlyUnderCrosshair(crosshair, units);
+            if (clickedFly != null && flyInRange(clickedFly) && flyHasLineOfSight(clickedFly)) {
+                avatar.startTongueAnimation(clickedFly.getObstacle().getX(), clickedFly.getObstacle().getY());
+                pendingFlyCollection = clickedFly;
+            }
+        }
+
+        // Update in-range fly list for highlight rendering
+        ArrayList<FlyCollectible> inRangeFlies = new ArrayList<>();
+        if (levelData != null) {
+            for (FlyCollectible fly : levelData.flies) {
+                if (!fly.isCollected() && flyInRange(fly) && flyHasLineOfSight(fly)) {
+                    inRangeFlies.add(fly);
+                }
+            }
+        }
+        renderer.setInRangeFlies(inRangeFlies);
+
         photoSystem.applyLiftSprings(sprites);
         avatar.applyForce();
         if (avatar.isJumping()) {
             SoundEffectManager.getInstance().play("jump", jumpSound, GameAudio.effectiveSfxVolume(volume));
             avatar.startJumpAnimation();
         }
+    }
+
+    private FlyCollectible findFlyUnderCrosshair(Vector2 crosshair, float units) {
+        if (levelData == null) return null;
+        float halfSizePx = FlyCollectible.FLY_SIZE * units / 2f;
+        float mouseX = crosshair.x * units;
+        float mouseY = crosshair.y * units;
+        for (FlyCollectible fly : levelData.flies) {
+            if (fly.isCollected()) continue;
+            float cx = fly.getObstacle().getX() * units;
+            float cy = fly.getObstacle().getY() * units;
+            if (mouseX >= cx - halfSizePx && mouseX <= cx + halfSizePx
+                    && mouseY >= cy - halfSizePx && mouseY <= cy + halfSizePx) {
+                return fly;
+            }
+        }
+        return null;
+    }
+
+    private boolean flyInRange(FlyCollectible fly) {
+        float dx = fly.getObstacle().getX() - avatar.getObstacle().getX();
+        float dy = fly.getObstacle().getY() - avatar.getObstacle().getY();
+        return dx * dx + dy * dy <= flyCollectRange * flyCollectRange;
+    }
+
+    /**
+     * Returns true if at least 3 of 5 sample points on the fly are reachable from the avatar
+     * without a solid fixture blocking the ray — mirrors the photo system's LOS logic.
+     * Flies are sensors so the ray can't hit them; instead we check that nothing solid
+     * intercepts the path to each sample point.
+     */
+    private boolean flyHasLineOfSight(FlyCollectible fly) {
+        float ox = avatar.getObstacle().getX();
+        float oy = avatar.getObstacle().getY();
+        float tx = fly.getObstacle().getX();
+        float ty = fly.getObstacle().getY();
+        float half = FlyCollectible.FLY_SIZE * 0.4f;
+        Vector2[] samples = {
+            new Vector2(tx,        ty),
+            new Vector2(tx - half, ty - half),
+            new Vector2(tx + half, ty - half),
+            new Vector2(tx - half, ty + half),
+            new Vector2(tx + half, ty + half),
+        };
+        int visible = 0;
+        for (Vector2 sample : samples) {
+            if (isPathToFlyClear(ox, oy, sample.x, sample.y)) {
+                if (++visible >= 3) return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isPathToFlyClear(float ox, float oy, float tx, float ty) {
+        final boolean[] blocked = {false};
+        world.rayCast((fixture, point, normal, fraction) -> {
+            if (fixture.isSensor()) return -1f;
+            if (fixture.getBody().getUserData() == avatar) return -1f;
+            blocked[0] = true;
+            return 0f;
+        }, ox, oy, tx, ty);
+        return !blocked[0];
     }
 
     /**
