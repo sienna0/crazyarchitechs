@@ -278,10 +278,17 @@ public class LevelSelectScene implements Screen {
                 batch.draw(starTexture, sx, sy, starSize, starSize);
 
                 if (score > 1){
-                    float star2Size = size * 0.35f;                 // ~45% of the lily
-                    float sx2 = pos.x - size * 0.2f - star2Size / 2;  // offset toward top-right
+                    float star2Size = size * 0.35f;
+                    float sx2 = pos.x - size * 0.2f - star2Size / 2;
                     float sy2 = pos.y - size * 0.2f - star2Size / 2;
-                    batch.setColor(Color.WHITE);                    // don't inherit the lily tint
+                    batch.setColor(Color.WHITE);
+                    batch.draw(starTexture, sx2, sy2, star2Size, star2Size);
+                }
+                if (score > 2) {
+                    float star2Size = size * 0.35f;
+                    float sx2 = pos.x - size * 0.2f - star2Size / 2;
+                    float sy2 = pos.y + size * 0.2f - star2Size / 2;
+                    batch.setColor(Color.WHITE);
                     batch.draw(starTexture, sx2, sy2, star2Size, star2Size);
                 }
             }

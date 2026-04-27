@@ -135,6 +135,8 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     private float entryTargetY = 0f;
     private int photosUsed;
 
+    private float timeElapsed;
+
     /**
      * Lazily creates sound handles, textures, {@link WorldState}, contact tracking,
      * {@link LevelPopulation}, {@link PhotoSystem}, and {@link LevelRenderer}.
@@ -532,6 +534,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
      */
     @Override
     public void update(float dt) {
+        timeElapsed += dt;
         if (hazardTriggered) {
             hazardTimer += dt;
             avatar.setMovement(0f);
@@ -940,4 +943,6 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     }
 
     public int getPhotosUsed() {return photosUsed;}
+
+    public float getTimeElapsed(){return timeElapsed;}
 }

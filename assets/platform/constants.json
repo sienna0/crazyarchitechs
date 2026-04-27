@@ -170,7 +170,8 @@
       "inventory_size": 1.0,
       "picture_cooldown": 10.0,
       "max_sight_distance": 9.0,
-      "film_count": 10.0
+      "film_count": 10.0,
+      "goal_num_photos": 1.0
     },
     "objectLocations": {
       "honey": [],
@@ -295,7 +296,8 @@
       "inventory_size": 1.0,
       "picture_cooldown": 10.0,
       "max_sight_distance": 9.0,
-      "film_count": 10.0
+      "film_count": 10.0,
+      "goal_num_photos": 1.0
     },
     "objectLocations": {
       "honey": [],
@@ -685,7 +687,8 @@
       "inventory_size": 1.0,
       "picture_cooldown": 10.0,
       "max_sight_distance": 9.0,
-      "film_count": 10.0
+      "film_count": 10.0,
+      "goal_num_photos": 1.0
     },
     "objectLocations": {
       "honey": [
@@ -823,7 +826,8 @@
       "inventory_size": 1.0,
       "picture_cooldown": 10.0,
       "max_sight_distance": 9.0,
-      "film_count": 10.0
+      "film_count": 10.0,
+      "goal_num_photos": 1.0
     },
     "objectLocations": {
       "honey": [
@@ -1036,7 +1040,8 @@
       "inventory_size": 1.0,
       "picture_cooldown": 10.0,
       "max_sight_distance": 9.0,
-      "film_count": 10.0
+      "film_count": 10.0,
+      "goal_num_photos": 1.0
     },
     "objectLocations": {
       "honey": [
@@ -1142,7 +1147,8 @@
       "inventory_size": 1.0,
       "picture_cooldown": 10.0,
       "max_sight_distance": 9.0,
-      "film_count": 10.0
+      "film_count": 10.0,
+      "goal_num_photos": 1.0
     },
     "objectLocations": {
       "honey": [],
@@ -1436,7 +1442,8 @@
       "inventory_size": 1.0,
       "film_count": 10.0,
       "picture_cooldown": 10.0,
-      "max_sight_distance": 9.0
+      "max_sight_distance": 9.0,
+      "goal_num_photos": 1.0
     },
     "objectLocations": {
       "honey": [
@@ -1607,7 +1614,8 @@
       "inventory_size": 1.0,
       "picture_cooldown": 10.0,
       "max_sight_distance": 9.0,
-      "film_count": 10.0
+      "film_count": 10.0,
+      "goal_num_photos": 1.0
     },
     "objectLocations": {
       "honey": [
@@ -1835,7 +1843,8 @@
       "inventory_size": 1.0,
       "picture_cooldown": 10.0,
       "max_sight_distance": 9.0,
-      "film_count": 10.0
+      "film_count": 10.0,
+      "goal_num_photos": 1.0
     },
     "objectLocations": {
       "honey": [],
@@ -1939,7 +1948,8 @@
       "inventory_size": 1.0,
       "picture_cooldown": 10.0,
       "max_sight_distance": 9.0,
-      "film_count": 10.0
+      "film_count": 10.0,
+      "goal_num_photos": 1.0
     },
     "objectLocations": {
       "honey": [
@@ -2137,7 +2147,8 @@
       "inventory_size": 2.0,
       "picture_cooldown": 10.0,
       "max_sight_distance": 9.0,
-      "film_count": 10.0
+      "film_count": 10.0,
+      "goal_num_photos": 1.0
     },
     "objectLocations": {
       "honey": [],
@@ -2284,7 +2295,8 @@
       "inventory_size": 1.0,
       "film_count": 10.0,
       "picture_cooldown": 10.0,
-      "max_sight_distance": 9.0
+      "max_sight_distance": 9.0,
+      "goal_num_photos": 1.0
     },
     "objectLocations": {
       "honey": [
@@ -2551,7 +2563,8 @@
       "inventory_size": 4.0,
       "picture_cooldown": 10.0,
       "max_sight_distance": 9.0,
-      "film_count": 10.0
+      "film_count": 10.0,
+      "goal_num_photos": 1.0
     }
   },
   "level14": {
@@ -2695,7 +2708,8 @@
       "inventory_size": 1.0,
       "picture_cooldown": 10.0,
       "max_sight_distance": 9.0,
-      "film_count": 10.0
+      "film_count": 10.0,
+      "goal_num_photos": 1.0
     },
     "objectLocations": {
       "honey": [
@@ -2859,7 +2873,8 @@
       "inventory_size": 3.0,
       "picture_cooldown": 10.0,
       "max_sight_distance": 9.0,
-      "film_count": 10.0
+      "film_count": 10.0,
+      "goal_num_photos": 1.0
     },
     "objectLocations": {
       "honey": [
@@ -3043,7 +3058,8 @@
       "inventory_size": 2.0,
       "picture_cooldown": 10.0,
       "max_sight_distance": 9.0,
-      "film_count": 10.0
+      "film_count": 10.0,
+      "goal_num_photos": 1.0
     },
     "objectLocations": {
       "honey": [
@@ -3389,7 +3405,8 @@
       "inventory_size": 3.0,
       "picture_cooldown": 10.0,
       "max_sight_distance": 9.0,
-      "film_count": 10.0
+      "film_count": 10.0,
+      "goal_num_photos": 1.0
     }
   },
   "level18": {
@@ -3623,7 +3640,8 @@
       "inventory_size": 1.0,
       "picture_cooldown": 10.0,
       "max_sight_distance": 9.0,
-      "film_count": 10.0
+      "film_count": 10.0,
+      "goal_num_photos": 1.0
     },
     "objectLocations": {
       "honey": [
@@ -3819,7 +3837,8 @@
       "inventory_size": 3.0,
       "picture_cooldown": 10.0,
       "max_sight_distance": 9.0,
-      "film_count": 10.0
+      "film_count": 10.0,
+      "goal_num_photos": 1.0
     },
     "objectLocations": {
       "honey": [
@@ -4084,7 +4103,8 @@
       "inventory_size": 1.0,
       "picture_cooldown": 10.0,
       "max_sight_distance": 9.0,
-      "film_count": 10.0
+      "film_count": 10.0,
+      "goal_num_photos": 1.0
     },
     "objectLocations": {
       "honey": [
@@ -4243,7 +4263,8 @@
       "inventory_size": 3.0,
       "film_count": 10.0,
       "picture_cooldown": 10.0,
-      "max_sight_distance": 9.0
+      "max_sight_distance": 9.0,
+      "goal_num_photos": 1.0
     },
     "objectLocations": {
       "honey": [],
@@ -4529,7 +4550,8 @@
       "inventory_size": 1.0,
       "picture_cooldown": 10.0,
       "max_sight_distance": 9.0,
-      "film_count": 10.0
+      "film_count": 10.0,
+      "goal_num_photos": 1.0
     }
   },
   "level23": {
@@ -4581,7 +4603,8 @@
       "inventory_size": 1.0,
       "film_count": 10.0,
       "picture_cooldown": 10.0,
-      "max_sight_distance": 9.0
+      "max_sight_distance": 9.0,
+      "goal_num_photos": 1.0
     },
     "objectLocations": {
       "honey": [
@@ -4753,7 +4776,8 @@
       "inventory_size": 1.0,
       "film_count": 10.0,
       "picture_cooldown": 10.0,
-      "max_sight_distance": 9.0
+      "max_sight_distance": 9.0,
+      "goal_num_photos": 1.0
     },
     "objectLocations": {
       "honey": [],
