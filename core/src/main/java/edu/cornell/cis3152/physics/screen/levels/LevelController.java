@@ -51,7 +51,7 @@ public class LevelController {
         totalLevels = countLevels(assets);
 
         loadLevel(currentLevel);
-        levelProgress = new LevelProgress(totalLevels);
+        levelProgress = new LevelProgress(totalLevels, "assets/save_game.json");
     }
 
     /**
@@ -155,12 +155,14 @@ public class LevelController {
     }
 
     public void markCurrentBeaten() {
-        levelProgress.beatLevel(currentLevel, ((LevelBaseScene) currentScene).getPhotosUsed());
-
+        int photosUsed = ((LevelBaseScene)currentScene).getPhotosUsed();
+        int flyCount = ((LevelBaseScene)currentScene).getFlyCount();
+        levelProgress.beatLevel(currentLevel, photosUsed, flyCount);
     }
 
     public boolean isBeaten(int level) {return levelProgress.isBeaten(level);}
 
     public LevelProgress getLevelProgress() {return levelProgress;}
     public int getLevelScore(int level) {return levelProgress.getLevelScore(level);}
+
 }

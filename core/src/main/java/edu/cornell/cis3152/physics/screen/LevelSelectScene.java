@@ -146,7 +146,7 @@ public class LevelSelectScene implements Screen {
         leftArrowBounds = new Rectangle();
         rightArrowBounds = new Rectangle();
 
-        this.starTexture = assets.getEntry("shared-star", Texture.class);
+        this.starTexture = assets.getEntry("shared-lotus", Texture.class);
         this.controller = controller;
 
         resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -269,22 +269,24 @@ public class LevelSelectScene implements Screen {
                 batch.draw(lilyTexture, pos.x - size/2, pos.y - size /2, size, size);
             }
 
-            if (starTexture != null && controller.isBeaten(ii + 1)) {
+            int score = controller.getLevelScore(ii + 1);
+            if (starTexture != null &&  score > 0) {
                 float starSize = size * 0.35f;                 // ~45% of the lily
                 float sx = pos.x + size * 0.25f - starSize / 2;  // offset toward top-right
                 float sy = pos.y + size * 0.25f - starSize / 2;
                 batch.setColor(Color.WHITE);                    // don't inherit the lily tint
                 batch.draw(starTexture, sx, sy, starSize, starSize);
+
+                if (score > 1){
+                    float star2Size = size * 0.35f;                 // ~45% of the lily
+                    float sx2 = pos.x - size * 0.2f - star2Size / 2;  // offset toward top-right
+                    float sy2 = pos.y - size * 0.2f - star2Size / 2;
+                    batch.setColor(Color.WHITE);                    // don't inherit the lily tint
+                    batch.draw(starTexture, sx2, sy2, star2Size, star2Size);
+                }
             }
-            int score = controller.getLevelScore(ii + 1);
-            if (score != -1) {
-                font.getData().setScale(0.5f * CanvasRender.layoutScale());
-                optionLayout.setColor(Color.WHITE);
-                optionLayout.setText(String.valueOf(score));
-                optionLayout.layout();
-                float numLift = -size * 0.25f;   // below the lily's center
-                batch.drawText(optionLayout, pos.x, pos.y + numLift);
-            }
+
+
 
 
             font.getData().setScale(0.85f * CanvasRender.layoutScale());

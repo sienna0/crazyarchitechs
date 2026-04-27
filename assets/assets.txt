@@ -1,5 +1,4 @@
 META-INF/MANIFEST.MF
-Yummy Sound effect.mp3
 assets.json
 loading/GameLogo_animated.gif
 loading/boot.json
@@ -14,7 +13,6 @@ loading/play.png
 loading/progress.png
 loading/splash.png
 loading/splash1.png
-mosquito.MP3
 platform/32zuko.png
 platform/cameraflash.png
 platform/cameraflash1.png
@@ -54,6 +52,7 @@ platform/zukojumpupdated.png
 platform/zukotonguechunk.png
 platform/zukowalk.png
 platform/zukowalk1.png
+save_game.json
 shared/NunitoBoldItalic-RpvlV.ttf
 shared/NunitoExtraboldItalic-8MamM.ttf
 shared/RetroGame.ttf
@@ -73,6 +72,7 @@ shared/levelbackgroundfuture.png
 shared/lily1.png
 shared/lily2.png
 shared/lily3.png
+shared/lotus.png
 shared/parallax-demon-woods-bg.png
 shared/parallax-demon-woods-close-trees.png
 shared/parallax-demon-woods-far-trees.png

@@ -24,6 +24,7 @@ platform/honey.png
 platform/hover.wav
 platform/ice.png
 platform/jump.wav
+platform/mosquito.mp3
 platform/oldzuko.png
 platform/pause_icon.png
 platform/pew.wav
@@ -38,6 +39,7 @@ platform/rock.png
 platform/settings_icon.png
 platform/tileset.png
 platform/walltile.png
+platform/yummy.mp3
 platform/zuko.png
 platform/zuko2.png
 platform/zuko2walk.png
@@ -50,6 +52,7 @@ platform/zukojumpupdated.png
 platform/zukotonguechunk.png
 platform/zukowalk.png
 platform/zukowalk1.png
+save_game.json
 shared/NunitoBoldItalic-RpvlV.ttf
 shared/NunitoExtraboldItalic-8MamM.ttf
 shared/RetroGame.ttf
@@ -59,14 +62,17 @@ shared/blanklily.png
 shared/earthtile.png
 shared/floortile.png
 shared/floortile1.png
+shared/frogtographer_flies_anim.png
 shared/goo_0.png
 shared/goo_1.png
 shared/goo_2.png
+shared/inventory.png
 shared/levelbackground.png
 shared/levelbackgroundfuture.png
 shared/lily1.png
 shared/lily2.png
 shared/lily3.png
+shared/lotus.png
 shared/parallax-demon-woods-bg.png
 shared/parallax-demon-woods-close-trees.png
 shared/parallax-demon-woods-far-trees.png
