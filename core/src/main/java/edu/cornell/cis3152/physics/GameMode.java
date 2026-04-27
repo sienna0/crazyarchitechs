@@ -32,7 +32,6 @@ public class GameMode implements Screen, ScreenListener {
     private PauseMenuScene pauseMenuScene;
     private GameplayOptionsOverlay gameplayOptionsOverlay;
     private WinScene winScene;
-    private LoseScene loseScene;
 
     private int width;
     private int height;
@@ -64,7 +63,6 @@ public class GameMode implements Screen, ScreenListener {
         pauseMenuScene = new PauseMenuScene(assets, batch, viewport);
         gameplayOptionsOverlay = new GameplayOptionsOverlay(assets, batch, viewport);
         winScene = new WinScene(assets, batch, viewport);
-//        loseScene = new LoseScene(assets, batch, viewport);
 
         camera = new OrthographicCamera();
         resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -329,10 +327,6 @@ public class GameMode implements Screen, ScreenListener {
         if (winScene != null) {
             winScene.dispose();
             winScene = null;
-        }
-        if (loseScene != null) {
-            loseScene.dispose();
-            loseScene = null;
         }
     }
 }
