@@ -41,7 +41,6 @@ public class GameMode implements Screen, ScreenListener {
     private boolean showingLevelSelect;
     private boolean paused;
     private boolean showingWin;
-    private boolean showingLose;
     /** Level select Menu/Esc: defer {@link ScreenListener#exitScreen} until after {@link #draw()} (avoid disposing mid-render). */
     private boolean pendingReturnToTitle;
 
@@ -65,7 +64,7 @@ public class GameMode implements Screen, ScreenListener {
         pauseMenuScene = new PauseMenuScene(assets, batch, viewport);
         gameplayOptionsOverlay = new GameplayOptionsOverlay(assets, batch, viewport);
         winScene = new WinScene(assets, batch, viewport);
-        loseScene = new LoseScene(assets, batch, viewport);
+//        loseScene = new LoseScene(assets, batch, viewport);
 
         camera = new OrthographicCamera();
         resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -114,8 +113,8 @@ public class GameMode implements Screen, ScreenListener {
                 levelScene.beginEntryFromPreviousLevel();
             }
         } else if (exitCode == PhysicsScene.EXIT_LOSE) {
-            showingLose = true;
-            loseScene.show();
+            levelController.loadLevel(levelController.getCurrentLevel());
+            levelController.setScreenListener(this);
         }
 
     }
@@ -202,24 +201,8 @@ public class GameMode implements Screen, ScreenListener {
                     levelSelectScene.show();
                 }
             }
-            if (showingLose) {
-                int choice = loseScene.consumeChoice();
-                if (choice == LoseScene.RETRY) {
-                    showingLose = false;
-                    loseScene.hide();
-                    levelController.loadLevel(levelController.getCurrentLevel());
-                    levelController.setScreenListener(this);
-                } else if (choice == LoseScene.QUIT) {
-                    showingLose = false;
-                    loseScene.hide();
-                    showingLevelSelect = true;
-                    levelSelectScene.show();
-                }
-            }
             PhysicsScene currentScene = levelController.getCurrentScene();
             if (!blockPauseForOptions && currentScene instanceof LevelBaseScene levelScene && levelScene.consumeHazardRestart()) {
-                showingLose = false;
-                loseScene.hide();
                 levelController.loadLevel(levelController.getCurrentLevel());
                 levelController.setScreenListener(this);
                 return;
@@ -247,9 +230,6 @@ public class GameMode implements Screen, ScreenListener {
             }
             if (showingWin) {
                 winScene.render(Gdx.graphics.getDeltaTime());
-            }
-            if (showingLose) {
-                loseScene.render(Gdx.graphics.getDeltaTime());
             }
         }
     }
