@@ -270,7 +270,7 @@ class LevelRenderer {
             Texture combo = resolveStuckComboTexture(subject, target);
             if (combo != null) {
                 batch.setColor(Color.WHITE);
-                float sz = stickerInner * (34f / STUCK_PICTURE_REF_INNER) * 0.82f;
+                float sz = stickerInner * (34f / STUCK_PICTURE_REF_INNER) * 1.64f;
                 batch.draw(combo,
                         centerX - (sz * 0.5f),
                         centerY - (sz * 0.5f),
