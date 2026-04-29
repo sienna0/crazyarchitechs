@@ -33,6 +33,9 @@
 	"goalPhotos": 1
 },
 {
+	"complete": true,
+	"minPhotosUsed": 2,
+	"bestTime": 47.36724,
 	"goalPhotos": 1
 },
 {
@@ -60,6 +63,9 @@
 	"goalPhotos": 1
 },
 {
+	"complete": true,
+	"minPhotosUsed": 2,
+	"bestTime": 35.217518,
 	"goalPhotos": 1
 },
 {
