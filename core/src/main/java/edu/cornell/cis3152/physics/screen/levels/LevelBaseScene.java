@@ -52,8 +52,6 @@ import java.util.List;
  */
 public class LevelBaseScene extends PhysicsScene implements ContactListener {
     private static final float UI = CanvasRender.layoutScale();
-    private static final float TRANSITION_ENTRY_X = 1.25f;
-    private static final float TRANSITION_WALK_MULTIPLIER = 0.4f;
     private static final float CAMERA_ZOOM = 0.75f;
     private static final float PULLEY_ROPE_WHEEL_INSET = 2.0f / 16.0f;
     private static final String[] PARALLAX_TEXTURE_KEYS = {
@@ -132,9 +130,6 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     private float hazardTimer = 0f;
     private boolean hazardTriggered = false;
     private static final float HAZARD_DELAY = 0.9f;
-    private boolean enteringFromPreviousLevel = false;
-    private float entryTargetX = 0f;
-    private float entryTargetY = 0f;
     private int photosUsed;
 
     private float timeElapsed;
@@ -475,27 +470,6 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         reset();
     }
 
-    /**
-     * Starts a short auto-walk from the left edge into this level's spawn point.
-     */
-    public void beginEntryFromPreviousLevel() {
-        if (avatar == null) {
-            return;
-        }
-
-        entryTargetX = avatar.getObstacle().getX();
-        entryTargetY = avatar.getObstacle().getY();
-        if (entryTargetX <= TRANSITION_ENTRY_X + 0.15f) {
-            return;
-        }
-
-        enteringFromPreviousLevel = true;
-        avatar.setFacingRight(true);
-        avatar.setJumping(false);
-        avatar.setGrounded(false);
-        avatar.warpTo(TRANSITION_ENTRY_X, entryTargetY);
-    }
-
     @Override
     public void draw(float dt) {
         super.draw(dt);
@@ -587,11 +561,6 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             settingsClicked = true;
         } else if (pauseIconHovered && Gdx.input.justTouched()) {
             pauseClicked = true;
-        }
-
-        if (enteringFromPreviousLevel) {
-            updateEntryTransition();
-            return;
         }
 
         InputController input = InputController.getInstance();
@@ -723,21 +692,6 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         avatar.setJumping(input.didPrimary());
     }
 
-    private void updateEntryTransition() {
-        // this should make Zuko walk to the right on screen
-        avatar.setFacingRight(true);
-        avatar.setJumping(false);
-        avatar.setMovement(avatar.getForce() * TRANSITION_WALK_MULTIPLIER);
-        avatar.applyForce();
-
-        if (avatar.getObstacle().getX() >= entryTargetX) {
-            avatar.warpTo(entryTargetX, entryTargetY);
-            avatar.setMovement(0f);
-            avatar.stopMotion();
-            enteringFromPreviousLevel = false;
-        }
-    }
-
     private void syncPulleyRopes() {
         if (levelData == null) {
             return;
@@ -844,6 +798,9 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             // Check for win condition
             if ((bd1 == avatar && bd2.getName().equals( "goal" )) ||
                     (bd1.getName().equals("goal") && bd2 == avatar)) {
+                avatar.setMovement(0f);
+                avatar.setJumping(false);
+                avatar.stopMotion();
                 setComplete(true);
             }
         } catch (Exception e) {

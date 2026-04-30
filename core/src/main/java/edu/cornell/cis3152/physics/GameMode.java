@@ -107,10 +107,6 @@ public class GameMode implements Screen, ScreenListener {
             levelController.nextLevel();
             levelController.setScreenListener(this);
             showingLevelSelect = false;
-            PhysicsScene currentScene = levelController.getCurrentScene();
-            if (currentScene instanceof LevelBaseScene levelScene) {
-                levelScene.beginEntryFromPreviousLevel();
-            }
         } else if (exitCode == PhysicsScene.EXIT_LOSE) {
             SoundEffect deathSound = assets.getEntry("platform-death", SoundEffect.class);
             deathSound.play();
