@@ -39,6 +39,7 @@ import edu.cornell.cis3152.physics.CanvasRender;
 import edu.cornell.cis3152.physics.GameAudio;
 import edu.cornell.cis3152.physics.graphics.GifFrames;
 import edu.cornell.gdiac.assets.*;
+import edu.cornell.gdiac.audio.SoundEffect;
 import edu.cornell.gdiac.graphics.SpriteBatch;
 import edu.cornell.gdiac.graphics.TextAlign;
 import edu.cornell.gdiac.graphics.TextLayout;
@@ -140,6 +141,8 @@ public class LoadingScene implements Screen {
     private GifFrames titleGif;
     private float titleAnimTime;
 
+    private SoundEffect buttonPress;
+
     private BitmapFont menuFont;
     private Texture pixel;
     private final TextLayout optionsStubLayout = new TextLayout();
@@ -196,6 +199,7 @@ public class LoadingScene implements Screen {
         if (progress < 1.0f || listener == null) {
             return;
         }
+        playButtonPress();
         assets.finishLoading();
         pendingExitToGame = true;
     }
@@ -396,7 +400,10 @@ public class LoadingScene implements Screen {
             menuChosenOption = -1;
             switch (choice) {
                 case MENU_PLAY -> notifyPlayPressed();
-                case MENU_OPTIONS -> optionsOpen = true;
+                case MENU_OPTIONS -> {
+                    playButtonPress();
+                    optionsOpen = true;
+                }
                 default -> { /* ignore */ }
             }
         }
@@ -812,6 +819,16 @@ public class LoadingScene implements Screen {
             camera = new OrthographicCamera(this.width,this.height);
          } else {
             camera.setToOrtho( false, this.width, this.height  );
+        }
+    }
+
+    /**
+     * Plays button press
+     */
+    private void playButtonPress() {
+        buttonPress = assets.getEntry("platform-button", SoundEffect.class);
+        if (buttonPress != null) {
+            buttonPress.play();
         }
     }
 

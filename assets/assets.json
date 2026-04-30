@@ -130,6 +130,8 @@
         "platform-pew"      : "platform/pew.wav",
         "platform-plop"     : "platform/plop.wav",
         "platform-hover"    : "platform/hover.wav",
+        "platform-button"   : "platform/ribbit.wav",
+        "platform-death"    : "platform/zukodeath.wav"
     },
     "fonts": {
         "shared-retro": {

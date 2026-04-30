@@ -8,6 +8,7 @@ import edu.cornell.cis3152.physics.screen.*;
 import edu.cornell.cis3152.physics.screen.levels.LevelBaseScene;
 import edu.cornell.cis3152.physics.screen.levels.LevelController;
 import edu.cornell.gdiac.assets.AssetDirectory;
+import edu.cornell.gdiac.audio.SoundEffect;
 import edu.cornell.gdiac.graphics.SpriteBatch;
 import edu.cornell.gdiac.util.ScreenListener;
 
@@ -111,6 +112,8 @@ public class GameMode implements Screen, ScreenListener {
                 levelScene.beginEntryFromPreviousLevel();
             }
         } else if (exitCode == PhysicsScene.EXIT_LOSE) {
+            SoundEffect deathSound = assets.getEntry("platform-death", SoundEffect.class);
+            deathSound.play();
             levelController.loadLevel(levelController.getCurrentLevel());
             levelController.setScreenListener(this);
         }

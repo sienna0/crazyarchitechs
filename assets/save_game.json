@@ -1,11 +1,17 @@
 [
 {
+	"complete": true,
+	"minPhotosUsed": 0,
+	"bestTime": 6.4989047,
 	"goalPhotos": 1
 },
 {
 	"goalPhotos": 1
 },
 {
+	"complete": true,
+	"minPhotosUsed": 1,
+	"bestTime": 23.016739,
 	"goalPhotos": 1
 },
 {

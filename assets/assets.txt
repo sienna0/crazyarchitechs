@@ -35,6 +35,7 @@ platform/picture_honey_with_ice.png
 platform/picture_ice_with_cloud.png
 platform/picture_ice_with_honey.png
 platform/plop.wav
+platform/ribbit.wav
 platform/rock.png
 platform/settings_icon.png
 platform/tileset.png
@@ -44,6 +45,7 @@ platform/zuko.png
 platform/zuko2.png
 platform/zuko2walk.png
 platform/zukodead.png
+platform/zukodeath.wav
 platform/zukodeathmelt.png
 platform/zukoidle.png
 platform/zukojump.png

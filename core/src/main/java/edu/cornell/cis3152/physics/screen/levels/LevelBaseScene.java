@@ -86,6 +86,8 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     /** The weapon pop sound. We only want to play once. */
     private SoundEffect plopSound;
     private SoundEffect hoverSound;
+    /** The death sound of Zuko */
+    private SoundEffect deathSound;
     /** The default sound volume */
     private float volume;
 
@@ -155,6 +157,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             fireSound = directory.getEntry("platform-pew", SoundEffect.class);
             plopSound = directory.getEntry("platform-plop", SoundEffect.class);
             hoverSound = directory.getEntry("platform-hover", SoundEffect.class);
+            deathSound = directory.getEntry("platform-death", SoundEffect.class);
             volume = constants.getFloat("volume", 1.0f);
         }
         if (parallaxTextures == null) {
@@ -820,6 +823,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
                 if (!hazardTriggered && !pendingHazardRestart) {
                     hazardTriggered = true;
                     hazardTimer = 0f;
+                    deathSound.play(0.5f);
                     avatar.startDeathMeltAnimation();
                     avatar.setMovement(0f);
                     avatar.setJumping(false);
