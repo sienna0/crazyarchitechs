@@ -96,10 +96,10 @@ class LevelPopulation {
         JsonValue objectLocations = level.get("objectLocations");
         JsonValue levelPlayerSettings = level.get("playerSettings");
 
-        Texture texture = textureResolver.apply("shared-goal", "shared/goaldoor.png");
+        Texture texture = textureResolver.apply("shared-goal", "platform/walltile.png");
         JsonValue goal = objectLocations.get("goal");
         result.goalDoor = new Door(units, goal);
-        result.goalDoor.setTexture(texture);
+        result.goalDoor.setAnimatedTexture(texture);
         result.goalDoor.getObstacle().setName("goal");
         spriteAdder.accept(result.goalDoor);
 

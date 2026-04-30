@@ -2,8 +2,7 @@
 {
 	"complete": true,
 	"minPhotosUsed": 0,
-	"flyCount": 1,
-	"bestTime": 5.9837055,
+	"bestTime": 5.33336,
 	"goalPhotos": 1
 },
 {
@@ -21,40 +20,61 @@
 {
 	"complete": true,
 	"minPhotosUsed": 1,
-	"bestTime": 16.966658,
+	"bestTime": 13.899738,
 	"goalPhotos": 1
 },
 {
 	"complete": true,
 	"minPhotosUsed": 1,
-	"bestTime": 26.78336,
+	"bestTime": 15.851057,
 	"goalPhotos": 1
 },
 {
+	"complete": true,
+	"minPhotosUsed": 3,
+	"bestTime": 18.166769,
 	"goalPhotos": 1
 },
 {
-	"goalPhotos": 1
-},
-{
-	"goalPhotos": 1
-},
-{
-	"goalPhotos": 1
-},
-{
-	"goalPhotos": 1
-},
-{
+	"complete": true,
+	"minPhotosUsed": 1,
+	"bestTime": 7.733205,
 	"goalPhotos": 1
 },
 {
 	"complete": true,
 	"minPhotosUsed": 2,
-	"bestTime": 47.36724,
+	"bestTime": 38.750298,
 	"goalPhotos": 1
 },
 {
+	"complete": true,
+	"minPhotosUsed": 1,
+	"bestTime": 14.749154,
+	"goalPhotos": 1
+},
+{
+	"complete": true,
+	"minPhotosUsed": 4,
+	"bestTime": 26.333874,
+	"goalPhotos": 1
+},
+{
+	"complete": true,
+	"minPhotosUsed": 2,
+	"bestTime": 80.65068,
+	"goalPhotos": 1
+},
+{
+	"complete": true,
+	"minPhotosUsed": 2,
+	"bestTime": 31.749994,
+	"goalPhotos": 1
+},
+{
+	"complete": true,
+	"minPhotosUsed": 1,
+	"bestTime": 18.266668,
 	"goalPhotos": 1
 },
 {

@@ -14,6 +14,8 @@
  package edu.cornell.cis3152.physics.world;
 
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.utils.JsonValue;
 import edu.cornell.gdiac.assets.ParserUtils;
@@ -37,6 +39,10 @@ import edu.cornell.gdiac.physics2.ObstacleSprite;
  * result of the collision.
  */
 public class Door extends ObstacleSprite {
+    private static final float FRAME_DURATION = 0.15f;
+
+    private TextureRegion[] frames = new TextureRegion[0];
+    private float animationTime = 0f;
 
     /**
      * Creates a door with the given physics units and settings
@@ -73,6 +79,35 @@ public class Door extends ObstacleSprite {
         // want (0,0) to be in the center of the mesh. So the method call below
         // is (x,y,w,h) where x, y is the bottom left.
         mesh.set(-size/2.0f,-size/2.0f,size,size);
+    }
+
+    /**
+     * Assigns either a still texture or a horizontal strip of square animation frames.
+     */
+    public void setAnimatedTexture(Texture texture) {
+        if (texture == null) {
+            frames = new TextureRegion[0];
+            return;
+        }
+
+        int frameSize = texture.getHeight();
+        int frameCount = frameSize > 0 ? Math.max(1, texture.getWidth() / frameSize) : 1;
+        frames = new TextureRegion[frameCount];
+        for (int ii = 0; ii < frameCount; ii++) {
+            frames[ii] = new TextureRegion(texture, ii * frameSize, 0, frameSize, frameSize);
+        }
+        animationTime = 0f;
+        setTextureRegion(frames[0]);
+    }
+
+    @Override
+    public void update(float dt) {
+        if (frames.length > 1) {
+            animationTime += dt;
+            int frame = ((int)(animationTime / FRAME_DURATION)) % frames.length;
+            setTextureRegion(frames[frame]);
+        }
+        super.update(dt);
     }
 
 }
