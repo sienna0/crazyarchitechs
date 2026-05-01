@@ -40,9 +40,11 @@ import edu.cornell.gdiac.physics2.ObstacleSprite;
  */
 public class Door extends ObstacleSprite {
     private static final float FRAME_DURATION = 0.15f;
+    private static final float GOAL_TILE_SIZE = 3.0f;
 
     private TextureRegion[] frames = new TextureRegion[0];
     private float animationTime = 0f;
+    private final float size;
 
     /**
      * Creates a door with the given physics units and settings
@@ -58,7 +60,8 @@ public class Door extends ObstacleSprite {
 
         float x = settings.get("pos").getFloat(0);
         float y = settings.get("pos").getFloat(1);
-        float s = settings.getFloat( "size" );
+        float s = GOAL_TILE_SIZE;
+        size = s;
         float size = s*units;
 
         obstacle = new BoxObstacle(x, y, s, s);
@@ -79,6 +82,10 @@ public class Door extends ObstacleSprite {
         // want (0,0) to be in the center of the mesh. So the method call below
         // is (x,y,w,h) where x, y is the bottom left.
         mesh.set(-size/2.0f,-size/2.0f,size,size);
+    }
+
+    public float getSize() {
+        return size;
     }
 
     /**

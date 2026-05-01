@@ -130,9 +130,12 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     private float hazardTimer = 0f;
     private boolean hazardTriggered = false;
     private static final float HAZARD_DELAY = 0.9f;
+    private static final float GOAL_CENTER_TILE_RATIO = 1.0f / 3.0f;
     private int photosUsed;
 
     private float timeElapsed;
+    private int goalContactCount = 0;
+    private boolean portalTriggered = false;
 
     /**
      * Lazily creates sound handles, textures, {@link WorldState}, contact tracking,
@@ -385,9 +388,15 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         setFailure(false);
 
         worldState.reset();
+        goalContactCount = 0;
+        portalTriggered = false;
+        pendingHazardRestart = false;
+        hazardTimer = 0f;
+        hazardTriggered = false;
 
         populateLevel();
         photosUsed = 0;
+        timeElapsed = 0f;
     }
 
     /**
@@ -521,6 +530,21 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
                 pendingHazardRestart = true;
                 hazardTriggered = false;
             }
+            return;
+        }
+        if (portalTriggered) {
+            updateGooAnimation(dt);
+            avatar.setMovement(0f);
+            avatar.setJumping(false);
+            avatar.stopMotion();
+            if (avatar.hasFinishedPortalAnimation()) {
+                portalTriggered = false;
+                setComplete(true);
+            }
+            return;
+        }
+        if (!isComplete() && goalContactCount > 0 && isAvatarInGoalCenter()) {
+            triggerPortalEntry();
             return;
         }
         updateGooAnimation(dt);
@@ -798,10 +822,10 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             // Check for win condition
             if ((bd1 == avatar && bd2.getName().equals( "goal" )) ||
                     (bd1.getName().equals("goal") && bd2 == avatar)) {
-                avatar.setMovement(0f);
-                avatar.setJumping(false);
-                avatar.stopMotion();
-                setComplete(true);
+                goalContactCount++;
+                if (!portalTriggered && !isComplete() && isAvatarInGoalCenter()) {
+                    triggerPortalEntry();
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -836,6 +860,35 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
                 refreshCurrentSupport();
             }
         }
+
+        try {
+            ObstacleSprite sprite1 = (ObstacleSprite) body1.getUserData();
+            ObstacleSprite sprite2 = (ObstacleSprite) body2.getUserData();
+            if ((sprite1 == avatar && "goal".equals(sprite2.getName())) ||
+                    ("goal".equals(sprite1.getName()) && sprite2 == avatar)) {
+                goalContactCount = Math.max(0, goalContactCount - 1);
+            }
+        } catch (Exception ignored) {
+            // Non-gameplay fixtures can appear here; ignore cast/name issues.
+        }
+    }
+
+    private boolean isAvatarInGoalCenter() {
+        if (avatar == null || goalDoor == null) {
+            return false;
+        }
+        float centerHalfSpan = goalDoor.getSize() * GOAL_CENTER_TILE_RATIO * 0.5f;
+        float dx = Math.abs(avatar.getPosition().x - goalDoor.getObstacle().getX());
+        float dy = Math.abs(avatar.getPosition().y - goalDoor.getObstacle().getY());
+        return dx <= centerHalfSpan && dy <= centerHalfSpan;
+    }
+
+    private void triggerPortalEntry() {
+        portalTriggered = true;
+        avatar.setMovement(0f);
+        avatar.setJumping(false);
+        avatar.stopMotion();
+        avatar.startPortalAnimation();
     }
 
     /**

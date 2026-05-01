@@ -40,6 +40,7 @@ public class Zuko extends ObstacleSprite {
 
     private float drawSize;
     private float jumpDrawHeight;
+    private float portalDrawHeight;
 
     /** The object type currently supporting Zuko's ground sensor */
     private GameObject currentPlatform;
@@ -152,6 +153,13 @@ public class Zuko extends ObstacleSprite {
         animator.startDeathMeltAnimation();
     }
 
+    /**
+     * Starts Zuko's portal animation
+     */
+    public void startPortalAnimation() {
+        animator.startPortalAnimation();
+    }
+
 
 
     /**
@@ -210,6 +218,7 @@ public class Zuko extends ObstacleSprite {
         //mesh.set(-size/2.0f,-size/2.0f,size,size);
         drawSize = size;
         jumpDrawHeight = size * (20f / 16f);
+        portalDrawHeight = size * 2.0f;
         animator = new ZukoAnimator();
         movement = new ZukoMovement(data);
         mesh.set(-drawSize/2.0f, -drawSize/2.0f, drawSize, drawSize);
@@ -309,7 +318,10 @@ public class Zuko extends ObstacleSprite {
             setTexture(animator.getBaseTexture());
         }
 
-        if (animator.isPlayingJump() && !animator.isPlayingPhoto() && !animator.isPlayingDeathMelt()) {
+        if (animator.isPlayingPortal()) {
+            float yOffset = (portalDrawHeight - drawSize) / 2.0f;
+            mesh.set(-drawSize/2.0f, -portalDrawHeight/2.0f + yOffset, drawSize, portalDrawHeight);
+        } else if (animator.isPlayingJump() && !animator.isPlayingPhoto() && !animator.isPlayingDeathMelt()) {
             float yOffset = (jumpDrawHeight - drawSize) / 2.0f;
             mesh.set(-drawSize/2.0f, -jumpDrawHeight/2.0f + yOffset, drawSize, jumpDrawHeight);
         } else {
@@ -386,6 +398,10 @@ public class Zuko extends ObstacleSprite {
         animator.setIdleAnimation(sheet, rows, cols, size);
     }
 
+    public void setPortalAnimation(Texture sheet, int rows, int cols, int size) {
+        animator.setPortalAnimation(sheet, rows, cols, size);
+    }
+
     public void setTongueSegment(Texture texture) {
         animator.setTongueSegment(texture);
     }
@@ -410,6 +426,14 @@ public class Zuko extends ObstacleSprite {
 
     public boolean isTongueActive() {
         return animator.isTongueActive();
+    }
+
+    public boolean isPlayingPortal() {
+        return animator.isPlayingPortal();
+    }
+
+    public boolean hasFinishedPortalAnimation() {
+        return animator.hasFinishedPortalAnimation();
     }
 
 }
