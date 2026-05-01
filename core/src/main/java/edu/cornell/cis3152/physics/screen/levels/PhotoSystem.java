@@ -430,6 +430,14 @@ class PhotoSystem {
         return null;
     }
 
+    private Vector2 getEyeOrigin(Zuko avatar) {
+        float eyeOffsetY = avatar.getHeight() / 4f; // tune these once the debug renderer is on
+        return new Vector2(
+                avatar.getObstacle().getX(),
+                avatar.getObstacle().getY() + eyeOffsetY
+        );
+    }
+
     /**
      * A target is photographable only if every sampled point on it is both in range and hit
      * first by the raycast before any wall, invisible collider, or other object.
@@ -438,11 +446,14 @@ class PhotoSystem {
         if (target == null || world == null) {
             return false;
         }
+        Vector2 center = new Vector2(avatar.getObstacle().getX(), avatar.getObstacle().getY());
+        Vector2 eyes = getEyeOrigin(avatar);
         Vector2[] samples = getVisibilitySamples(target);
         int visibleCount = 0;
-        int requiredCount = 3;
+        int requiredCount = 1;
         for (Vector2 sample : samples) {
-            if (isSampleVisible(target, avatar, world, sample, maxDistance)) {
+            if (isSampleVisible(target, avatar, world, sample, maxDistance, center) ||
+                    isSampleVisible(target, avatar, world, sample, maxDistance, eyes)) {
                 visibleCount++;
                 if (visibleCount >= requiredCount) {
                     return true;
@@ -471,9 +482,9 @@ class PhotoSystem {
         };
     }
 
-    private boolean isSampleVisible(GameObject target, Zuko avatar, World world, Vector2 sample, float maxDistance) {
-        float originX = avatar.getObstacle().getX();
-        float originY = avatar.getObstacle().getY();
+    private boolean isSampleVisible(GameObject target, Zuko avatar, World world, Vector2 sample, float maxDistance, Vector2 origin) {
+        float originX = origin.x;
+        float originY = origin.y;
         float dx = sample.x - originX;
         float dy = sample.y - originY;
         if ((dx * dx + dy * dy) > (maxDistance * maxDistance)) {

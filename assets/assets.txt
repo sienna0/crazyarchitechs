@@ -60,6 +60,7 @@ save_game.json
 shared/NunitoBoldItalic-RpvlV.ttf
 shared/NunitoExtraboldItalic-8MamM.ttf
 shared/RetroGame.ttf
+shared/Sprite-0001.aseprite
 shared/background.png
 shared/backgroundmeasure.png
 shared/blanklily.png
