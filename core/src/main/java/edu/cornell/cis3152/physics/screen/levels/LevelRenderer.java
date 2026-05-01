@@ -43,7 +43,7 @@ class LevelRenderer {
     /** Slot size is capped so the HUD stays reasonable with few inventory slots. */
     private static final float MAX_SLOT_SIZE = 40.0f * UI;
     /** Flat strip behind the inventory row (not gray — avoids a second “border”). */
-    private static final Color INVENTORY_BAR_BACK = new Color(0.1f, 0.08f, 0.07f, 0.92f);
+    private static final Color INVENTORY_BAR_BACK = new Color(0.1f, 0.08f, 0.07f, 0f);
     private final WorldState worldState;
     /** Empty slots, and frame overlay on filled slots ({@code shared/inventory.png}). */
     private final Texture inventoryTexture;
@@ -357,16 +357,17 @@ class LevelRenderer {
         float padding = INVENTORY_PADDING;
         int size = avatar.getPictureInventory().getSize();
         float slotSize = Math.min(MAX_SLOT_SIZE, barHeight - 2 * padding);
-        float barWidth = size * slotSize + (size + 1) * padding;
+        float scaledSlotSize = slotSize * 1.5f;
+        float barWidth = size * scaledSlotSize + (size + 1) * padding;
         float barX = viewport.getWidth() / 2 - barWidth / 2;
         float startX = barX + padding;
-        float startY = barY + (barHeight - slotSize) / 2f;
+        float startY = barY + (barHeight - scaledSlotSize) / 2f;
         float selectedRaise = 8f * UI;
         // Inner margin for subject art vs. frame hole (inventory.png is 200×200 with ~44px border).
-        float frameInnerPad = slotSize * 0.22f;
+        float frameInnerPad = scaledSlotSize * 0.22f;
 
         for (int ii = 0; ii < size; ii++) {
-            float slotX = startX + ii * (slotSize + padding);
+            float slotX = startX + ii * (scaledSlotSize + padding);
             float slotY = ii == worldState.getSelectedSlotIndex() ? startY + selectedRaise : startY;
             Picture picture = avatar.getPictureInventory().getPicture(ii);
 
@@ -377,11 +378,11 @@ class LevelRenderer {
                     batch.setColor(inventoryObject.getCloudColor());
                 }
                 batch.draw(inventoryObject.getTexture(), slotX + frameInnerPad, slotY + frameInnerPad,
-                        slotSize - 2f * frameInnerPad, slotSize - 2f * frameInnerPad);
+                        (scaledSlotSize - 2f * frameInnerPad), (scaledSlotSize - 2f * frameInnerPad));
                 batch.setColor(Color.WHITE);
             }
             batch.setColor(Color.WHITE);
-            batch.draw(inventoryTexture, slotX, slotY, slotSize, slotSize);
+            batch.draw(inventoryTexture, slotX, slotY, scaledSlotSize, scaledSlotSize);
         }
         batch.setColor(Color.WHITE);
     }
