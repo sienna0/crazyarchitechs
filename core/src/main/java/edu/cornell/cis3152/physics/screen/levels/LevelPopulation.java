@@ -32,6 +32,7 @@ import java.util.function.Consumer;
 class LevelPopulation {
 
     private static final int TILE_PX = 16;
+    private static final float SPAWN_DROP_TILES = 0.0f;
     private static final int GOO_FRAME_COUNT = 3;
     /** Default if {@code constants.goo.surface_line_from_bottom} is absent (5px / 16px tile). */
     private static final float GOO_SURFACE_LINE_FROM_BOTTOM_DEFAULT = 5f / 16f;
@@ -168,11 +169,14 @@ class LevelPopulation {
         Texture deathMeltSheet = textureResolver.apply("platform-deathmelt",   "platform/zukodeathmelt.png");
         Texture idleSheet = textureResolver.apply("platform-idle", "platform/zukoidle.png");
         Texture portalSheet = textureResolver.apply("platform-portal", "platform/zukoportal.png");
+        Texture spawnSheet = textureResolver.apply("platform-spawn", "platform/zukospawn.png");
 
 
         JsonValue posJson = level.get("objectLocations").get("zukoPos");
-        result.avatar = buildZuko(units, constants.get("zuko"), posJson.get("pos").getFloat(0), posJson.get("pos").getFloat(1),
-                zukoTexture, walkSheet, photoSheet, jumpSheet, deathMeltSheet, idleSheet, portalSheet, tongueTexture, "avatar",levelPlayerSettings);
+        float spawnX = posJson.get("pos").getFloat(0);
+        float spawnY = posJson.get("pos").getFloat(1) + SPAWN_DROP_TILES;
+        result.avatar = buildZuko(units, constants.get("zuko"), spawnX, spawnY,
+                zukoTexture, walkSheet, photoSheet, jumpSheet, deathMeltSheet, idleSheet, portalSheet, spawnSheet, tongueTexture, "avatar",levelPlayerSettings);
         spriteAdder.accept(result.avatar);
         result.avatar.createSensor();
 
@@ -185,7 +189,7 @@ class LevelPopulation {
                         level.get("objectLocations").get("zukoPos"), pos[0], pos[1]);
 
                 Zuko extra = buildZuko(units, syntheticZuko,pos[0], pos[1],
-                        zukoTexture, walkSheet, photoSheet, jumpSheet, deathMeltSheet, idleSheet, portalSheet, tongueTexture,
+                        zukoTexture, walkSheet, photoSheet, jumpSheet, deathMeltSheet, idleSheet, portalSheet, spawnSheet, tongueTexture,
                         "zukosprite" + ii, levelPlayerSettings);
                 spriteAdder.accept(extra);
                 extra.createSensor();
@@ -622,7 +626,7 @@ class LevelPopulation {
      */
     private Zuko buildZuko(float units, JsonValue zukoJson, float xStartingPos, float yStartingPos,
                            Texture zukoTexture, Texture walkSheet,
-                           Texture photoSheet, Texture jumpSheet, Texture deathMeltSheet, Texture idleSheet, Texture portalSheet, Texture tongueTexture,
+                           Texture photoSheet, Texture jumpSheet, Texture deathMeltSheet, Texture idleSheet, Texture portalSheet, Texture spawnSheet, Texture tongueTexture,
                            String name, JsonValue levelPlayerSettings) {
         Zuko zuko = new Zuko(units, zukoJson, xStartingPos, yStartingPos, levelPlayerSettings);
         zuko.setTexture(zukoTexture);
@@ -634,6 +638,7 @@ class LevelPopulation {
         zuko.setDeathMeltAnimation(deathMeltSheet,  1, 13, 13);
         zuko.setIdleAnimation(idleSheet, 1, 7, 7);
         zuko.setPortalAnimation(portalSheet, 1, 15, 15);
+        zuko.setSpawnAnimation(spawnSheet, 1, 15, 15);
         zuko.setTongueSegment(tongueTexture);
 
         return zuko;

@@ -64,6 +64,17 @@ public class ZukoAnimator {
     /** Whether the portal animation has reached its last frame */
     private boolean portalFinished = false;
 
+    /** The SpriteSheet for Zuko's spawn animation */
+    private SpriteSheet spawnSheet;
+    /** The duration of the spawn animation */
+    private float spawnAnimationTime = 0f;
+    /** The duration of each spawn frame */
+    private float spawnFrameDuration = 0.06f;
+    /** Whether the spawn animation is actively playing */
+    private boolean playingSpawn = false;
+    /** Whether the spawn animation has reached its last frame */
+    private boolean spawnFinished = false;
+
     /** The Texture of one segment of Zuko's tongue */
     private Texture tongueSegment;
     /** The progress of the tongue to the target. 0 = fully retracted, 1 = fully extended */
@@ -160,6 +171,18 @@ public class ZukoAnimator {
     }
 
     /**
+     * Starts Zuko's spawn animation
+     */
+    public void startSpawnAnimation() {
+        playingSpawn = true;
+        spawnFinished = false;
+        spawnAnimationTime = 0f;
+        if (spawnSheet != null) {
+            spawnSheet.setFrame(0);
+        }
+    }
+
+    /**
      * Sets the jump animation SpriteSheet for Zuko
      * @param sheet
      * @param rows
@@ -178,6 +201,17 @@ public class ZukoAnimator {
     public void setPortalAnimation(Texture sheet, int rows, int cols, int size) {
         portalSheet = new SpriteSheet(sheet, rows, cols, size);
         portalFinished = false;
+    }
+
+    /**
+     * Sets the spawn animation SpriteSheet for Zuko
+     * @param sheet
+     * @param rows
+     * @param cols
+     */
+    public void setSpawnAnimation(Texture sheet, int rows, int cols, int size) {
+        spawnSheet = new SpriteSheet(sheet, rows, cols, size);
+        spawnFinished = false;
     }
 
     /**
@@ -254,7 +288,19 @@ public class ZukoAnimator {
                 deathMeltSheet.setFrame(frame);
             }
         }
-        if (playingPortal && portalSheet != null) {
+        if (playingSpawn && spawnSheet != null) {
+            playingJump = false;
+            playingPhoto = false;
+            spawnAnimationTime += dt;
+            int frame = (int)(spawnAnimationTime / spawnFrameDuration);
+            if (frame >= spawnSheet.getSize()) {
+                playingSpawn = false;
+                spawnFinished = true;
+                spawnSheet.setFrame(spawnSheet.getSize() - 1);
+            } else {
+                spawnSheet.setFrame(frame);
+            }
+        } else if (playingPortal && portalSheet != null) {
             playingJump = false;
             playingPhoto = false;
             portalAnimationTime += dt;
@@ -323,6 +369,7 @@ public class ZukoAnimator {
     }
 
     public SpriteSheet getActiveSheet(boolean isGrounded, float velocityX) {
+        if (playingSpawn && spawnSheet != null) return spawnSheet;
         if ((playingPortal || portalFinished) && portalSheet != null) return portalSheet;
         if (playingPhoto && photoSheet != null) return photoSheet;
         if (playingJump && jumpSheet != null) return jumpSheet;
@@ -341,6 +388,10 @@ public class ZukoAnimator {
     public boolean isPlayingPortal() { return playingPortal; }
 
     public boolean hasFinishedPortalAnimation() { return portalFinished; }
+
+    public boolean isPlayingSpawn() { return playingSpawn; }
+
+    public boolean hasFinishedSpawnAnimation() { return spawnFinished; }
 
     public boolean isTongueActive() { return tongueState != 0f; }
 

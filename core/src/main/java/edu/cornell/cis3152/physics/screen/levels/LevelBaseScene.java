@@ -136,6 +136,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     private float timeElapsed;
     private int goalContactCount = 0;
     private boolean portalTriggered = false;
+    private boolean spawnSequenceActive = false;
 
     /**
      * Lazily creates sound handles, textures, {@link WorldState}, contact tracking,
@@ -292,8 +293,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             float scaleToView = (visibleHeight / texture.getHeight()) * PARALLAX_SCALE;
             float layerWidth = texture.getWidth() * scaleToView;
             float layerHeight = texture.getHeight() * scaleToView;
-            // float xOffset = positiveMod(scrollX * PARALLAX_SPEEDS[ii], layerWidth);
-            float xOffset = positiveMod(camera.position.x * PARALLAX_SPEEDS[ii], layerWidth);
+            float xOffset = positiveMod(scrollX * PARALLAX_SPEEDS[ii], layerWidth);
             float yOffset = positiveMod(scrollY * PARALLAX_VERTICAL_SPEEDS[ii], layerHeight);
             float startX = visibleLeft - xOffset;
             float startY = visibleBottom - yOffset;
@@ -393,6 +393,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         pendingHazardRestart = false;
         hazardTimer = 0f;
         hazardTriggered = false;
+        spawnSequenceActive = false;
 
         populateLevel();
         photosUsed = 0;
@@ -417,6 +418,12 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         flyTotal = levelData.flies.size();
         pendingFlyCollection = null;
         tonguePreviouslyActive = false;
+        if (avatar != null) {
+            avatar.startSpawnAnimation();
+            avatar.stopMotion();
+            avatar.setGravityScale(0f);
+            spawnSequenceActive = true;
+        }
     }
 
     /** Returns the number of flies collected in the current level. */
@@ -547,6 +554,17 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             triggerPortalEntry();
             return;
         }
+        if (spawnSequenceActive) {
+            if (avatar.hasFinishedSpawnAnimation()) {
+                avatar.setGravityScale(1.0f);
+                spawnSequenceActive = false;
+            } else {
+                avatar.setMovement(0f);
+                avatar.setJumping(false);
+                avatar.stopMotion();
+                avatar.setGravityScale(0f);
+            }
+        }
         updateGooAnimation(dt);
         photoSystem.update(dt);
         viewport.screenToCanvas(Gdx.input.getX(), Gdx.input.getY(), worldState.getPauseMouseCache());
@@ -588,6 +606,13 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         }
 
         InputController input = InputController.getInstance();
+        if (spawnSequenceActive) {
+            photoSystem.updateHighlights(avatar, sprites, world);
+            renderer.setInRangeFlies(new ArrayList<>());
+            photoSystem.applyLiftSprings(sprites);
+            avatar.applyForce();
+            return;
+        }
         photoSystem.updateHighlights(avatar, sprites, world);
         photoSystem.handlePictureShortcuts(input, avatar);
         updateAvatarMovement(input, avatar);

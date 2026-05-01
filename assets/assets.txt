@@ -52,6 +52,7 @@ platform/zukojump.png
 platform/zukojump1.png
 platform/zukojumpupdated.png
 platform/zukoportal.png
+platform/zukospawn.png
 platform/zukotonguechunk.png
 platform/zukowalk.png
 platform/zukowalk1.png
