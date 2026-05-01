@@ -85,6 +85,7 @@
         "platform-deathmelt" : "platform/zukodeathmelt.png",
         "platform-idle"     : "platform/zukoidle.png",
         "platform-portal"   : "platform/zukoportal.png",
+        "platform-spawn"    : "platform/zukospawn.png",
         "platform-tongue"   : "platform/zukotonguechunk.png",
         "platform-ice"      : "platform/ice.png",
         "platform-honey"    : "platform/honey.png",
