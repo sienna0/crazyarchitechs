@@ -148,10 +148,10 @@
         "restitution": 0.0
       },
       "zuko": {
-        "pos": [2.5, 5.75]
+        "pos": [2.5, 5.5]
       },
       "zukoPos": {
-        "pos": [2.5, 5.75]
+        "pos": [2.5, 5.5]
       },
       "pulley_top": [],
       "pulley_carry": []
@@ -272,10 +272,10 @@
         "restitution": 0.0
       },
       "zuko": {
-        "pos": [2.5, 5.0]
+        "pos": [2.5, 4.5]
       },
       "zukoPos": {
-        "pos": [2.5, 5.0]
+        "pos": [2.5, 4.5]
       },
       "pulley_top": [],
       "pulley_carry": []
@@ -672,10 +672,10 @@
         "restitution": 0.0
       },
       "zuko": {
-        "pos": [2.5, 5.0]
+        "pos": [2.5, 4.5]
       },
       "zukoPos": {
-        "pos": [2.5, 5.0]
+        "pos": [2.5, 4.5]
       },
       "pulley_top": [],
       "pulley_carry": []
@@ -807,10 +807,10 @@
         "restitution": 0.0
       },
       "zuko": {
-        "pos": [2.5, 5.0]
+        "pos": [2.5, 4.5]
       },
       "zukoPos": {
-        "pos": [2.5, 5.0]
+        "pos": [2.5, 4.5]
       },
       "pulley_top": [],
       "pulley_carry": []
@@ -1036,10 +1036,10 @@
         "restitution": 0.0
       },
       "zuko": {
-        "pos": [3.5, 4.75]
+        "pos": [3.75, 4.5]
       },
       "zukoPos": {
-        "pos": [3.5, 4.75]
+        "pos": [3.75, 4.5]
       },
       "pulley_top": [],
       "pulley_carry": []
@@ -1123,7 +1123,7 @@
       "picture_cooldown": 10.0,
       "max_sight_distance": 9.0,
       "film_count": 10.0,
-      "goal_num_photos": 1.0
+      "goal_num_photos": 2.0
     },
     "objectLocations": {
       "honey": [],
@@ -1153,10 +1153,10 @@
         "restitution": 0.0
       },
       "zuko": {
-        "pos": [8.0, 5.5]
+        "pos": [8.0, 4.5]
       },
       "zukoPos": {
-        "pos": [8.0, 5.5]
+        "pos": [8.0, 4.5]
       }
     }
   },
@@ -1617,7 +1617,7 @@
         "restitution": 0.0
       },
       "zuko": {
-        "pos": [3.75, 4.75],
+        "pos": [3.75, 4.5],
         "inner": [0.7, 0.95],
         "size": 1.0,
         "force": 20.0,
@@ -1645,7 +1645,7 @@
         [11.5, 4.5]
       ],
       "zukoPos": {
-        "pos": [3.75, 4.75]
+        "pos": [3.75, 4.5]
       },
       "pulley_top": [],
       "pulley_carry": []
@@ -1813,7 +1813,7 @@
       "picture_cooldown": 10.0,
       "max_sight_distance": 9.0,
       "film_count": 10.0,
-      "goal_num_photos": 1.0
+      "goal_num_photos": 2.0
     },
     "objectLocations": {
       "honey": [
@@ -1840,10 +1840,10 @@
         "restitution": 0.0
       },
       "zuko": {
-        "pos": [2.5, 5.0]
+        "pos": [2.5, 4.5]
       },
       "zukoPos": {
-        "pos": [2.5, 5.0]
+        "pos": [2.5, 4.5]
       }
     }
   },
@@ -2147,7 +2147,7 @@
       "picture_cooldown": 10.0,
       "max_sight_distance": 9.0,
       "film_count": 10.0,
-      "goal_num_photos": 1.0
+      "goal_num_photos": 2.0
     },
     "objectLocations": {
       "honey": [
@@ -2321,10 +2321,10 @@
         "restitution": 0.0
       },
       "zuko": {
-        "pos": [2.5, 5.0]
+        "pos": [2.5, 4.5]
       },
       "zukoPos": {
-        "pos": [2.5, 5.0]
+        "pos": [2.5, 4.5]
       }
     }
   },
@@ -2475,10 +2475,10 @@
         "restitution": 0.0
       },
       "zuko": {
-        "pos": [1.75, 4.75]
+        "pos": [1.75, 4.5]
       },
       "zukoPos": {
-        "pos": [1.75, 4.75]
+        "pos": [1.75, 4.5]
       }
     }
   },
@@ -2849,7 +2849,7 @@
         [17.75, 12.75]
       ],
       "ice": [
-        [4.75, 2.75]
+        [4.75, 2.5]
       ],
       "zukosprite": [],
       "goal": {
@@ -2860,7 +2860,7 @@
         "restitution": 0.0
       },
       "zuko": {
-        "pos": [2.5, 5.0],
+        "pos": [2.5, 2.5],
         "inner": [0.7, 0.95],
         "size": 1.0,
         "force": 20.0,
@@ -2888,7 +2888,7 @@
         [9.5, 3.5]
       ],
       "zukoPos": {
-        "pos": [2.5, 2.75]
+        "pos": [2.5, 2.5]
       },
       "pulley_top": [],
       "pulley_carry": []
@@ -2905,11 +2905,11 @@
       ]
     },
     "playerSettings": {
-      "inventory_size": 4.0,
+      "inventory_size": 2.0,
       "picture_cooldown": 10.0,
       "max_sight_distance": 9.0,
       "film_count": 10.0,
-      "goal_num_photos": 1.0
+      "goal_num_photos": 2.0
     }
   },
   "level16": {
@@ -3090,10 +3090,10 @@
         "restitution": 0.0
       },
       "zuko": {
-        "pos": [2.5, 5.0]
+        "pos": [2.5, 4.5]
       },
       "zukoPos": {
-        "pos": [2.5, 5.0]
+        "pos": [2.5, 4.5]
       },
       "pulley_top": [],
       "pulley_carry": []
@@ -3219,7 +3219,7 @@
       "picture_cooldown": 10.0,
       "max_sight_distance": 9.0,
       "film_count": 10.0,
-      "goal_num_photos": 1.0
+      "goal_num_photos": 3.0
     },
     "objectLocations": {
       "honey": [
@@ -3260,10 +3260,10 @@
         "restitution": 0.0
       },
       "zuko": {
-        "pos": [9.25, 4.75]
+        "pos": [9.25, 4.5]
       },
       "zukoPos": {
-        "pos": [9.25, 4.75]
+        "pos": [9.25, 4.5]
       },
       "pulley_top": [],
       "pulley_carry": []
@@ -3394,7 +3394,7 @@
       "picture_cooldown": 10.0,
       "max_sight_distance": 9.0,
       "film_count": 10.0,
-      "goal_num_photos": 1.0
+      "goal_num_photos": 3.0
     },
     "objectLocations": {
       "honey": [
@@ -3430,10 +3430,10 @@
         "restitution": 0.0
       },
       "zuko": {
-        "pos": [4.75, 10.75]
+        "pos": [4.75, 10.5]
       },
       "zukoPos": {
-        "pos": [4.75, 10.75]
+        "pos": [4.75, 10.5]
       },
       "pulley_top": [],
       "pulley_carry": []
@@ -3664,7 +3664,7 @@
         "restitution": 0.0
       },
       "zuko": {
-        "pos": [2.5, 5.0],
+        "pos": [2.5, 4.5],
         "inner": [0.7, 0.95],
         "size": 1.0,
         "force": 20.0,
@@ -3704,7 +3704,7 @@
         [18.0, 10.5]
       ],
       "zukoPos": {
-        "pos": [2.5, 5.0]
+        "pos": [2.5, 4.5]
       },
       "pulley_top": [],
       "pulley_carry": []
@@ -3741,7 +3741,7 @@
       "picture_cooldown": 10.0,
       "max_sight_distance": 9.0,
       "film_count": 10.0,
-      "goal_num_photos": 1.0
+      "goal_num_photos": 3.0
     }
   },
   "level20": {
@@ -3976,7 +3976,7 @@
       "picture_cooldown": 10.0,
       "max_sight_distance": 9.0,
       "film_count": 10.0,
-      "goal_num_photos": 1.0
+      "goal_num_photos": 2.0
     },
     "objectLocations": {
       "honey": [
@@ -4031,10 +4031,10 @@
         "restitution": 0.0
       },
       "zuko": {
-        "pos": [7.0, 4.75]
+        "pos": [7.0, 4.5]
       },
       "zukoPos": {
-        "pos": [7.0, 4.75]
+        "pos": [7.0, 4.5]
       }
     }
   },
@@ -4187,7 +4187,7 @@
       "picture_cooldown": 10.0,
       "max_sight_distance": 9.0,
       "film_count": 10.0,
-      "goal_num_photos": 1.0
+      "goal_num_photos": 3.0
     },
     "objectLocations": {
       "honey": [
@@ -4195,17 +4195,17 @@
         [26.5, 3.5]
       ],
       "cloud": [
-        [22.5, 9.0],
-        [23.5, 9.0],
-        [22.25, 10.0],
-        [23.25, 10.0],
+        [21.75, 10.0],
+        [22.75, 10.0],
+        [21.25, 11.0],
+        [22.25, 11.0],
         [1.25, 15.75],
         [2.25, 15.75],
         [3.25, 15.75],
         [1.5, 14.75],
         [2.5, 14.75],
         [15.5, 2.75],
-        [29.0, 13.0]
+        [29.75, 13.0]
       ],
       "ice": [
         [6.75, 2.5]
@@ -4219,10 +4219,10 @@
         "restitution": 0.0
       },
       "zuko": {
-        "pos": [11.75, 3.75]
+        "pos": [11.75, 3.5]
       },
       "zukoPos": {
-        "pos": [11.75, 3.75]
+        "pos": [11.75, 3.5]
       },
       "pulley_top": [],
       "pulley_carry": []
@@ -4453,7 +4453,7 @@
       "picture_cooldown": 10.0,
       "max_sight_distance": 9.0,
       "film_count": 10.0,
-      "goal_num_photos": 1.0
+      "goal_num_photos": 2.0
     },
     "objectLocations": {
       "honey": [
@@ -4502,10 +4502,10 @@
         "restitution": 0.0
       },
       "zuko": {
-        "pos": [2.5, 5.0]
+        "pos": [2.5, 4.5]
       },
       "zukoPos": {
-        "pos": [2.5, 5.0]
+        "pos": [2.5, 4.5]
       },
       "pulley_settings": {
         "groundAnchors": [
@@ -4605,10 +4605,10 @@
         "restitution": 0.0
       },
       "zuko": {
-        "pos": [2.5, 5.0]
+        "pos": [2.25, 1.5]
       },
       "zukoPos": {
-        "pos": [2.5, 5.0]
+        "pos": [2.25, 1.5]
       }
     }
   },
@@ -4813,10 +4813,10 @@
         "restitution": 0.0
       },
       "zuko": {
-        "pos": [0.5, 2.75]
+        "pos": [0.5, 1.5]
       },
       "zukoPos": {
-        "pos": [0.5, 2.75]
+        "pos": [0.5, 1.5]
       }
     }
   }
