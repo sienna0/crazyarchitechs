@@ -127,6 +127,9 @@
     "jsons"  : {
         "platform-constants": "platform/constants.json"
     },
+    "music" : {
+      "platform-backgroundost" : "platform/levelost.ogg"
+    },
     "soundfx" : {
         "platform-jump"     : "platform/jump.wav",
         "platform-pew"      : "platform/pew.wav",

@@ -24,6 +24,7 @@ platform/honey.png
 platform/hover.wav
 platform/ice.png
 platform/jump.wav
+platform/levelost.ogg
 platform/mosquito.mp3
 platform/oldzuko.png
 platform/pause_icon.png

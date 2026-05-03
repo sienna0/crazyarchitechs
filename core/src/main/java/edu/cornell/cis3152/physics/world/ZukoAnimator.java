@@ -24,7 +24,7 @@ public class ZukoAnimator {
     /** The duration of the animation */
     private float jumpAnimationTime = 0f;
     /** The duration of each frame */
-    private float jumpFrameDuration = 0.14f;
+    private float jumpFrameDuration = 0.18f;
     /** Whether the animation is playing or not */
     private boolean playingJump = false;
 
@@ -80,13 +80,13 @@ public class ZukoAnimator {
     /** The progress of the tongue to the target. 0 = fully retracted, 1 = fully extended */
     private float tongueProgress = 0f;
     /** The speed of the tongue */
-    private float tongueSpeed = 8.0f;
+    private float tongueSpeed = 3.0f;
     /** The sticking target */
     private Vector2 tongueTarget = new Vector2();
 //    /** The offset of the tongue on Zuko's sprite */
 //    private Vector2 tongueMouthOffset = new Vector2(0.1f, 0f);
     /** The state of Zuko's tongue. 0 = idle, 1 = extending, 2 = retracting */
-    private float tongueState = 0f;
+    private int tongueState = 0; // 0 = idle, 1 = extending, 2 = retracting
     /** The Affine2 for drawing the tongue */
     private final Affine2 tongueTransform = new Affine2();
     /** Distance from tongue to target */
@@ -234,43 +234,73 @@ public class ZukoAnimator {
     /**
      * Starts Zuko's tongue animation when a photo is being stuck
      */
-    public void startTongueAnimation(float zukoX, float zukoY, float targetX, float targetY, float units) {
+    public void startTongueAnimation(float zukoX, float zukoY, float targetX, float targetY, boolean faceRight, float units) {
         tongueTarget.set(targetX * units, targetY * units);
 
-        float mx = zukoX * units;
-        float my = zukoY * units;
-        float dx = tongueTarget.x - mx;
-        float dy = tongueTarget.y - my;
-        tongueTotalDist = (float) Math.sqrt(dx * dx + dy * dy);
+        Vector2 mouth = getMouthPosition(zukoX, zukoY, faceRight, units);
+
+        float dx = tongueTarget.x - mouth.x;
+        float dy = tongueTarget.y - mouth.y;
+        tongueTotalDist = (float)Math.sqrt(dx * dx + dy * dy);
 
         tongueProgress = 0f;
-        tongueState = 1f;
+        tongueState = 1;
+        System.out.println("zukoX=" + zukoX + " zukoY=" + zukoY + " targetX=" + targetX + " targetY=" + targetY + " units=" + units);
     }
 
     /**
      * Separate draw method for the tongue. Draws incrementally based on progress.
      */
     public void drawTongue(SpriteBatch batch, boolean faceRight, float zukoX, float zukoY, float units) {
-        if (tongueState != 0f && tongueSegment != null) {
-            float mx = zukoX * units + (faceRight ? 0.3f : -0.3f);
-            float my = zukoY * units - 0.2f;
-            float tipX = mx + (tongueTarget.x - mx) * tongueProgress;
-            float tipY = my + (tongueTarget.y - my) * tongueProgress;
+        if (tongueState == 0 || tongueSegment == null) return;
 
-            float totalDist = tongueTotalDist * tongueProgress;
-            int numSegs = Math.max(1, (int) (totalDist / 3f) + 1);
+        // Use the same mouth position as startTongueAnimation
+        Vector2 mouth = getMouthPosition(zukoX, zukoY, faceRight, units);
+        float mx = mouth.x;
+        float my = mouth.y;
 
-            float angle = (float)(Math.atan2(tipY - my, tipX - mx) * 180f / Math.PI);
+        // Current tip position based on progress
+        float tipX = mx + (tongueTarget.x - mx) * tongueProgress;
+        float tipY = my + (tongueTarget.y - my) * tongueProgress;
 
-            for (int i = 0; i < numSegs; i++) {
-                float t = (float) i / numSegs;
-                float sx = mx + (tipX - mx) * t;
-                float sy = my + (tipY - my) * t;
+        float dx = tipX - mx;
+        float dy = tipY - my;
+        float len = (float) Math.sqrt(dx * dx + dy * dy);
 
-                tongueTransform.setToTrnRotScl(sx, sy, angle, 1f, 1f);
-                batch.draw(tongueSegment, tongueTransform);
+        if (len <= 0f) return;
+
+// Compute perpendicular ONCE for the whole tongue
+        float px = -dy / len;
+        float py = dx / len;
+
+        float pixelSize = 1f;
+        float step = 1f;
+        float tongueWidth = 1.3f;
+
+        int i = 0;
+        for (float d = 0; d <= len; d += step, i++) {
+            float t = d / len;
+            float sx = (float)Math.round((mx + dx * t) / step) * step;
+            float sy = (float)Math.round((my + dy * t) / step) * step;
+
+            float halfW = tongueWidth / 2;
+            for (float w = -halfW; w <= halfW; w++) {
+                float wx = (float)Math.round(sx + px * w);
+                float wy = (float)Math.round(sy + py * w);
+                batch.draw(tongueSegment, wx - pixelSize / 2f, wy - pixelSize / 2f, pixelSize, pixelSize);
             }
         }
+        System.out.println("mouth=" + mx + "," + my + " tip=" + tipX + "," + tipY);
+    }
+
+    private Vector2 getMouthPosition(float zukoX, float zukoY, boolean faceRight, float units) {
+        float mouthOffsetX = 0.2f;  // was 0.3f
+        float mouthOffsetY = -0.1f;  // was -0.2f, pushed it too low
+
+        return new Vector2(
+                zukoX * units + (faceRight ? mouthOffsetX : -mouthOffsetX) * units,
+                zukoY * units + mouthOffsetY * units
+        );
     }
 
     public void update(float dt, boolean isGrounded, float velocityX) {
@@ -344,17 +374,17 @@ public class ZukoAnimator {
             walkSheet.setFrame(0);
         }
 
-        if (tongueState == 1f) {
+        if (tongueState == 1) {
             tongueProgress += dt * tongueSpeed;
             if (tongueProgress >= 1f) {
                 tongueProgress = 1f;
-                tongueState = 2f;
+                tongueState = 2;
             }
-        } else if (tongueState == 2f) {
+        } else if (tongueState == 2) {
             tongueProgress -= dt * tongueSpeed;
             if (tongueProgress <= 0f) {
                 tongueProgress = 0f;
-                tongueState = 0f;
+                tongueState = 0;
             }
         }
     }
@@ -393,6 +423,6 @@ public class ZukoAnimator {
 
     public boolean hasFinishedSpawnAnimation() { return spawnFinished; }
 
-    public boolean isTongueActive() { return tongueState != 0f; }
+    public boolean isTongueActive() { return tongueState != 0; }
 
 }

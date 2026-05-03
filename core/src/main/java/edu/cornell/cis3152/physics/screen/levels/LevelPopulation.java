@@ -634,7 +634,7 @@ class LevelPopulation {
         zuko.getObstacle().setName(name);
         zuko.setWalkAnimation(walkSheet,  1, 7, 7);
         zuko.setPhotoAnimation(photoSheet, 1, 11, 11);
-        zuko.setJumpAnimation(jumpSheet,  1, 6, 6);
+        zuko.setJumpAnimation(jumpSheet,  1, 5, 5);
         zuko.setDeathMeltAnimation(deathMeltSheet,  1, 13, 13);
         zuko.setIdleAnimation(idleSheet, 1, 7, 7);
         zuko.setPortalAnimation(portalSheet, 1, 15, 15);
