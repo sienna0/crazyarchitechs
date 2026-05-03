@@ -104,6 +104,15 @@ public class LevelProgress {
             System.out.println("Error loading game");
             resetSaveGame();
         }
+        // Pad if save file has fewer levels than the current level count
+        for (int i = levels.size + 1; i <= numLevels; i++) {
+            LevelData nl = new LevelData();
+            levels.add(nl);
+        }
+        // Restore goalPhotos from directory (not persisted in save file)
+        for (int i = 1; i <= levels.size; i++) {
+            levels.get(i - 1).goalPhotos = directory.get("level" + i).get("playerSettings").getInt("goal_num_photos");
+        }
     }
 
     public void resetSaveGame(){
