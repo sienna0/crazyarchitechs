@@ -1,6 +1,6 @@
 META-INF/MANIFEST.MF
-Yummy Sound effect.mp3
 assets.json
+assets/save_game.json
 loading/GameLogo_animated.png
 loading/boot.json
 loading/main_menu_background.png
@@ -14,7 +14,6 @@ loading/play.png
 loading/progress.png
 loading/splash.png
 loading/splash1.png
-mosquito.MP3
 platform/32zuko.png
 platform/cameraflash.png
 platform/cameraflash1.png
@@ -67,7 +66,10 @@ shared/RetroGame.ttf
 shared/Sprite-0001.aseprite
 shared/background.png
 shared/backgroundmeasure.png
-shared/blanklily.png
+shared/blank-lily.png
+shared/cursor.png
+shared/cursor200x200.png
+shared/cursor64X64.png
 shared/earthtile.png
 shared/floortile.png
 shared/floortile1.png

@@ -1,5 +1,6 @@
 META-INF/MANIFEST.MF
 assets.json
+assets/save_game.json
 loading/GameLogo_animated.png
 loading/boot.json
 loading/main_menu_background.png
@@ -65,7 +66,10 @@ shared/RetroGame.ttf
 shared/Sprite-0001.aseprite
 shared/background.png
 shared/backgroundmeasure.png
-shared/blanklily.png
+shared/blank-lily.png
+shared/cursor.png
+shared/cursor200x200.png
+shared/cursor64X64.png
 shared/earthtile.png
 shared/floortile.png
 shared/floortile1.png

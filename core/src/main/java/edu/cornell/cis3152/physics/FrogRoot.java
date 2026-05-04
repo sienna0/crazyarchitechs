@@ -14,6 +14,8 @@
 package edu.cornell.cis3152.physics;
 
 import com.badlogic.gdx.*;
+import com.badlogic.gdx.graphics.Cursor;
+import com.badlogic.gdx.graphics.Pixmap;
 import edu.cornell.cis3152.physics.screen.LoadingScene;
 import edu.cornell.gdiac.util.*;
 import edu.cornell.gdiac.assets.*;
@@ -92,6 +94,11 @@ public class FrogRoot extends Game implements ScreenListener {
                     DesktopDisplayLayout.largeWindowWidth(), DesktopDisplayLayout.largeWindowHeight());
         }
         super.render();
+        Pixmap cursorPix = new Pixmap(Gdx.files.internal("shared/cursor.png"));
+        Cursor cursor = Gdx.graphics.newCursor(cursorPix,0,0);
+        Gdx.graphics.setCursor(cursor);
+        cursorPix.dispose();
+
     }
 
     /**
