@@ -512,10 +512,11 @@ class PhotoSystem {
         if (owner == avatar) {
             return true;
         }
-        if (owner instanceof ObstacleSprite sprite) {
-            String name = sprite.getName();
-            return name != null && name.startsWith("tilecollider");
-        }
+        // Don't uncomment this without telling arno
+//        if (owner instanceof ObstacleSprite sprite) {
+//            String name = sprite.getName();
+//            return name != null && name.startsWith("tilecollider");
+//        }
         return false;
     }
 
