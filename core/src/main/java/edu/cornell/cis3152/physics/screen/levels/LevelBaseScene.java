@@ -134,6 +134,8 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     /** Camera intro sequence played at level start. */
     private boolean introActive = false;
     private float introTimer = 0f;
+    /** Set to true once the intro has completed for the current level; cleared only on setLevel(). */
+    private boolean introPlayed = false;
     private static final float INTRO_HOLD   = 1.0f;
     private static final float INTRO_PAN    = 1.5f;
     private static final float INTRO_SETTLE = 1.0f;
@@ -295,8 +297,25 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         float visibleHeight = camera.viewportHeight * camera.zoom;
         float visibleLeft = camera.position.x - visibleWidth * 0.5f;
         float visibleBottom = camera.position.y - visibleHeight * 0.5f - 100;
-        float scrollX = avatar == null ? camera.position.x : avatar.getPosition().x * scale.x;
-        float scrollY = avatar == null ? camera.position.y : avatar.getPosition().y * scale.y;
+        // Interpolate parallax scroll between goal-door world position and Zuko's spawn using the
+        // same smoothstep as the camera, so the background moves as though Zuko were physically
+        // traveling from the door to his spawn.  At s==1 scrollX equals avatar.x*scale.x exactly,
+        // so there is no pop when the intro ends and normal gameplay takes over.
+        float scrollX;
+        float scrollY;
+        if (introActive && goalDoor != null && avatar != null) {
+            float t = Math.min(1f, Math.max(0f, (introTimer - INTRO_HOLD) / INTRO_PAN));
+            float s = t * t * (3f - 2f * t);
+            float goalWorldX = goalDoor.getObstacle().getX() * scale.x;
+            float goalWorldY = goalDoor.getObstacle().getY() * scale.y;
+            float zukoWorldX = avatar.getPosition().x * scale.x;
+            float zukoWorldY = avatar.getPosition().y * scale.y;
+            scrollX = goalWorldX + (zukoWorldX - goalWorldX) * s;
+            scrollY = goalWorldY + (zukoWorldY - goalWorldY) * s;
+        } else {
+            scrollX = avatar == null ? camera.position.x : avatar.getPosition().x * scale.x;
+            scrollY = avatar == null ? camera.position.y : avatar.getPosition().y * scale.y;
+        }
 
         batch.setColor(Color.WHITE);
         for (int ii = 0; ii < parallaxTextures.length; ii++) {
@@ -428,8 +447,12 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         populateLevel();
         photosUsed = 0;
         timeElapsed = 0f;
-        introActive = true;
+        introActive = !introPlayed;
         introTimer = 0f;
+        if (!introActive && avatar != null) {
+            avatar.setDrawVisible(true);
+            avatar.setGravityScale(1.0f);
+        }
     }
 
     /**
@@ -514,6 +537,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         {
             currentLevel = 1;
         }
+        introPlayed = false;
         reset();
     }
 
@@ -572,6 +596,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             }
             if (introTimer >= INTRO_TOTAL) {
                 introActive = false;
+                introPlayed = true;
                 avatar.setGravityScale(1.0f);
             }
             return;

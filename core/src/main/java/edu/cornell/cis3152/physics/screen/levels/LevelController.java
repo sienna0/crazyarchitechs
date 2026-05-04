@@ -126,6 +126,17 @@ public class LevelController {
     }
 
     /**
+     * Restarts the current level in-place by calling reset() on the existing scene so that
+     * per-level state (e.g. whether the intro has already played) is preserved.  Use this for
+     * death/hazard restarts; use {@link #loadLevel(int)} only when changing to a different level.
+     */
+    public void restartCurrentLevel() {
+        if (currentScene instanceof LevelBaseScene levelScene) {
+            levelScene.reset();
+        }
+    }
+
+    /**
      * Get current scene
      */
     public PhysicsScene getCurrentScene() {

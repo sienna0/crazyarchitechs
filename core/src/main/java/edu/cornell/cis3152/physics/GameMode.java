@@ -115,8 +115,7 @@ public class GameMode implements Screen, ScreenListener {
         } else if (exitCode == PhysicsScene.EXIT_LOSE) {
             SoundEffect deathSound = assets.getEntry("platform-death", SoundEffect.class);
             deathSound.play();
-            levelController.loadLevel(levelController.getCurrentLevel());
-            levelController.setScreenListener(this);
+            levelController.restartCurrentLevel();
         }
 
     }
@@ -180,7 +179,7 @@ public class GameMode implements Screen, ScreenListener {
 
                 }
                 if (choice == PauseMenuScene.RESTART) {
-                    levelController.loadLevel(levelController.getCurrentLevel());
+                    levelController.restartCurrentLevel();
                     levelController.getCurrentScene().setGamePaused(false);
                     paused = false;
                 }
@@ -208,8 +207,7 @@ public class GameMode implements Screen, ScreenListener {
             }
             PhysicsScene currentScene = levelController.getCurrentScene();
             if (!blockPauseForOptions && currentScene instanceof LevelBaseScene levelScene && levelScene.consumeHazardRestart()) {
-                levelController.loadLevel(levelController.getCurrentLevel());
-                levelController.setScreenListener(this);
+                levelController.restartCurrentLevel();
                 return;
             }
         }
