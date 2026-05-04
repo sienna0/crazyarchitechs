@@ -1,7 +1,7 @@
 META-INF/MANIFEST.MF
 Yummy Sound effect.mp3
 assets.json
-loading/GameLogo_animated.gif
+loading/GameLogo_animated.png
 loading/boot.json
 loading/main_menu_background.png
 loading/menu_options.png
@@ -26,6 +26,7 @@ platform/honey.png
 platform/hover.wav
 platform/ice.png
 platform/jump.wav
+platform/levelost.ogg
 platform/mosquito.mp3
 platform/oldzuko.png
 platform/pause_icon.png
@@ -41,6 +42,7 @@ platform/ribbit.wav
 platform/rock.png
 platform/settings_icon.png
 platform/tileset.png
+platform/vines.png
 platform/walltile.png
 platform/yummy.mp3
 platform/zuko.png

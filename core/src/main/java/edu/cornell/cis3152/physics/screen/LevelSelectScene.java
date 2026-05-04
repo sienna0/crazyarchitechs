@@ -8,10 +8,13 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.ScreenUtils;
 import edu.cornell.cis3152.physics.CanvasRender;
+import edu.cornell.cis3152.physics.graphics.SpriteStripAnimation;
 import edu.cornell.cis3152.physics.screen.levels.LevelController;
 import edu.cornell.gdiac.assets.AssetDirectory;
 import edu.cornell.gdiac.graphics.SpriteBatch;
@@ -32,6 +35,8 @@ public class LevelSelectScene implements Screen {
     private final BitmapFont font;
     /** Background texture for the level select screen */
     private final Texture backgroundTexture;
+    /** Animated logo shown at top center */
+    private SpriteStripAnimation titleAnimation;
     /** Lily pad buttons for levels 1-3 */
     private final Texture lilyTexture;
     /** Title screen–style control; returns to main menu */
@@ -71,16 +76,25 @@ public class LevelSelectScene implements Screen {
     /** Reusable coordinate buffer */
     private final Vector2 pointer;
 
-    private float scroll;
+    private int currentPage;
 
     private final TextLayout arrowLayout;
 
     private Rectangle leftArrowBounds;
     private Rectangle rightArrowBounds;
+    private float titleAnimTime;
 
     private static final float ARROW_SIZE_REF = 70f;
     private static final float ARROW_PADDING_REF = 20f;
-    private static final int PAGE_SIZE = 3;
+    private static final int PAGE_SIZE = 5;
+    private static final float CONTENT_SIDE_MARGIN_REF = 95f;
+    private static final String TITLE_STRIP_INTERNAL = "loading/GameLogo_animated.png";
+    private static final int TITLE_FRAME_COUNT = 7;
+    private static final float TITLE_DEFAULT_FRAME_SEC = 1f / 12f;
+    private static final float TITLE_MAX_WIDTH_FRAC = 0.6f;
+    private static final float TITLE_MAX_HEIGHT_FRAC = 0.26f;
+    private static final float TITLE_CENTER_X_FRAC = 0.5f;
+    private static final float TITLE_CENTER_Y_FRAC = 0.88f;
     private static final float MENU_BTN_MAX_W_FRAC = 0.2f;
     private static final float MENU_BTN_TOP_MARGIN_REF = 16f;
     private static final float MENU_BTN_RIGHT_MARGIN_REF = 16f;
@@ -98,6 +112,15 @@ public class LevelSelectScene implements Screen {
         this.backgroundTexture = assets.getEntry("shared-water", Texture.class);
         if (this.backgroundTexture != null) {
             this.backgroundTexture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        }
+        try {
+            this.titleAnimation = SpriteStripAnimation.loadHorizontalStrip(
+                    Gdx.files.internal(TITLE_STRIP_INTERNAL),
+                    TITLE_FRAME_COUNT,
+                    Texture.TextureFilter.Nearest,
+                    TITLE_DEFAULT_FRAME_SEC);
+        } catch (RuntimeException e) {
+            Gdx.app.error("LevelSelectScene", "Could not load title sprite strip: " + TITLE_STRIP_INTERNAL, e);
         }
         this.lilyTexture = assets.getEntry("shared-blank-lily", Texture.class);
         if (lilyTexture != null) {
@@ -138,7 +161,7 @@ public class LevelSelectScene implements Screen {
         optionLayout = new TextLayout();
         optionLayout.setFont(font);
         optionLayout.setAlignment(TextAlign.middleCenter);
-        scroll = 0f;
+        currentPage = 0;
         arrowLayout = new TextLayout();
         arrowLayout.setFont(font);
         arrowLayout.setAlignment(TextAlign.middleCenter);
@@ -171,6 +194,8 @@ public class LevelSelectScene implements Screen {
     @Override
     public void show() {
         active = true;
+        selectedIndex = Math.max(0, Math.min(selectedIndex, totalLevels - 1));
+        currentPage = pageForIndex(selectedIndex);
     }
 
     @Override
@@ -179,6 +204,7 @@ public class LevelSelectScene implements Screen {
             return;
         }
 
+        titleAnimTime += delta;
         update();
         draw();
     }
@@ -192,9 +218,11 @@ public class LevelSelectScene implements Screen {
 
         if (upPressed && !upPrevious) {
             selectedIndex = (selectedIndex + totalLevels - 1) % totalLevels;
+            currentPage = pageForIndex(selectedIndex);
         }
         if (downPressed && !downPrevious) {
             selectedIndex = (selectedIndex + 1) % totalLevels;
+            currentPage = pageForIndex(selectedIndex);
         }
         if (confirmPressed && !confirmPrevious) {
             chosenLevel = selectedIndex + 1;
@@ -208,13 +236,14 @@ public class LevelSelectScene implements Screen {
             if (getMenuButtonBounds().contains(pointer.x, pointer.y)) {
                 exitRequested = true;
             } else if (leftArrowBounds.contains(pointer)) {
-                scrollByPage(-1);
+                changePage(-1);
             } else if (rightArrowBounds.contains(pointer)) {
-                scrollByPage(1);
+                changePage(1);
             } else {
                 int clickedIndex = getHoveredIndex();
                 if (clickedIndex >= 0) {
                     selectedIndex = clickedIndex;
+                    currentPage = pageForIndex(selectedIndex);
                     chosenLevel = clickedIndex + 1;
                 }
             }
@@ -222,6 +251,7 @@ public class LevelSelectScene implements Screen {
             int hoveredIndex = getHoveredIndex();
             if (hoveredIndex >= 0) {
                 selectedIndex = hoveredIndex;
+                currentPage = pageForIndex(selectedIndex);
             }
         }
 
@@ -230,17 +260,6 @@ public class LevelSelectScene implements Screen {
         confirmPrevious = confirmPressed;
         exitPrevious = exitPressed;
         clickPrevious = clickPressed;
-        float scrollStep = 5f * CanvasRender.layoutScale();
-        scroll -= Gdx.input.isKeyPressed(Input.Keys.A) ? scrollStep : 0f;
-        scroll -= Gdx.input.isKeyPressed(Input.Keys.LEFT) ? scrollStep : 0f;
-
-        scroll += Gdx.input.isKeyPressed(Input.Keys.D) ? scrollStep : 0f;
-        scroll += Gdx.input.isKeyPressed(Input.Keys.RIGHT) ? scrollStep : 0f;
-
-        float spacing = levelSpacing();
-        float start = levelStartMargin();
-        float maxScroll = Math.max(0, (totalLevels - 1) * spacing - (width - start * 2));
-        scroll = Math.max(0, Math.min(scroll, maxScroll));
     }
 
     private void draw() {
@@ -253,13 +272,16 @@ public class LevelSelectScene implements Screen {
         if (backgroundTexture != null) {
             batch.draw(backgroundTexture, 0, 0, width, height);
         }
+        drawTitle();
         float titleY = height - height * (100f / 720f);
         float instructY = height - height * (170f / 720f);
         batch.drawText(titleLayout, width / 2.0f, titleY);
         batch.drawText(instructionLayout, width / 2.0f, instructY);
 
         batch.setColor(0, 0, 0, 1f);
-        for (int ii = 0; ii < totalLevels; ii++) {
+        int startIndex = currentPage * PAGE_SIZE;
+        int endIndex = Math.min(totalLevels, startIndex + PAGE_SIZE);
+        for (int ii = startIndex; ii < endIndex; ii++) {
             Vector2 pos = getLevelPosition(ii);
             boolean selected = ii == selectedIndex;
             float size = selected ? lilySizeSelected() : lilySizeNormal();
@@ -305,11 +327,8 @@ public class LevelSelectScene implements Screen {
 
         }
         font.getData().setScale(1.0f);
-        float spacing = levelSpacing();
-        float start = levelStartMargin();
-        float maxScroll = Math.max(0, (totalLevels - 1) * spacing - (width - start * 2));
-        drawArrow(false, scroll > 1f);
-        drawArrow(true, scroll < maxScroll - 1f);
+        drawArrow(false, currentPage > 0);
+        drawArrow(true, currentPage < pageCount() - 1);
 
         drawMenuButton();
 
@@ -317,30 +336,28 @@ public class LevelSelectScene implements Screen {
         viewport.reset();
     }
 
-    private float levelSpacing() {
-        return width * (220f / 1280f);
-    }
-
-    private float levelStartMargin() {
-        return width * (150f / 1280f);
+    private float contentSideMargin() {
+        return width * (CONTENT_SIDE_MARGIN_REF / 1280f);
     }
 
     private float lilySizeSelected() {
-        return width * (140f / 1280f);
+        return width * (165f / 1280f);
     }
 
     private float lilySizeNormal() {
-        return width * (110f / 1280f);
+        return width * (132f / 1280f);
     }
 
     private Vector2 getLevelPosition(int index) {
-        float spacing = levelSpacing();
-        float start = levelStartMargin();
-        float x = start + index * spacing - scroll;
-
+        int pageStart = (index / PAGE_SIZE) * PAGE_SIZE;
+        int visibleCount = Math.min(PAGE_SIZE, totalLevels - pageStart);
+        int slot = index - pageStart;
+        float contentLeft = contentSideMargin();
+        float contentWidth = width - 2f * contentLeft;
+        float x = contentLeft + contentWidth * (slot + 1f) / (visibleCount + 1f);
         float amplitude = height * (120f / 720f);
-        float base = height * 0.5f;
-        float y = base + (index % 2 == 0 ? amplitude : -amplitude);
+        float base = height * 0.43f;
+        float y = base + (slot % 2 == 0 ? amplitude : -amplitude);
         return new Vector2(x,y);
     }
 
@@ -352,7 +369,9 @@ public class LevelSelectScene implements Screen {
         }
 
         float hoverRad = width * (60f / 1280f);
-        for (int ii = 0; ii < totalLevels; ii++) {
+        int startIndex = currentPage * PAGE_SIZE;
+        int endIndex = Math.min(totalLevels, startIndex + PAGE_SIZE);
+        for (int ii = startIndex; ii < endIndex; ii++) {
             Vector2 pos = getLevelPosition(ii);
             if (pointer.dst(pos) < hoverRad) {
                 return ii;
@@ -368,16 +387,19 @@ public class LevelSelectScene implements Screen {
         camera.setToOrtho(false, this.width, this.height);
     }
 
-    private void clampScroll() {
-        float spacing = levelSpacing();
-        float start = levelStartMargin();
-        float maxScroll = Math.max(0, (totalLevels - 1) * spacing - (width - start * 2));
-        scroll = Math.max(0, Math.min(scroll, maxScroll));
+    private int pageCount() {
+        return Math.max(1, (totalLevels + PAGE_SIZE - 1) / PAGE_SIZE);
     }
 
-    private void scrollByPage(int direction) {
-        scroll += direction * PAGE_SIZE * levelSpacing();
-        clampScroll();
+    private int pageForIndex(int index) {
+        return Math.max(0, Math.min(pageCount() - 1, index / PAGE_SIZE));
+    }
+
+    private void changePage(int direction) {
+        currentPage = Math.max(0, Math.min(pageCount() - 1, currentPage + direction));
+        int pageStart = currentPage * PAGE_SIZE;
+        int pageEnd = Math.min(totalLevels, pageStart + PAGE_SIZE) - 1;
+        selectedIndex = Math.max(pageStart, Math.min(selectedIndex, pageEnd));
     }
 
     private Rectangle getMenuButtonBounds() {
@@ -439,6 +461,37 @@ public class LevelSelectScene implements Screen {
         batch.drawText(arrowLayout, x + arrowSize / 2, cy + 5f * UI);
         font.getData().setScale(1.0f);
     }
+
+    private void drawTitle() {
+        Rectangle r = computeTitleCanvasRect();
+        if (r.width <= 0f || titleAnimation == null) {
+            return;
+        }
+        TextureRegion tr = titleAnimation.getKeyFrame(titleAnimTime);
+        batch.setColor(Color.WHITE);
+        batch.draw(tr, r.x, r.y, r.width, r.height);
+    }
+
+    private Rectangle computeTitleCanvasRect() {
+        if (titleAnimation == null || titleAnimation.getFrameCount() == 0) {
+            return new Rectangle(0, 0, 0, 0);
+        }
+        TextureRegion tr = titleAnimation.getKeyFrame(titleAnimTime);
+        float rw = Math.max(1, tr.getRegionWidth());
+        float rh = Math.max(1, tr.getRegionHeight());
+        float maxW = width * TITLE_MAX_WIDTH_FRAC;
+        float maxH = height * TITLE_MAX_HEIGHT_FRAC;
+        float s = Math.min(maxW / rw, maxH / rh);
+        s = MathUtils.clamp(s, 0.01f, 100f);
+        float drawW = rw * s;
+        float drawH = rh * s;
+        float cx = width * TITLE_CENTER_X_FRAC;
+        float cy = height * TITLE_CENTER_Y_FRAC;
+        float x = cx - drawW / 2f;
+        float y = cy - drawH / 2f;
+        return new Rectangle(x, y, drawW, drawH);
+    }
+
     @Override
     public void pause() {
     }
@@ -454,6 +507,10 @@ public class LevelSelectScene implements Screen {
 
     @Override
     public void dispose() {
+        if (titleAnimation != null) {
+            titleAnimation.dispose();
+            titleAnimation = null;
+        }
         pixel.dispose();
     }
 }

@@ -283,21 +283,18 @@ class PhotoSystem {
      * skipping when there is no free inventory slot (and no slot selected for sticking).
      */
     private void findObjectNearZuko(Zuko avatar, PooledList<ObstacleSprite> sprites, World world) {
-        Picture activePicture = worldState.getActivePicture();
-        if (avatar.getPictureInventory().getUnusedPicture() == null && worldState.getSelectedSlotIndex() == -1) {
-            return;
-        }
-
-        float range = (activePicture != null) ? STICK_PICTURE_DISTANCE: TAKE_PICTURE_DISTANCE;
         for (ObstacleSprite sprite : sprites) {
             if (sprite == avatar) continue;
             if (!(sprite instanceof GameObject go)) continue;
-            if (hasFullLineOfSight(go, avatar, world, range)) {
-                if (activePicture != null) {
-                    if (activePicture.getSubjectType() == go.getObjectType()) {continue;}}
-                worldState.addHighlight(go);
+            Picture activePicture = worldState.getActivePicture();
+            if (avatar.getPictureInventory().getUnusedPicture() == null && worldState.getSelectedSlotIndex() == -1) {
+                return;
             }
 
+            float range = (activePicture != null) ? STICK_PICTURE_DISTANCE: TAKE_PICTURE_DISTANCE;
+            if (hasFullLineOfSight(go, avatar, world, range)) {
+                worldState.addHighlight(go);
+            }
         }
     }
 
@@ -508,7 +505,14 @@ class PhotoSystem {
             return true;
         }
         Object owner = fixture.getBody().getUserData();
-        return owner == avatar;
+        if (owner == avatar) {
+            return true;
+        }
+        if (owner instanceof ObstacleSprite sprite) {
+            String name = sprite.getName();
+            return name != null && name.startsWith("tilecollider");
+        }
+        return false;
     }
 
     private static final class RaycastHit {

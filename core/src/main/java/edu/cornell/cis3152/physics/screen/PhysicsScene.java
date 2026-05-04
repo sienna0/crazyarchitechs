@@ -503,6 +503,8 @@ public abstract class PhysicsScene implements Screen {
             }
         }
 
+        drawForeground(batch);
+
         // Draw a final message
 //        if (complete && !failed) {
 //            batch.drawText(goodMessage, width/2, height/2);
@@ -521,6 +523,13 @@ public abstract class PhysicsScene implements Screen {
      */
     protected void drawBackground(SpriteBatch batch) {
         // Default scene uses only the clear color.
+    }
+
+    /**
+     * Draws any scene foreground after world sprites render.
+     */
+    protected void drawForeground(SpriteBatch batch) {
+        // Default scene uses no foreground overlay.
     }
 
     /**

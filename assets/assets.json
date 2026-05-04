@@ -122,10 +122,14 @@
         "platform-picture-honey-with-ice": "platform/picture_honey_with_ice.png",
         "platform-picture-ice-with-cloud": "platform/picture_ice_with_cloud.png",
         "platform-picture-ice-with-honey": "platform/picture_ice_with_honey.png",
-        "platform-tileset"  : "platform/tileset.png"
+        "platform-tileset"  : "platform/tileset.png",
+        "platform-vines"    : "platform/vines.png"
     },
     "jsons"  : {
         "platform-constants": "platform/constants.json"
+    },
+    "music" : {
+      "platform-backgroundost" : "platform/levelost.ogg"
     },
     "soundfx" : {
         "platform-jump"     : "platform/jump.wav",

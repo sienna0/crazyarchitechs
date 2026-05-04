@@ -3,6 +3,7 @@ package edu.cornell.cis3152.physics;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import edu.cornell.cis3152.physics.screen.*;
 import edu.cornell.cis3152.physics.screen.levels.LevelBaseScene;
@@ -33,6 +34,8 @@ public class GameMode implements Screen, ScreenListener {
     private PauseMenuScene pauseMenuScene;
     private GameplayOptionsOverlay gameplayOptionsOverlay;
     private WinScene winScene;
+
+    private Music levelMusic;
 
     private int width;
     private int height;
@@ -70,6 +73,7 @@ public class GameMode implements Screen, ScreenListener {
 
         active = true;
         showingLevelSelect = true;
+        stopLevelMusic();
     }
 
     /**
@@ -101,6 +105,7 @@ public class GameMode implements Screen, ScreenListener {
             showingLevelSelect = false;
         } else if (exitCode == PhysicsScene.EXIT_QUIT) {
             showingLevelSelect = true;
+            stopLevelMusic();
             levelSelectScene.show();
         } else if (exitCode == PhysicsScene.EXIT_WIN) {
             levelController.markCurrentBeaten();
@@ -128,6 +133,7 @@ public class GameMode implements Screen, ScreenListener {
                 levelController.loadLevel(selectedLevel);
                 levelController.setScreenListener(this);
                 showingLevelSelect = false;
+                startLevelMusic();
                 if (levelController.getCurrentScene() != null) {
                     levelController.getCurrentScene().show();
                 }
@@ -180,6 +186,7 @@ public class GameMode implements Screen, ScreenListener {
                 }
                 if (choice == PauseMenuScene.QUIT)    {
                     paused = false;
+                    stopLevelMusic();
                     showingLevelSelect = true;
                     levelSelectScene.show();
                 }
@@ -195,6 +202,7 @@ public class GameMode implements Screen, ScreenListener {
                     showingWin = false;
                     winScene.hide();
                     showingLevelSelect = true;
+                    stopLevelMusic();
                     levelSelectScene.show();
                 }
             }
@@ -228,6 +236,28 @@ public class GameMode implements Screen, ScreenListener {
             if (showingWin) {
                 winScene.render(Gdx.graphics.getDeltaTime());
             }
+        }
+    }
+
+    private void startLevelMusic() {
+        if (levelMusic == null) {
+            levelMusic = assets.getEntry("platform-backgroundost", Music.class);
+            if (levelMusic == null) {
+                Gdx.app.error("GameMode", "Missing music asset: platform-backgroundost");
+                return;
+            }
+            levelMusic.setLooping(true);
+            levelMusic.setVolume(0.2f);
+        }
+
+        if (!levelMusic.isPlaying()) {
+            levelMusic.play();
+        }
+    }
+
+    private void stopLevelMusic() {
+        if (levelMusic != null) {
+            levelMusic.stop();
         }
     }
 
@@ -307,6 +337,10 @@ public class GameMode implements Screen, ScreenListener {
 
     @Override
     public void dispose() {
+        if (levelMusic != null) {
+            levelMusic.stop();
+            levelMusic = null;
+        }
         if (levelController != null) {
             levelController.dispose();
             levelController = null;

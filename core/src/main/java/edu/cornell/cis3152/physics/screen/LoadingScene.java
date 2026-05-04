@@ -37,7 +37,7 @@ import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.utils.ScreenUtils;
 import edu.cornell.cis3152.physics.CanvasRender;
 import edu.cornell.cis3152.physics.GameAudio;
-import edu.cornell.cis3152.physics.graphics.GifFrames;
+import edu.cornell.cis3152.physics.graphics.SpriteStripAnimation;
 import edu.cornell.gdiac.assets.*;
 import edu.cornell.gdiac.audio.SoundEffect;
 import edu.cornell.gdiac.graphics.SpriteBatch;
@@ -45,12 +45,10 @@ import edu.cornell.gdiac.graphics.TextAlign;
 import edu.cornell.gdiac.graphics.TextLayout;
 import edu.cornell.gdiac.util.ScreenListener;
 
-import java.io.IOException;
-
 /**
  * Class that provides a loading screen for the state of the game.
  *
- * Main menu and asset loading: background, animated title {@link GifFrames}, progress bar, then sprite PLAY / OPTIONS.
+ * Main menu and asset loading: background, animated title, progress bar, then sprite PLAY / OPTIONS.
  */
 public class LoadingScene implements Screen {
 
@@ -71,7 +69,7 @@ public class LoadingScene implements Screen {
     /** Gap between PLAY and OPTIONS (canvas pixels, scaled). */
     private static final float MENU_GAP_BETWEEN = 22f;
     /** Extra shift downward for PLAY/OPTIONS stack (reference px × {@link CanvasRender#layoutScale()}, y-up). */
-    private static final float MENU_BUTTON_EXTRA_DOWN_REF = 22f;
+    private static final float MENU_BUTTON_EXTRA_DOWN_REF = 20f;
     /** Min bottom edge for OPTIONS when the stack would clip off-screen (fraction of canvas height, y-up). */
     private static final float MENU_BUTTON_STACK_AREA_BOTTOM_FRAC = 0.10f;
     /** Fallback: vertical center of stack when title is missing (y-up, 0–1). */
@@ -90,8 +88,8 @@ public class LoadingScene implements Screen {
     /** Default budget for asset loader (do nothing but load 60 fps) */
     private static int DEFAULT_BUDGET = 15;
 
-    private static final String TITLE_GIF_INTERNAL = "loading/GameLogo_animated.gif";
-    /** Fallback per-frame duration if a GIF frame omits delay metadata. */
+    private static final String TITLE_STRIP_INTERNAL = "loading/GameLogo_animated.png";
+    private static final int TITLE_FRAME_COUNT = 7;
     private static final float TITLE_DEFAULT_FRAME_SEC = 1f / 12f;
     /**
      * Max title width/height vs canvas. After opaque crop the logo is wide; a full-width cap blows up scale
@@ -102,7 +100,7 @@ public class LoadingScene implements Screen {
     /** Title position: center X as fraction of canvas width (0–1). */
     private static final float TITLE_CENTER_X_FRAC = 0.5f;
     /** Title position: center Y as fraction of canvas height (0–1); higher = title + menu stack move up. */
-    private static final float TITLE_CENTER_Y_FRAC = 0.72f;
+    private static final float TITLE_CENTER_Y_FRAC = 0.68f;
 
     // There are TWO asset managers.
     // One to load the loading screen. The other to load the assets
@@ -138,7 +136,7 @@ public class LoadingScene implements Screen {
     /** Whether or not this player mode is still active */
     private boolean active;
 
-    private GifFrames titleGif;
+    private SpriteStripAnimation titleAnimation;
     private float titleAnimTime;
 
     private SoundEffect buttonPress;
@@ -289,12 +287,13 @@ public class LoadingScene implements Screen {
         resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
         try {
-            titleGif = GifFrames.load(
-                    Gdx.files.internal(TITLE_GIF_INTERNAL),
-                    TITLE_DEFAULT_FRAME_SEC,
-                    Texture.TextureFilter.Nearest);
-        } catch (IOException e) {
-            Gdx.app.error("LoadingScene", "Could not load title GIF: " + TITLE_GIF_INTERNAL, e);
+            titleAnimation = SpriteStripAnimation.loadHorizontalStrip(
+                    Gdx.files.internal(TITLE_STRIP_INTERNAL),
+                    TITLE_FRAME_COUNT,
+                    Texture.TextureFilter.Nearest,
+                    TITLE_DEFAULT_FRAME_SEC);
+        } catch (RuntimeException e) {
+            Gdx.app.error("LoadingScene", "Could not load title sprite strip: " + TITLE_STRIP_INTERNAL, e);
         }
 
         Pixmap pm = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
@@ -314,9 +313,9 @@ public class LoadingScene implements Screen {
      * Called when this screen should release all resources.
      */
     public void dispose() {
-        if (titleGif != null) {
-            titleGif.dispose();
-            titleGif = null;
+        if (titleAnimation != null) {
+            titleAnimation.dispose();
+            titleAnimation = null;
         }
         if (pixel != null) {
             pixel.dispose();
@@ -459,7 +458,7 @@ public class LoadingScene implements Screen {
         if (r.width <= 0f) {
             return;
         }
-        TextureRegion tr = titleGif.getKeyFrame(titleAnimTime);
+        TextureRegion tr = titleAnimation.getKeyFrame(titleAnimTime);
         batch.setColor(Color.WHITE);
         batch.draw(tr, r.x, r.y, r.width, r.height);
     }
@@ -469,10 +468,10 @@ public class LoadingScene implements Screen {
      * Width/height are zero if there is no title.
      */
     private Rectangle computeTitleCanvasRect() {
-        if (titleGif == null || titleGif.getFrameCount() == 0) {
+        if (titleAnimation == null || titleAnimation.getFrameCount() == 0) {
             return new Rectangle(0, 0, 0, 0);
         }
-        TextureRegion tr = titleGif.getKeyFrame(titleAnimTime);
+        TextureRegion tr = titleAnimation.getKeyFrame(titleAnimTime);
         float rw = Math.max(1, tr.getRegionWidth());
         float rh = Math.max(1, tr.getRegionHeight());
         float maxW = width * TITLE_MAX_WIDTH_FRAC;

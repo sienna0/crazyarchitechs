@@ -397,7 +397,14 @@ public class Zuko extends ObstacleSprite {
     public void startTongueAnimation(float targetX, float targetY) {
         boolean facingRight = targetX > obstacle.getX();
         setFacingRight(facingRight);
-        animator.startTongueAnimation(obstacle.getX(), obstacle.getY(), targetX, targetY, obstacle.getPhysicsUnits());
+        animator.startTongueAnimation(
+                obstacle.getX(),
+                obstacle.getY(),
+                targetX,
+                targetY,
+                movement.isFacingRight(),
+                obstacle.getPhysicsUnits()
+        );
     }
 
     public void setPhotoAnimation(Texture sheet, int rows, int cols, int size) {
