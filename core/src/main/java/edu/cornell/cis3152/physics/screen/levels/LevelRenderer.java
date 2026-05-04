@@ -374,14 +374,21 @@ class LevelRenderer {
         float barX = viewport.getWidth() / 2 - barWidth / 2;
         float startX = barX + padding;
         float startY = barY + (barHeight - scaledSlotSize) / 2f;
-        float selectedRaise = 8f * UI;
+        float highlightPad = 3f * UI;
         // Inner margin for subject art vs. frame hole (inventory.png is 200×200 with ~44px border).
         float frameInnerPad = scaledSlotSize * 0.22f;
 
         for (int ii = 0; ii < size; ii++) {
             float slotX = startX + ii * (scaledSlotSize + padding);
-            float slotY = ii == worldState.getSelectedSlotIndex() ? startY + selectedRaise : startY;
+            float slotY = startY;
             Picture picture = avatar.getPictureInventory().getPicture(ii);
+
+            if (ii == worldState.getSelectedSlotIndex()) {
+                batch.setColor(Color.GOLD);
+                batch.draw(markerPixel,
+                        slotX - highlightPad, slotY - highlightPad,
+                        scaledSlotSize + 2 * highlightPad, scaledSlotSize + 2 * highlightPad);
+            }
 
             if (picture != null && picture.hasSubject()) {
                 batch.setColor(Color.WHITE);

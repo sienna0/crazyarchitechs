@@ -268,11 +268,6 @@ class PhotoSystem {
         Picture picture = new Picture(target);
         worldState.getPictures().add(picture);
         avatar.getPictureInventory().addPicture(picture);
-        int autoIdx = avatar.getPictureInventory().getAutoSelectIndex();
-        if (autoIdx != -1) {
-            worldState.setSelectedSlotIndex(autoIdx);
-            worldState.setActivePicture(avatar.getPictureInventory().getPicture(autoIdx));
-        }
         SoundEffectManager.getInstance().play("plop", plopSound,
                 GameAudio.effectiveSfxVolume(Math.min(1.0f, volume * 1.75f)));
     }
