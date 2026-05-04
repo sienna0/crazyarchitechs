@@ -1,14 +1,26 @@
 [
 {
+	"complete": true,
+	"minPhotosUsed": 0,
+	"flyCount": 1,
+	"bestTime": 6.0000906,
+	"goalPhotos": 1
+},
+{
+	"complete": true,
+	"minPhotosUsed": 0,
+	"flyCount": 1,
+	"bestTime": 4.216645,
 	"goalPhotos": 1
 },
 {
 	"goalPhotos": 1
 },
 {
-	"goalPhotos": 1
-},
-{
+	"complete": true,
+	"minPhotosUsed": 1,
+	"flyCount": 1,
+	"bestTime": 14.767777,
 	"goalPhotos": 1
 },
 {

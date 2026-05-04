@@ -1,6 +1,6 @@
 META-INF/MANIFEST.MF
 assets.json
-loading/GameLogo_animated.gif
+loading/GameLogo_animated.png
 loading/boot.json
 loading/main_menu_background.png
 loading/menu_options.png
