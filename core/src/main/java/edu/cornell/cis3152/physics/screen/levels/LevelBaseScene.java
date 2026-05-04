@@ -642,8 +642,9 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         tonguePreviouslyActive = tongueActive;
 
         // Fly click detection (only when no active picture and no pending collection)
-        if (input.didLeftClick() && worldState.getActivePicture() == null
-                && clickedSlot < 0 && pendingFlyCollection == null) {
+        if (input.didLeftClick() &&  pendingFlyCollection == null) {
+            // worldState.getActivePicture() == null
+            //                && clickedSlot < 0 &&
             Vector2 crosshair = input.getCrossHair();
             FlyCollectible clickedFly = findFlyUnderCrosshair(crosshair, units);
             if (clickedFly != null && flyInRange(clickedFly) && flyHasLineOfSight(clickedFly)) {
