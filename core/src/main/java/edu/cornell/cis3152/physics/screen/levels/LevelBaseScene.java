@@ -271,6 +271,13 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         }
     }
 
+    @Override
+    protected void drawForeground(SpriteBatch batch) {
+        if (renderer != null && levelData != null) {
+            renderer.drawVines(batch, levelData, height / bounds.height);
+        }
+    }
+
     private void drawParallaxBackground(SpriteBatch batch) {
         if (parallaxTextures == null || camera == null) {
             return;
@@ -613,7 +620,6 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             avatar.applyForce();
             return;
         }
-        photoSystem.updateHighlights(avatar, sprites, world);
         photoSystem.handlePictureShortcuts(input, avatar);
         updateAvatarMovement(input, avatar);
 
@@ -653,7 +659,11 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             }
         }
 
-        // Update in-range fly list for highlight rendering
+        // Rebuild range highlights after all input/selection changes so the UI
+        // matches the final state for this frame.
+        photoSystem.updateHighlights(avatar, sprites, world);
+
+        // Update in-range fly list for highlight rendering using the same final state.
         ArrayList<FlyCollectible> inRangeFlies = new ArrayList<>();
         if (levelData != null) {
             for (FlyCollectible fly : levelData.flies) {

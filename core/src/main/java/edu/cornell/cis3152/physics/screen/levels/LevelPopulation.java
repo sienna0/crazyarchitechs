@@ -60,6 +60,9 @@ class LevelPopulation {
         List<TextureRegion> tileRegions    = new ArrayList<>();
         /** [x, y] screen-space position in pixels for each tile, in the same order as tileRegions. */
         List<float[]>       tilePositions  = new ArrayList<>();
+        List<TextureRegion> vineRegions    = new ArrayList<>();
+        /** [x, y] screen-space position in pixels for each vine tile, in the same order as vineRegions. */
+        List<float[]>       vinePositions  = new ArrayList<>();
         List<BoxSprite> pulleyCarries = new ArrayList<>();
         List<BoxSprite> pulleyRopes = new ArrayList<>();
         List<Vector2> pulleyWheelCenters = new ArrayList<>();
@@ -105,26 +108,10 @@ class LevelPopulation {
         spriteAdder.accept(result.goalDoor);
 
         Texture tilesetTexture = textureResolver.apply("platform-tileset", "platform/tileset.png");
-        JsonValue tilemap = level.get("tilemap");
-        if (tilemap != null) {
-            for (int ii = 0; ii < tilemap.size; ii++) {
-                JsonValue entry = tilemap.get(ii);
-                int tx  = entry.getInt("tx");
-                int ty  = entry.getInt("ty");
-                int col = entry.getInt("col");
-                int row = entry.getInt("row");
+        parseTileLayer(level.get("tilemap"), tilesetTexture, units, result.tileRegions, result.tilePositions);
 
-                // 16x16 from tileset
-                TextureRegion region = new TextureRegion(
-                        tilesetTexture,
-                        col * TILE_PX, row * TILE_PX,
-                        TILE_PX, TILE_PX
-                );
-                result.tileRegions.add(region);
-
-                result.tilePositions.add(new float[]{ tx * units, ty * units });
-            }
-        }
+        Texture vinesTexture = textureResolver.apply("platform-vines", "platform/vines.png");
+        parseTileLayer(level.get("vines"), vinesTexture, units, result.vineRegions, result.vinePositions);
 
         Texture borderTexture = textureResolver.apply("shared-wall", "shared/treetile.png");
         JsonValue walls = level.get("walls");
@@ -708,6 +695,29 @@ class LevelPopulation {
         JsonValue copy = new JsonReader().parse(collisionSettings.toJson(JsonWriter.OutputType.json));
         copy.addChild("invisible", new JsonValue(true));
         return copy;
+    }
+
+    private void parseTileLayer(JsonValue layer, Texture texture, float units,
+                                List<TextureRegion> regions, List<float[]> positions) {
+        if (layer == null || texture == null) {
+            return;
+        }
+
+        for (int ii = 0; ii < layer.size; ii++) {
+            JsonValue entry = layer.get(ii);
+            int tx = MathUtils.round(entry.getFloat("tx"));
+            int ty = MathUtils.round(entry.getFloat("ty"));
+            int col = MathUtils.round(entry.getFloat("col"));
+            int row = MathUtils.round(entry.getFloat("row"));
+
+            TextureRegion region = new TextureRegion(
+                    texture,
+                    col * TILE_PX, row * TILE_PX,
+                    TILE_PX, TILE_PX
+            );
+            regions.add(region);
+            positions.add(new float[]{ tx * units, ty * units });
+        }
     }
 
     /**

@@ -93,6 +93,7 @@ class LevelRenderer {
 
         viewport.apply();
         batch.begin(camera);
+        bindOutlineTexture(batch);
         batch.setColor(worldState.getActivePicture() != null ? Color.LIME : Color.CORAL);
 
         for (GameObject go : worldState.getHighlighted()) {
@@ -148,6 +149,18 @@ class LevelRenderer {
         viewport.reset();
     }
 
+    private void bindOutlineTexture(SpriteBatch batch) {
+        if (markerPixel == null) {
+            return;
+        }
+        Color original = new Color(batch.getColor());
+        batch.setColor(1f, 1f, 1f, 0f);
+        // Ensure the outline pass uses a neutral bound texture instead of the last
+        // world texture, which can vary by level (e.g. vines overlay).
+        batch.draw(markerPixel, -10000f, -10000f, 1f, 1f);
+        batch.setColor(original);
+    }
+
     /**
      * Hit-tests a mouse position against the inventory bar slots; returns slot index or {@code -1}.
      */
@@ -176,7 +189,6 @@ class LevelRenderer {
         float units = obj.getPhysicsUnits();
         float angle = obj.getAngle();
         Vector2 position = obj.getPosition();
-
         highlightTransform.idt();
         highlightTransform.preRotate((float) (angle * 180.0f / Math.PI));
         highlightTransform.preTranslate(position.x * units, position.y * units);
@@ -391,15 +403,33 @@ class LevelRenderer {
      * Renders the tilemap background tiles.
      */
     void drawLevelTiles(SpriteBatch batch, LevelPopulation.Result levelData, float tileSize) {
-        if (levelData == null || levelData.tileRegions.isEmpty()) {
+        drawTileLayer(batch, levelData == null ? null : levelData.tileRegions,
+                levelData == null ? null : levelData.tilePositions, tileSize);
+    }
+
+    /**
+     * Renders decorative vine overlay tiles.
+     */
+    void drawVines(SpriteBatch batch, LevelPopulation.Result levelData, float tileSize) {
+        drawTileLayer(batch, levelData == null ? null : levelData.vineRegions,
+                levelData == null ? null : levelData.vinePositions, tileSize);
+    }
+
+    private void drawTileLayer(SpriteBatch batch, java.util.List<TextureRegion> regions,
+                               java.util.List<float[]> positions, float tileSize) {
+        if (regions == null || regions.isEmpty() || positions == null) {
             return;
         }
 
+        float snappedTileSize = MathUtils.round(tileSize);
         batch.setColor(Color.WHITE);
-        for (int ii = 0; ii < levelData.tileRegions.size(); ii++) {
-            TextureRegion region = levelData.tileRegions.get(ii);
-            float[] position = levelData.tilePositions.get(ii);
-            batch.draw(region, position[0], position[1], tileSize, tileSize);
+        for (int ii = 0; ii < regions.size(); ii++) {
+            TextureRegion region = regions.get(ii);
+            float[] position = positions.get(ii);
+            float snappedX = MathUtils.round(position[0]);
+            float snappedY = MathUtils.round(position[1]);
+            // Match the editor: snap to whole pixels and slightly overdraw to hide seams.
+            batch.draw(region, snappedX, snappedY, snappedTileSize + 1f, snappedTileSize + 1f);
         }
     }
 }
