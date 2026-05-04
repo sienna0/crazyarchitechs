@@ -245,7 +245,6 @@ public class ZukoAnimator {
 
         tongueProgress = 0f;
         tongueState = 1;
-        System.out.println("zukoX=" + zukoX + " zukoY=" + zukoY + " targetX=" + targetX + " targetY=" + targetY + " units=" + units);
     }
 
     /**
@@ -290,7 +289,6 @@ public class ZukoAnimator {
                 batch.draw(tongueSegment, wx - pixelSize / 2f, wy - pixelSize / 2f, pixelSize, pixelSize);
             }
         }
-        System.out.println("mouth=" + mx + "," + my + " tip=" + tipX + "," + tipY);
     }
 
     private Vector2 getMouthPosition(float zukoX, float zukoY, boolean faceRight, float units) {

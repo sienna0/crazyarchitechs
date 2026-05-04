@@ -30,7 +30,6 @@
             "wrapU": "repeated",
             "wrapV": "repeated"
         },
-        "shared-star" : "shared/star.png",
         "shared-lotus": "shared/lotus.png",
         "shared-lily-1": "shared/lily1.png",
         "shared-lily-2": "shared/lily2.png",

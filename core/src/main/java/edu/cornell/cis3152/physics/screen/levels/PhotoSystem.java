@@ -270,6 +270,15 @@ class PhotoSystem {
         avatar.getPictureInventory().addPicture(picture);
         SoundEffectManager.getInstance().play("plop", plopSound,
                 GameAudio.effectiveSfxVolume(Math.min(1.0f, volume * 1.75f)));
+
+        // If the inventory is now full and nothing is selected, auto-select the first photo
+         if (avatar.getPictureInventory().getUnusedPicture() == null && worldState.getActivePicture() == null) {
+            Picture firstPicture = avatar.getPictureInventory().getPicture(0);
+            if (firstPicture != null) {
+                worldState.setSelectedSlotIndex(0);
+                worldState.setActivePicture(firstPicture);
+            }
+         }
     }
 
     /**
