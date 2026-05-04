@@ -1,4 +1,5 @@
 META-INF/MANIFEST.MF
+Yummy Sound effect.mp3
 assets.json
 loading/GameLogo_animated.gif
 loading/boot.json
@@ -13,6 +14,7 @@ loading/play.png
 loading/progress.png
 loading/splash.png
 loading/splash1.png
+mosquito.MP3
 platform/32zuko.png
 platform/cameraflash.png
 platform/cameraflash1.png

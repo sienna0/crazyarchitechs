@@ -11,7 +11,7 @@ import edu.cornell.gdiac.graphics.SpriteBatch;
  */
 public class FlyCollectible extends BoxSprite {
 
-    public static final float FLY_SIZE = 0.5f;
+    public static final float FLY_SIZE = 1.0f;
     private static final float FRAME_DURATION = 0.15f;
     private static final int FRAME_COUNT = 2;
 
