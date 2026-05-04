@@ -78,6 +78,14 @@ public class LevelSelectScene implements Screen {
 
     private int currentPage;
 
+    /** Slide-transition state for arrow page changes. */
+    private boolean sliding = false;
+    private int slidingFromPage;
+    private int slidingToPage;
+    private int slideDirection; // +1 = advancing (right arrow), -1 = retreating (left arrow)
+    private float slideTimer;
+    private static final float SLIDE_DURATION = 0.28f;
+
     private final TextLayout arrowLayout;
 
     private Rectangle leftArrowBounds;
@@ -205,11 +213,29 @@ public class LevelSelectScene implements Screen {
         }
 
         titleAnimTime += delta;
-        update();
+        update(delta);
         draw();
     }
 
-    private void update() {
+    private void update(float delta) {
+        if (sliding) {
+            slideTimer += delta;
+            if (slideTimer >= SLIDE_DURATION) {
+                sliding = false;
+                currentPage = slidingToPage;
+                int pageStart = currentPage * PAGE_SIZE;
+                int pageEnd = Math.min(totalLevels, pageStart + PAGE_SIZE) - 1;
+                selectedIndex = Math.max(pageStart, Math.min(selectedIndex, pageEnd));
+            }
+            // Consume input state so no ghost events fire after animation.
+            upPrevious    = Gdx.input.isKeyPressed(Input.Keys.UP);
+            downPrevious  = Gdx.input.isKeyPressed(Input.Keys.DOWN);
+            confirmPrevious = Gdx.input.isKeyPressed(Input.Keys.ENTER) || Gdx.input.isKeyPressed(Input.Keys.SPACE);
+            exitPrevious  = Gdx.input.isKeyPressed(Input.Keys.ESCAPE);
+            clickPrevious = Gdx.input.isButtonPressed(Input.Buttons.LEFT);
+            return;
+        }
+
         boolean upPressed = Gdx.input.isKeyPressed(Input.Keys.UP);
         boolean downPressed = Gdx.input.isKeyPressed(Input.Keys.DOWN);
         boolean confirmPressed = Gdx.input.isKeyPressed(Input.Keys.ENTER) || Gdx.input.isKeyPressed(Input.Keys.SPACE);
@@ -278,57 +304,17 @@ public class LevelSelectScene implements Screen {
         batch.drawText(titleLayout, width / 2.0f, titleY);
         batch.drawText(instructionLayout, width / 2.0f, instructY);
 
-        batch.setColor(0, 0, 0, 1f);
-        int startIndex = currentPage * PAGE_SIZE;
-        int endIndex = Math.min(totalLevels, startIndex + PAGE_SIZE);
-        for (int ii = startIndex; ii < endIndex; ii++) {
-            Vector2 pos = getLevelPosition(ii);
-            boolean selected = ii == selectedIndex;
-            float size = selected ? lilySizeSelected() : lilySizeNormal();
-
-            if (lilyTexture != null) {
-                batch.setColor(selected ? Color.WHITE : new Color(0.82f, 0.82f, 0.82f, 1.0f));
-                batch.draw(lilyTexture, pos.x - size/2, pos.y - size /2, size, size);
-            }
-
-            int score = controller.getLevelScore(ii + 1);
-            if (starTexture != null &&  score > 0) {
-                float starSize = size * 0.35f;                 // ~45% of the lily
-                float sx = pos.x + size * 0.25f - starSize / 2;  // offset toward top-right
-                float sy = pos.y + size * 0.25f - starSize / 2;
-                batch.setColor(Color.WHITE);                    // don't inherit the lily tint
-                batch.draw(starTexture, sx, sy, starSize, starSize);
-
-                if (score > 1){
-                    float star2Size = size * 0.35f;
-                    float sx2 = pos.x - size * 0.2f - star2Size / 2;
-                    float sy2 = pos.y - size * 0.2f - star2Size / 2;
-                    batch.setColor(Color.WHITE);
-                    batch.draw(starTexture, sx2, sy2, star2Size, star2Size);
-                }
-                if (score > 2) {
-                    float star2Size = size * 0.35f;
-                    float sx2 = pos.x - size * 0.2f - star2Size / 2;
-                    float sy2 = pos.y + size * 0.2f - star2Size / 2;
-                    batch.setColor(Color.WHITE);
-                    batch.draw(starTexture, sx2, sy2, star2Size, star2Size);
-                }
-            }
-
-
-
-
-            font.getData().setScale(0.85f * CanvasRender.layoutScale());
-            optionLayout.setColor(Color.WHITE);
-            optionLayout.setText(String.valueOf(ii + 1));
-            optionLayout.layout();
-            float labelLift = 5f * CanvasRender.layoutScale();
-            batch.drawText(optionLayout, pos.x, pos.y + labelLift);
-
+        if (sliding) {
+            float t = Math.min(1f, slideTimer / SLIDE_DURATION);
+            float s = t * t * (3f - 2f * t); // smoothstep
+            drawPageItems(slidingFromPage, -slideDirection * s * width);
+            drawPageItems(slidingToPage,   slideDirection * (1f - s) * width);
+        } else {
+            drawPageItems(currentPage, 0f);
         }
-        font.getData().setScale(1.0f);
-        drawArrow(false, currentPage > 0);
-        drawArrow(true, currentPage < pageCount() - 1);
+        int displayPage = sliding ? slidingToPage : currentPage;
+        drawArrow(false, displayPage > 0);
+        drawArrow(true, displayPage < pageCount() - 1);
 
         drawMenuButton();
 
@@ -396,10 +382,13 @@ public class LevelSelectScene implements Screen {
     }
 
     private void changePage(int direction) {
-        currentPage = Math.max(0, Math.min(pageCount() - 1, currentPage + direction));
-        int pageStart = currentPage * PAGE_SIZE;
-        int pageEnd = Math.min(totalLevels, pageStart + PAGE_SIZE) - 1;
-        selectedIndex = Math.max(pageStart, Math.min(selectedIndex, pageEnd));
+        int targetPage = Math.max(0, Math.min(pageCount() - 1, currentPage + direction));
+        if (targetPage == currentPage) return;
+        slidingFromPage = currentPage;
+        slidingToPage = targetPage;
+        slideDirection = direction;
+        slideTimer = 0f;
+        sliding = true;
     }
 
     private Rectangle getMenuButtonBounds() {
@@ -433,6 +422,49 @@ public class LevelSelectScene implements Screen {
         batch.setColor(hover ? MENU_HOVER_TINT : Color.WHITE);
         batch.draw(menuButtonTexture, dx, dy, dw, dh);
         batch.setColor(Color.WHITE);
+    }
+
+    private void drawPageItems(int page, float xOffset) {
+        int startIndex = page * PAGE_SIZE;
+        int endIndex = Math.min(totalLevels, startIndex + PAGE_SIZE);
+        for (int ii = startIndex; ii < endIndex; ii++) {
+            Vector2 pos = getLevelPosition(ii);
+            pos.x += xOffset;
+            boolean selected = ii == selectedIndex;
+            float size = selected ? lilySizeSelected() : lilySizeNormal();
+
+            if (lilyTexture != null) {
+                batch.setColor(selected ? Color.WHITE : new Color(0.82f, 0.82f, 0.82f, 1.0f));
+                batch.draw(lilyTexture, pos.x - size / 2, pos.y - size / 2, size, size);
+            }
+
+            int score = controller.getLevelScore(ii + 1);
+            if (starTexture != null && score > 0) {
+                float starSize = size * 0.35f;
+                float sx = pos.x + size * 0.25f - starSize / 2;
+                float sy = pos.y + size * 0.25f - starSize / 2;
+                batch.setColor(Color.WHITE);
+                batch.draw(starTexture, sx, sy, starSize, starSize);
+                if (score > 1) {
+                    float sx2 = pos.x - size * 0.2f - starSize / 2;
+                    float sy2 = pos.y - size * 0.2f - starSize / 2;
+                    batch.draw(starTexture, sx2, sy2, starSize, starSize);
+                }
+                if (score > 2) {
+                    float sx2 = pos.x - size * 0.2f - starSize / 2;
+                    float sy2 = pos.y + size * 0.2f - starSize / 2;
+                    batch.draw(starTexture, sx2, sy2, starSize, starSize);
+                }
+            }
+
+            font.getData().setScale(0.85f * CanvasRender.layoutScale());
+            optionLayout.setColor(Color.WHITE);
+            optionLayout.setText(String.valueOf(ii + 1));
+            optionLayout.layout();
+            float labelLift = 5f * CanvasRender.layoutScale();
+            batch.drawText(optionLayout, pos.x, pos.y + labelLift);
+        }
+        font.getData().setScale(1.0f);
     }
 
     private void drawArrow(boolean isRight, boolean active) {
