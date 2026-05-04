@@ -635,4 +635,19 @@ public abstract class PhysicsScene implements Screen {
         this.listener = listener;
     }
 
+    /**
+     * Immediately notifies the registered screen listener of an exit request.
+     *
+     * Child scenes use this for custom overlay flows that should transition
+     * without going through the countdown-based complete/failed state machine.
+     *
+     * @param exitCode one of the {@code EXIT_*} constants for the next screen action
+     */
+    protected void requestExit(int exitCode) {
+        if (listener != null) {
+            pause();
+            listener.exitScreen(this, exitCode);
+        }
+    }
+
 }

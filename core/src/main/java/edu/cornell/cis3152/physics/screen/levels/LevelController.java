@@ -51,7 +51,7 @@ public class LevelController {
         totalLevels = countLevels(assets);
 
         loadLevel(currentLevel);
-        levelProgress = new LevelProgress(totalLevels, "assets/save_game.json", assets.getEntry("platform-constants", JsonValue.class));
+        levelProgress = new LevelProgress(totalLevels, "save_game.json", assets.getEntry("platform-constants", JsonValue.class));
     }
 
     /**

@@ -11,6 +11,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.utils.Array;
@@ -70,6 +71,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     private static final float[] PARALLAX_SPEEDS = {0.025f, 0.09f, 0.16f, 0.26f};
     // private static final float[] PARALLAX_VERTICAL_SPEEDS = {0.0005f, 0.02f, 0.035f, 0.55f};
     private static final float[] PARALLAX_VERTICAL_SPEEDS = {0, 0, 0, 0};
+    private static final float PARALLAX_VERTICAL_SHIFT = 60;
 
     private Texture[] parallaxTextures;
 
@@ -147,6 +149,20 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     private int goalContactCount = 0;
     private boolean portalTriggered = false;
     private boolean spawnSequenceActive = false;
+    private Texture winOverlayTexture;
+    private Texture winNextButtonTexture;
+    private Texture winMenuButtonTexture;
+    private boolean awaitingWinOverlay = false;
+    private float winOverlayDelayTimer = 0f;
+    private boolean winOverlayVisible = false;
+    private boolean winOverlayClickPrevious = false;
+
+    private static final float WIN_OVERLAY_DELAY = 0.5f;
+    private static final float WIN_BUTTON_WIDTH_RATIO = 0.34f;
+    private static final float WIN_BUTTON_SCALE = 0.75f;
+    private static final float WIN_BUTTON_BOTTOM_MARGIN = 85f;
+    private static final float WIN_BUTTON_STACK_GAP = 18f;
+    private static final float WIN_BUTTON_HOVER_TINT = 0.92f;
 
     /**
      * Lazily creates sound handles, textures, {@link WorldState}, contact tracking,
@@ -190,6 +206,15 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         }
         if (inventoryTexture == null) {
             inventoryTexture = requireTexture("shared-inventory", "shared/inventory.png");
+        }
+        if (winOverlayTexture == null) {
+            winOverlayTexture = requireTexture("platform-win", "platform/win.png");
+        }
+        if (winNextButtonTexture == null) {
+            winNextButtonTexture = requireTexture("shared-next", "shared/next.png");
+        }
+        if (winMenuButtonTexture == null) {
+            winMenuButtonTexture = requireTexture("shared-pause-menu", "shared/pause_menu.png");
         }
         if (levelPopulation == null) {
             levelPopulation = new LevelPopulation(constants, this::requireTexture, this::addSprite);
@@ -277,15 +302,13 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     protected void drawBackground(SpriteBatch batch) {
         drawParallaxBackground(batch);
         if (renderer != null && levelData != null) {
+            renderer.drawVines(batch, levelData, height / bounds.height);
             renderer.drawLevelTiles(batch, levelData, height / bounds.height);
         }
     }
 
     @Override
     protected void drawForeground(SpriteBatch batch) {
-        if (renderer != null && levelData != null) {
-            renderer.drawVines(batch, levelData, height / bounds.height);
-        }
     }
 
     private void drawParallaxBackground(SpriteBatch batch) {
@@ -296,13 +319,16 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         float visibleWidth = camera.viewportWidth * camera.zoom;
         float visibleHeight = camera.viewportHeight * camera.zoom;
         float visibleLeft = camera.position.x - visibleWidth * 0.5f;
-        float visibleBottom = camera.position.y - visibleHeight * 0.5f - 100;
+        float visibleBottom = camera.position.y - visibleHeight * 0.5f - PARALLAX_VERTICAL_SHIFT;
+        float scrollX = avatar == null ? camera.position.x : avatar.getPosition().x * scale.x;
+        float scrollY = avatar == null ? camera.position.y : avatar.getPosition().y * scale.y;
+        // float visibleBottom = camera.position.y - visibleHeight * 0.5f - 100;
         // Interpolate parallax scroll between goal-door world position and Zuko's spawn using the
         // same smoothstep as the camera, so the background moves as though Zuko were physically
         // traveling from the door to his spawn.  At s==1 scrollX equals avatar.x*scale.x exactly,
         // so there is no pop when the intro ends and normal gameplay takes over.
-        float scrollX;
-        float scrollY;
+        //float scrollX;
+       // float scrollY;
         if (introActive && goalDoor != null && avatar != null) {
             float t = Math.min(1f, Math.max(0f, (introTimer - INTRO_HOLD) / INTRO_PAN));
             float s = t * t * (3f - 2f * t);
@@ -443,6 +469,10 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         hazardTimer = 0f;
         hazardTriggered = false;
         spawnSequenceActive = false;
+        awaitingWinOverlay = false;
+        winOverlayDelayTimer = 0f;
+        winOverlayVisible = false;
+        winOverlayClickPrevious = false;
 
         populateLevel();
         photosUsed = 0;
@@ -545,6 +575,9 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     public void draw(float dt) {
         super.draw(dt);
         renderer.draw(batch, viewport, camera, uiCamera, avatar);
+        if (winOverlayVisible) {
+            drawWinOverlay();
+        }
     }
 
     /**
@@ -619,8 +652,29 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             avatar.stopMotion();
             if (avatar.hasFinishedPortalAnimation()) {
                 portalTriggered = false;
-                setComplete(true);
+                awaitingWinOverlay = true;
+                winOverlayDelayTimer = 0f;
             }
+            return;
+        }
+        if (awaitingWinOverlay) {
+            updateGooAnimation(dt);
+            avatar.setMovement(0f);
+            avatar.setJumping(false);
+            avatar.stopMotion();
+            winOverlayDelayTimer += dt;
+            if (winOverlayDelayTimer >= WIN_OVERLAY_DELAY) {
+                awaitingWinOverlay = false;
+                winOverlayVisible = true;
+            }
+            return;
+        }
+        if (winOverlayVisible) {
+            updateGooAnimation(dt);
+            avatar.setMovement(0f);
+            avatar.setJumping(false);
+            avatar.stopMotion();
+            updateWinOverlayInput();
             return;
         }
         if (!isComplete() && goalContactCount > 0 && isAvatarInGoalCenter()) {
@@ -996,6 +1050,76 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         avatar.setJumping(false);
         avatar.stopMotion();
         avatar.startPortalAnimation();
+    }
+
+    private void drawWinOverlay() {
+        if (winOverlayTexture == null || viewport == null || uiCamera == null) {
+            return;
+        }
+
+        viewport.apply();
+        batch.begin(uiCamera);
+        batch.setColor(Color.WHITE);
+        batch.draw(winOverlayTexture, 0, 0, width, height);
+
+        drawWinOverlayButton(batch, winNextButtonTexture, getWinNextButtonBounds());
+        drawWinOverlayButton(batch, winMenuButtonTexture, getWinMenuButtonBounds());
+
+        batch.end();
+        viewport.reset();
+    }
+
+    private void updateWinOverlayInput() {
+        boolean clickPressed = Gdx.input.isButtonPressed(com.badlogic.gdx.Input.Buttons.LEFT);
+        boolean justClicked = clickPressed && !winOverlayClickPrevious;
+        if (justClicked) {
+            if (isPointerInside(getWinNextButtonBounds())) {
+                winOverlayVisible = false;
+                setComplete(true);
+                requestExit(EXIT_WIN);
+            } else if (isPointerInside(getWinMenuButtonBounds())) {
+                winOverlayVisible = false;
+                requestExit(EXIT_QUIT);
+            }
+        }
+        winOverlayClickPrevious = clickPressed;
+    }
+
+    private void drawWinOverlayButton(SpriteBatch batch, Texture texture, Rectangle bounds) {
+        if (texture == null || bounds == null) {
+            return;
+        }
+        float tint = isPointerInside(bounds) ? WIN_BUTTON_HOVER_TINT : 1f;
+        batch.setColor(tint, tint, tint, 1f);
+        batch.draw(texture, bounds.x, bounds.y, bounds.width, bounds.height);
+        batch.setColor(Color.WHITE);
+    }
+
+    private Rectangle getWinNextButtonBounds() {
+        return getWinButtonBounds(winNextButtonTexture, 1);
+    }
+
+    private Rectangle getWinMenuButtonBounds() {
+        return getWinButtonBounds(winMenuButtonTexture, 0);
+    }
+
+    private Rectangle getWinButtonBounds(Texture texture, int stackIndexFromBottom) {
+        float buttonWidth = Math.min(width * WIN_BUTTON_WIDTH_RATIO, 420f) * WIN_BUTTON_SCALE;
+        float buttonHeight = texture == null || texture.getWidth() <= 0
+                ? buttonWidth * 0.25f
+                : buttonWidth * ((float) texture.getHeight() / texture.getWidth());
+        float x = (width - buttonWidth) * 0.5f;
+        float y = WIN_BUTTON_BOTTOM_MARGIN + stackIndexFromBottom * (buttonHeight + WIN_BUTTON_STACK_GAP);
+        return new Rectangle(x, y, buttonWidth, buttonHeight);
+    }
+
+    private boolean isPointerInside(Rectangle bounds) {
+        if (viewport == null || worldState == null) {
+            return false;
+        }
+        Vector2 pointer = worldState.getPauseMouseCache();
+        viewport.screenToCanvas(Gdx.input.getX(), Gdx.input.getY(), pointer);
+        return bounds.contains(pointer);
     }
 
     /**

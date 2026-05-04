@@ -1,5 +1,6 @@
 META-INF/MANIFEST.MF
 assets.json
+assets/save_game.json
 loading/GameLogo_animated.png
 loading/boot.json
 loading/main_menu_background.png
@@ -14,6 +15,7 @@ loading/progress.png
 loading/splash.png
 loading/splash1.png
 platform/32zuko.png
+platform/Sprite-0001.aseprite
 platform/cameraflash.png
 platform/cameraflash1.png
 platform/cloud.png
@@ -40,6 +42,7 @@ platform/settings_icon.png
 platform/tileset.png
 platform/vines.png
 platform/walltile.png
+platform/win.png
 platform/yummy.mp3
 platform/zuko.png
 platform/zuko2.png
@@ -60,6 +63,7 @@ save_game.json
 shared/NunitoBoldItalic-RpvlV.ttf
 shared/NunitoExtraboldItalic-8MamM.ttf
 shared/RetroGame.ttf
+shared/Sprite-0001-Recovered.aseprite
 shared/Sprite-0001.aseprite
 shared/background.png
 shared/backgroundmeasure.png
@@ -79,6 +83,7 @@ shared/lily1.png
 shared/lily2.png
 shared/lily3.png
 shared/lotus.png
+shared/next.png
 shared/parallax-demon-woods-bg.png
 shared/parallax-demon-woods-close-trees.png
 shared/parallax-demon-woods-far-trees.png
