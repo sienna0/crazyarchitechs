@@ -656,7 +656,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         InputController input = InputController.getInstance();
         if (spawnSequenceActive) {
             photoSystem.updateHighlights(avatar, sprites, world);
-            renderer.setInRangeFlies(new ArrayList<>());
+            renderer.setInRangeFlies(new ArrayList<>(), new ArrayList<>());
             photoSystem.applyLiftSprings(sprites);
             avatar.applyForce();
             return;
@@ -706,14 +706,19 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
 
         // Update in-range fly list for highlight rendering using the same final state.
         ArrayList<FlyCollectible> inRangeFlies = new ArrayList<>();
+        ArrayList<float[]> inRangeFlyPositions = new ArrayList<>();
         if (levelData != null) {
             for (FlyCollectible fly : levelData.flies) {
                 if (!fly.isCollected() && flyInRange(fly) && flyHasLineOfSight(fly)) {
                     inRangeFlies.add(fly);
+                    inRangeFlyPositions.add(new float[]{
+                        fly.getObstacle().getX() * scale.x,
+                        fly.getObstacle().getY() * scale.y
+                    });
                 }
             }
         }
-        renderer.setInRangeFlies(inRangeFlies);
+        renderer.setInRangeFlies(inRangeFlies, inRangeFlyPositions);
 
         photoSystem.applyLiftSprings(sprites);
         avatar.applyForce();

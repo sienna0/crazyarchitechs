@@ -56,9 +56,12 @@ class LevelRenderer {
     private final float takeDistance;
     private final Affine2 highlightTransform = new Affine2();
     private ArrayList<FlyCollectible> inRangeFlies = new ArrayList<>();
+    /** World-pixel positions [x, y] for each in-range fly, computed with scale.x/scale.y. */
+    private ArrayList<float[]> inRangeFlyPositions = new ArrayList<>();
 
-    void setInRangeFlies(ArrayList<FlyCollectible> flies) {
-        this.inRangeFlies = flies != null ? flies : new ArrayList<>();
+    void setInRangeFlies(ArrayList<FlyCollectible> flies, ArrayList<float[]> positions) {
+        this.inRangeFlies   = flies     != null ? flies     : new ArrayList<>();
+        this.inRangeFlyPositions = positions != null ? positions : new ArrayList<>();
     }
 
     LevelRenderer(WorldState worldState,
@@ -100,9 +103,9 @@ class LevelRenderer {
             drawHighlight(batch, go);
         }
 
-        batch.setColor(Color.GOLD);
-        for (FlyCollectible fly : inRangeFlies) {
-            drawFlyHighlight(batch, fly);
+        for (int fi = 0; fi < inRangeFlies.size(); fi++) {
+            float[] pos = fi < inRangeFlyPositions.size() ? inRangeFlyPositions.get(fi) : null;
+            if (pos != null) drawFlyHighlight(batch, inRangeFlies.get(fi), pos[0], pos[1]);
         }
 
         if (worldState.isShowRange()) {
@@ -208,15 +211,11 @@ class LevelRenderer {
         }
     }
 
-    private void drawFlyHighlight(SpriteBatch batch, FlyCollectible fly) {
-        Obstacle obj = fly.getObstacle();
-        float units = obj.getPhysicsUnits();
-        float angle = obj.getAngle();
-        Vector2 position = obj.getPosition();
-        highlightTransform.idt();
-        highlightTransform.preRotate((float) (angle * 180.0f / Math.PI));
-        highlightTransform.preTranslate(position.x * units, position.y * units);
-        batch.outline(obj.getOutline(), highlightTransform);
+    private void drawFlyHighlight(SpriteBatch batch, FlyCollectible fly, float cx, float cy) {
+        float dot = fly.getObstacle().getPhysicsUnits() * 0.10f;
+        batch.setColor(0.2f, 0.9f, 0.3f, 0.85f);
+        batch.draw(markerPixel, cx - dot * 0.5f, cy - dot * 0.5f, dot, dot);
+        batch.setColor(Color.WHITE);
     }
 
     /**

@@ -249,11 +249,38 @@ class LevelPopulation {
             }
         }
 
+        addBoundaryWalls(units);
+
         addPulleyAssembly(result, objectLocations, units, world);
 
         addGooDecorations(result, level, units);
 
         return result;
+    }
+
+    /**
+     * Adds invisible walls at the left and right edges of the world so the player
+     * cannot walk off the map. Applied to every level automatically.
+     */
+    private void addBoundaryWalls(float units) {
+        float[] bounds = constants.get("world").get("bounds").asFloatArray();
+        float bw = bounds[0];
+        float bh = bounds[1];
+        float thickness = 0.25f;
+
+        JsonValue s = new com.badlogic.gdx.utils.JsonReader().parse(
+                "{\"tile\":128,\"friction\":0.0,\"density\":0.0,\"restitution\":0.0," +
+                "\"debug\":\"#ffffff\",\"invisible\":true}");
+
+        Surface left = new Surface(new float[]{
+                -thickness, 0, 0, 0, 0, bh, -thickness, bh}, units, s);
+        left.getObstacle().setName("boundary_left");
+        spriteAdder.accept(left);
+
+        Surface right = new Surface(new float[]{
+                bw, 0, bw + thickness, 0, bw + thickness, bh, bw, bh}, units, s);
+        right.getObstacle().setName("boundary_right");
+        spriteAdder.accept(right);
     }
 
     /**
