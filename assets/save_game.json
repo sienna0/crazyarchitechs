@@ -1,39 +1,33 @@
 [
 {
-	"goalPhotos": 1
-},
-{
+	"complete": true,
+	"minPhotosUsed": 0,
+	"bestTime": 8.576408,
 	"goalPhotos": 1
 },
 {
 	"complete": true,
-	"minPhotosUsed": 1,
-	"bestTime": 11.421663,
+	"minPhotosUsed": 0,
+	"bestTime": 6.849571,
+	"goalPhotos": 1
+},
+{
+	"goalPhotos": 1
+},
+{
 	"goalPhotos": 1
 },
 {
 	"complete": true,
 	"minPhotosUsed": 1,
 	"flyCount": 1,
-	"bestTime": 15.206844,
+	"bestTime": 27.798836,
 	"goalPhotos": 1
 },
 {
-	"complete": true,
-	"minPhotosUsed": 1,
-	"bestTime": 12.516244,
-	"goalPhotos": 1
-},
-{
-	"complete": true,
-	"minPhotosUsed": 2,
-	"bestTime": 15.783858,
 	"goalPhotos": 2
 },
 {
-	"complete": true,
-	"minPhotosUsed": 1,
-	"bestTime": 16.182814,
 	"goalPhotos": 1
 },
 {
