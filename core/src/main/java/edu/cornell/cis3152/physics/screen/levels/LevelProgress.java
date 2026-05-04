@@ -111,6 +111,7 @@ public class LevelProgress {
         }
         // Restore goalPhotos from directory (not persisted in save file)
         for (int i = 1; i <= levels.size; i++) {
+            if (i > numLevels) {return;}
             levels.get(i - 1).goalPhotos = directory.get("level" + i).get("playerSettings").getInt("goal_num_photos");
         }
     }
