@@ -328,8 +328,13 @@ public class Zuko extends ObstacleSprite {
      *
      * @param batch destination batch
      */
+    private boolean drawVisible = true;
+
+    public void setDrawVisible(boolean visible) { this.drawVisible = visible; }
+
     @Override
     public void draw(SpriteBatch batch) {
+        if (!drawVisible) return;
         SpriteSheet activeSheet = animator.getActiveSheet(movement.isGrounded(), obstacle.getVX());
         if (activeSheet != null) {
             setSpriteSheet(activeSheet);

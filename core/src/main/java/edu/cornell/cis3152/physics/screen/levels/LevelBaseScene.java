@@ -130,6 +130,14 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     private float hazardTimer = 0f;
     private boolean hazardTriggered = false;
     private static final float HAZARD_DELAY = 0.9f;
+
+    /** Camera intro sequence played at level start. */
+    private boolean introActive = false;
+    private float introTimer = 0f;
+    private static final float INTRO_HOLD   = 1.0f;
+    private static final float INTRO_PAN    = 1.5f;
+    private static final float INTRO_SETTLE = 1.0f;
+    private static final float INTRO_TOTAL  = INTRO_HOLD + INTRO_PAN + INTRO_SETTLE;
     private static final float GOAL_CENTER_TILE_RATIO = 1.0f / 3.0f;
     private int photosUsed;
 
@@ -333,11 +341,26 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             return;
         }
 
-        camera.zoom = CAMERA_ZOOM;
-        float halfViewWidth = (camera.viewportWidth * camera.zoom) * 0.5f;
-        float halfViewHeight = (camera.viewportHeight * camera.zoom) * 0.5f;
-        float worldWidth = bounds.width * scale.x;
+        float worldWidth  = bounds.width  * scale.x;
         float worldHeight = bounds.height * scale.y;
+
+        if (introActive && avatar != null && goalDoor != null) {
+            float halfViewW = (camera.viewportWidth  * CAMERA_ZOOM) * 0.5f;
+            float halfViewH = (camera.viewportHeight * CAMERA_ZOOM) * 0.5f;
+            float zukoX = clampCameraAxis(avatar.getPosition().x * scale.x, halfViewW, worldWidth);
+            float zukoY = clampCameraAxis(avatar.getPosition().y * scale.y, halfViewH, worldHeight);
+            float goalX = clampCameraAxis(goalDoor.getObstacle().getX() * scale.x, halfViewW, worldWidth);
+            float goalY = clampCameraAxis(goalDoor.getObstacle().getY() * scale.y, halfViewH, worldHeight);
+            float t = Math.min(1f, Math.max(0f, (introTimer - INTRO_HOLD) / INTRO_PAN));
+            float s = t * t * (3f - 2f * t); // smoothstep
+            camera.zoom = CAMERA_ZOOM;
+            camera.position.set(goalX + (zukoX - goalX) * s, goalY + (zukoY - goalY) * s, 0f);
+            return;
+        }
+
+        camera.zoom = CAMERA_ZOOM;
+        float halfViewWidth  = (camera.viewportWidth  * camera.zoom) * 0.5f;
+        float halfViewHeight = (camera.viewportHeight * camera.zoom) * 0.5f;
 
         float targetX = worldWidth * 0.5f;
         float targetY = worldHeight * 0.5f;
@@ -347,7 +370,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         }
 
         camera.position.set(
-                clampCameraAxis(targetX, halfViewWidth, worldWidth),
+                clampCameraAxis(targetX, halfViewWidth,  worldWidth),
                 clampCameraAxis(targetY, halfViewHeight, worldHeight),
                 0f
         );
@@ -405,6 +428,8 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         populateLevel();
         photosUsed = 0;
         timeElapsed = 0f;
+        introActive = true;
+        introTimer = 0f;
     }
 
     /**
@@ -426,10 +451,9 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         pendingFlyCollection = null;
         tonguePreviouslyActive = false;
         if (avatar != null) {
-            avatar.startSpawnAnimation();
             avatar.stopMotion();
             avatar.setGravityScale(0f);
-            spawnSequenceActive = true;
+            avatar.setDrawVisible(false);
         }
     }
 
@@ -535,6 +559,23 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     @Override
     public void update(float dt) {
         timeElapsed += dt;
+        if (introActive) {
+            avatar.setMovement(0f);
+            avatar.setJumping(false);
+            avatar.stopMotion();
+            avatar.setGravityScale(0f);
+            introTimer += dt;
+            if (introTimer >= INTRO_HOLD + INTRO_PAN && !spawnSequenceActive) {
+                avatar.setDrawVisible(true);
+                avatar.startSpawnAnimation();
+                spawnSequenceActive = true;
+            }
+            if (introTimer >= INTRO_TOTAL) {
+                introActive = false;
+                avatar.setGravityScale(1.0f);
+            }
+            return;
+        }
         if (hazardTriggered) {
             hazardTimer += dt;
             avatar.setMovement(0f);
