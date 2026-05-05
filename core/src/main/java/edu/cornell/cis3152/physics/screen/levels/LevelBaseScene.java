@@ -192,7 +192,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             deathSound = directory.getEntry("platform-death", SoundEffect.class);
             portalEnterSound = directory.getEntry("platform-portalenter", SoundEffect.class);
             zukoEnterSound = directory.getEntry("platform-zukoenter", SoundEffect.class);
-            volume = constants.getFloat("volume", 1.0f);
+            volume = constants.getFloat("volume", 0.35f);
         }
         if (parallaxTextures == null) {
             parallaxTextures = new Texture[PARALLAX_TEXTURE_KEYS.length];
@@ -634,7 +634,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             if (introTimer >= INTRO_HOLD + INTRO_PAN && !spawnSequenceActive) {
                 avatar.setDrawVisible(true);
                 avatar.startSpawnAnimation();
-                SoundEffectManager.getInstance().play("zuko-enter", zukoEnterSound, GameAudio.effectiveSfxVolume(volume));
+                SoundEffectManager.getInstance().play("zuko-enter", zukoEnterSound, GameAudio.effectiveSfxVolume(volume * 0.5f));
                 spawnSequenceActive = true;
             }
             if (introTimer >= INTRO_TOTAL) {
@@ -825,14 +825,14 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         if (isWalking) {
             // 🔥 NEW: play immediately when walking starts
             if (!wasWalking) {
-                sounds.play("walk", jumpSound, GameAudio.effectiveSfxVolume(volume));
+                sounds.play("walk", jumpSound, GameAudio.effectiveSfxVolume(volume * 0.5f));
                 walkSoundTimer = 0f;
             }
 
             walkSoundTimer += dt;
 
             if (walkSoundTimer >= WALK_SOUND_INTERVAL) {
-                sounds.play("walk", jumpSound, GameAudio.effectiveSfxVolume(volume));
+                sounds.play("walk", jumpSound, GameAudio.effectiveSfxVolume(volume * 0.5f));
                 walkSoundTimer = 0f;
             }
         } else {
@@ -1085,7 +1085,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         avatar.setJumping(false);
         avatar.stopMotion();
         avatar.startPortalAnimation();
-        SoundEffectManager.getInstance().play("portal-enter", portalEnterSound, GameAudio.effectiveSfxVolume(volume));
+        SoundEffectManager.getInstance().play("portal-enter", portalEnterSound, GameAudio.effectiveSfxVolume(volume * 0.5f));
     }
 
     private void drawWinOverlay() {
