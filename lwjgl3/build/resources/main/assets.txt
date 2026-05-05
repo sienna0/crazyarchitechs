@@ -25,6 +25,7 @@ platform/hover.wav
 platform/ice.png
 platform/jump.wav
 platform/levelost.ogg
+platform/levelostintro.ogg
 platform/mosquito.mp3
 platform/oldzuko.png
 platform/pause_icon.png
@@ -36,6 +37,7 @@ platform/picture_honey_with_ice.png
 platform/picture_ice_with_cloud.png
 platform/picture_ice_with_honey.png
 platform/plop.wav
+platform/portalenter.wav
 platform/ribbit.wav
 platform/rock.png
 platform/settings_icon.png
@@ -50,6 +52,7 @@ platform/zuko2walk.png
 platform/zukodead.png
 platform/zukodeath.wav
 platform/zukodeathmelt.png
+platform/zukoenter.wav
 platform/zukoidle.png
 platform/zukojump.png
 platform/zukojump1.png

@@ -81,6 +81,9 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     private Texture pauseIconTexture;
     /** The jump sound. We only want to play once. */
     private SoundEffect jumpSound;
+    private float walkSoundTimer = 0f;
+    private static final float WALK_SOUND_INTERVAL = 0.35f;
+    private boolean wasWalking = false;
     /** The weapon fire sound. We only want to play once. */
     private SoundEffect fireSound;
     /** The weapon pop sound. We only want to play once. */
@@ -88,6 +91,10 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     private SoundEffect hoverSound;
     /** The death sound of Zuko */
     private SoundEffect deathSound;
+    /** The portal enter sound */
+    private SoundEffect portalEnterSound;
+    /** The Zuko enter sound*/
+    private SoundEffect zukoEnterSound;
     /** The default sound volume */
     private float volume;
 
@@ -183,6 +190,8 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             plopSound = directory.getEntry("platform-plop", SoundEffect.class);
             hoverSound = directory.getEntry("platform-hover", SoundEffect.class);
             deathSound = directory.getEntry("platform-death", SoundEffect.class);
+            portalEnterSound = directory.getEntry("platform-portalenter", SoundEffect.class);
+            zukoEnterSound = directory.getEntry("platform-zukoenter", SoundEffect.class);
             volume = constants.getFloat("volume", 1.0f);
         }
         if (parallaxTextures == null) {
@@ -625,6 +634,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             if (introTimer >= INTRO_HOLD + INTRO_PAN && !spawnSequenceActive) {
                 avatar.setDrawVisible(true);
                 avatar.startSpawnAnimation();
+                SoundEffectManager.getInstance().play("zuko-enter", zukoEnterSound, GameAudio.effectiveSfxVolume(volume));
                 spawnSequenceActive = true;
             }
             if (introTimer >= INTRO_TOTAL) {
@@ -802,9 +812,34 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         photoSystem.applyLiftSprings(sprites);
         avatar.applyForce();
         if (avatar.isJumping()) {
-            SoundEffectManager.getInstance().play("jump", jumpSound, GameAudio.effectiveSfxVolume(volume));
+            //SoundEffectManager.getInstance().play("jump", jumpSound, GameAudio.effectiveSfxVolume(volume));
             avatar.startJumpAnimation();
         }
+        boolean isWalking = avatar.isGrounded()
+                && Math.abs(input.getHorizontal()) > 0.1f
+                && Math.abs(avatar.getObstacle().getVX()) > 0.1f
+                && !avatar.isJumping();
+
+        SoundEffectManager sounds = SoundEffectManager.getInstance();
+
+        if (isWalking) {
+            // 🔥 NEW: play immediately when walking starts
+            if (!wasWalking) {
+                sounds.play("walk", jumpSound, GameAudio.effectiveSfxVolume(volume));
+                walkSoundTimer = 0f;
+            }
+
+            walkSoundTimer += dt;
+
+            if (walkSoundTimer >= WALK_SOUND_INTERVAL) {
+                sounds.play("walk", jumpSound, GameAudio.effectiveSfxVolume(volume));
+                walkSoundTimer = 0f;
+            }
+        } else {
+            walkSoundTimer = 0f;
+        }
+
+        wasWalking = isWalking;
     }
 
     private FlyCollectible findFlyUnderCrosshair(Vector2 crosshair, float units) {
@@ -1050,6 +1085,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         avatar.setJumping(false);
         avatar.stopMotion();
         avatar.startPortalAnimation();
+        SoundEffectManager.getInstance().play("portal-enter", portalEnterSound, GameAudio.effectiveSfxVolume(volume));
     }
 
     private void drawWinOverlay() {

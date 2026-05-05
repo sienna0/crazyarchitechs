@@ -128,6 +128,7 @@
         "platform-constants": "platform/constants.json"
     },
     "music" : {
+      "platform-backgroundintroost" : "platform/levelostintro.ogg",
       "platform-backgroundost" : "platform/levelost.ogg"
     },
     "soundfx" : {
@@ -136,7 +137,9 @@
         "platform-plop"     : "platform/plop.wav",
         "platform-hover"    : "platform/hover.wav",
         "platform-button"   : "platform/ribbit.wav",
-        "platform-death"    : "platform/zukodeath.wav"
+        "platform-death"    : "platform/zukodeath.wav",
+        "platform-portalenter" : "platform/portalenter.wav",
+        "platform-zukoenter" : "platform/zukoenter.wav"
     },
     "fonts": {
         "shared-retro": {

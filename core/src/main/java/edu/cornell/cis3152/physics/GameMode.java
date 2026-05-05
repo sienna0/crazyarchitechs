@@ -35,7 +35,12 @@ public class GameMode implements Screen, ScreenListener {
     private GameplayOptionsOverlay gameplayOptionsOverlay;
     private WinScene winScene;
 
-    private Music levelMusic;
+    private Music levelIntro;
+    private Music levelLoop;
+    private boolean introPlayed = false;
+    private static final float INTRO_TO_LOOP_TIME = 18.0f;
+    private boolean loopStarted = false;
+    private boolean musicWasOn = true;
 
     private int width;
     private int height;
@@ -126,6 +131,42 @@ public class GameMode implements Screen, ScreenListener {
      * @param delta time since last frame
      */
     private void update(float delta) {
+        boolean musicNowOn = GameAudio.isMusicOn();
+        if (musicNowOn != musicWasOn) {
+            musicWasOn = musicNowOn;
+
+            if (!musicNowOn) {
+                stopLevelMusic();
+            } else if (!showingLevelSelect) {
+                startLevelMusic();
+            }
+        }
+        if (GameAudio.isMusicOn()
+                && !showingLevelSelect
+                && levelIntro != null
+                && levelLoop != null
+                && levelIntro.isPlaying()
+                && !loopStarted
+                && levelIntro.getPosition() >= 18.0f) {
+            levelLoop.setPosition(0f);
+            levelLoop.play();
+            loopStarted = true;
+        }
+        if (!showingLevelSelect
+                && levelIntro != null
+                && levelLoop != null
+                && levelIntro.isPlaying()
+                && !loopStarted
+                && levelIntro.getPosition() >= INTRO_TO_LOOP_TIME) {
+
+            levelLoop.setPosition(0f);
+            levelLoop.play();
+            loopStarted = true;
+        }
+        if (introPlayed && levelIntro != null && !levelIntro.isPlaying()) {
+            levelLoop.play();
+            introPlayed = false;
+        }
         if (showingLevelSelect) {
             int selectedLevel = levelSelectScene.consumeChosenLevel();
             if (selectedLevel > 0) {
@@ -238,25 +279,40 @@ public class GameMode implements Screen, ScreenListener {
     }
 
     private void startLevelMusic() {
-        if (levelMusic == null) {
-            levelMusic = assets.getEntry("platform-backgroundost", Music.class);
-            if (levelMusic == null) {
-                Gdx.app.error("GameMode", "Missing music asset: platform-backgroundost");
-                return;
-            }
-            levelMusic.setLooping(true);
-            levelMusic.setVolume(0.2f);
+        if (!GameAudio.isMusicOn()) {
+            return;
+        }
+        if (levelIntro == null) {
+            levelIntro = assets.getEntry("platform-backgroundintroost", Music.class);
+            levelLoop  = assets.getEntry("platform-backgroundost", Music.class);
+
+            levelLoop.setLooping(true);
+            levelLoop.setVolume(0.25f);
+            levelIntro.setVolume(0.25f);
         }
 
-        if (!levelMusic.isPlaying()) {
-            levelMusic.play();
-        }
+        // reset both tracks first
+        levelIntro.stop();
+        levelLoop.stop();
+
+        levelIntro.setPosition(0f);
+        levelLoop.setPosition(0f);
+
+// play intro
+        levelIntro.play();
+
+// reset loop trigger
+        loopStarted = false;
     }
 
     private void stopLevelMusic() {
-        if (levelMusic != null) {
-            levelMusic.stop();
+        if (levelIntro != null) {
+            levelIntro.stop();
         }
+        if (levelLoop != null) {
+            levelLoop.stop();
+        }
+        introPlayed = false;
     }
 
     /**
@@ -335,9 +391,14 @@ public class GameMode implements Screen, ScreenListener {
 
     @Override
     public void dispose() {
-        if (levelMusic != null) {
-            levelMusic.stop();
-            levelMusic = null;
+        if (levelIntro != null) {
+            levelIntro.stop();
+            levelIntro = null;
+        }
+
+        if (levelLoop != null) {
+            levelLoop.stop();
+            levelLoop = null;
         }
         if (levelController != null) {
             levelController.dispose();

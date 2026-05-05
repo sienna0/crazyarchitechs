@@ -482,4 +482,8 @@ public class Zuko extends ObstacleSprite {
         return animator.hasFinishedSpawnAnimation();
     }
 
+    public boolean isGrounded() {
+        return movement.isGrounded();
+    }
+
 }

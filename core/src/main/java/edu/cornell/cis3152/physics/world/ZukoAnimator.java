@@ -80,7 +80,7 @@ public class ZukoAnimator {
     /** The progress of the tongue to the target. 0 = fully retracted, 1 = fully extended */
     private float tongueProgress = 0f;
     /** The speed of the tongue */
-    private float tongueSpeed = 3.0f;
+    private float tongueSpeed = 7f;
     /** The sticking target */
     private Vector2 tongueTarget = new Vector2();
 //    /** The offset of the tongue on Zuko's sprite */
