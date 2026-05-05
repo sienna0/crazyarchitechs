@@ -151,6 +151,10 @@ public class LoadingScene implements Screen {
     private int menuChosenOption = -1;
     private boolean optionsOpen;
     private boolean optionsHelpOpen;
+    private boolean draggingMusicSlider;
+    private boolean draggingSfxSlider;
+    private Texture sliderBarTex;
+    private Texture sliderToggleTex;
     private boolean mainAssetsFinalized;
     /** Set when Play is chosen; {@link ScreenListener#exitScreen} runs after {@link #draw()} this frame. */
     private boolean pendingExitToGame;
@@ -301,6 +305,10 @@ public class LoadingScene implements Screen {
         pm.fill();
         pixel = new Texture(pm);
         pm.dispose();
+        sliderBarTex = new Texture(Gdx.files.internal("sliderbar.png"));
+        sliderBarTex.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        sliderToggleTex = new Texture(Gdx.files.internal("slidertoggle.png"));
+        sliderToggleTex.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
 
         menuFont = internal.getEntry("menu", BitmapFont.class);
         menuFont.getData().setScale(0.45f * CanvasRender.layoutScale());
@@ -321,6 +329,8 @@ public class LoadingScene implements Screen {
             pixel.dispose();
             pixel = null;
         }
+        if (sliderBarTex != null) { sliderBarTex.dispose(); sliderBarTex = null; }
+        if (sliderToggleTex != null) { sliderToggleTex.dispose(); sliderToggleTex = null; }
         internal.unloadAssets();
         internal.dispose();
     }
@@ -586,24 +596,56 @@ public class LoadingScene implements Screen {
             } else {
                 optionsOpen = false;
                 optionsHelpOpen = false;
+                draggingMusicSlider = false;
+                draggingSfxSlider = false;
             }
             return;
         }
-        if (!Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
-            return;
-        }
-        if (optionsHelpOpen) {
-            return;
-        }
+
+        if (optionsHelpOpen) return;
+
         viewport.screenToCanvas(Gdx.input.getX(), Gdx.input.getY(), pointer);
-        Rectangle[] r = computeOptionIconBounds();
-        if (r[OPT_MUSIC].contains(pointer.x, pointer.y)) {
-            GameAudio.toggleMusic();
-        } else if (r[OPT_SOUND].contains(pointer.x, pointer.y)) {
-            GameAudio.toggleSfx();
-        } else if (r[OPT_HELP].contains(pointer.x, pointer.y)) {
-            optionsHelpOpen = true;
+        boolean btnDown = Gdx.input.isTouched() && Gdx.input.isButtonPressed(Input.Buttons.LEFT);
+        boolean btnJust = Gdx.input.isButtonJustPressed(Input.Buttons.LEFT);
+
+        if (!btnDown) {
+            draggingMusicSlider = false;
+            draggingSfxSlider = false;
+            return;
         }
+
+        Rectangle musicBar = optionsSliderBounds(OPT_MUSIC);
+        Rectangle sfxBar   = optionsSliderBounds(OPT_SOUND);
+
+        if (draggingMusicSlider || musicBar.contains(pointer.x, pointer.y)) {
+            draggingMusicSlider = true;
+            GameAudio.setMusicVolume(MathUtils.clamp((pointer.x - musicBar.x) / musicBar.width, 0f, 1f));
+            return;
+        }
+        if (draggingSfxSlider || sfxBar.contains(pointer.x, pointer.y)) {
+            draggingSfxSlider = true;
+            GameAudio.setSfxVolume(MathUtils.clamp((pointer.x - sfxBar.x) / sfxBar.width, 0f, 1f));
+            return;
+        }
+
+        if (btnJust) {
+            Rectangle[] r = computeOptionIconBounds();
+            if (r[OPT_MUSIC].contains(pointer.x, pointer.y)) {
+                GameAudio.toggleMusic();
+            } else if (r[OPT_SOUND].contains(pointer.x, pointer.y)) {
+                GameAudio.toggleSfx();
+            } else if (r[OPT_HELP].contains(pointer.x, pointer.y)) {
+                optionsHelpOpen = true;
+            }
+        }
+    }
+
+    private Rectangle optionsSliderBounds(int slot) {
+        Rectangle icon = computeOptionIconBounds()[slot];
+        float UI = CanvasRender.layoutScale();
+        float barH = 28f * UI;
+        float gapY = 8f * UI;
+        return new Rectangle(icon.x, icon.y - gapY - barH, icon.width, barH);
     }
 
     private Rectangle[] computeOptionIconBounds() {
@@ -624,6 +666,20 @@ public class LoadingScene implements Screen {
                 new Rectangle(startX + wIcon + gap, y, wIcon, hIcon),
                 new Rectangle(startX + 2f * (wIcon + gap), y, wIcon, hIcon),
         };
+    }
+
+    private void drawOptionsSlider(Rectangle bar, float value) {
+        if (sliderBarTex == null || sliderToggleTex == null) return;
+        float UI = CanvasRender.layoutScale();
+        float visualH = 14f * UI;
+        float visualY = bar.y + (bar.height - visualH) / 2f;
+        batch.setColor(Color.WHITE);
+        batch.draw(sliderBarTex, bar.x, visualY, bar.width, visualH);
+        float knobSize = visualH * 2.2f;
+        float knobX = bar.x + value * bar.width - knobSize / 2f;
+        float knobY = bar.y + bar.height / 2f - knobSize / 2f;
+        batch.draw(sliderToggleTex, knobX, knobY, knobSize, knobSize);
+        batch.setColor(Color.WHITE);
     }
 
     private void drawOptionPuck(Texture tex, Rectangle bounds, boolean hovered, Color baseTint) {
@@ -662,11 +718,18 @@ public class LoadingScene implements Screen {
         drawOptionPuck(musicTex, r[OPT_MUSIC], r[OPT_MUSIC].contains(pointer.x, pointer.y), musicTint);
         drawOptionPuck(soundTex, r[OPT_SOUND], r[OPT_SOUND].contains(pointer.x, pointer.y), Color.WHITE);
         drawOptionPuck(helpTex, r[OPT_HELP], r[OPT_HELP].contains(pointer.x, pointer.y), Color.WHITE);
+
+        drawOptionsSlider(optionsSliderBounds(OPT_MUSIC), GameAudio.getMusicVolume());
+        drawOptionsSlider(optionsSliderBounds(OPT_SOUND), GameAudio.getSfxVolume());
+
+        Rectangle musicBar = optionsSliderBounds(OPT_MUSIC);
+        Rectangle sfxBar   = optionsSliderBounds(OPT_SOUND);
         optionsStubLayout.setAlignment(TextAlign.middleCenter);
         optionsStubLayout.setColor(Color.WHITE);
         optionsStubLayout.setText("Press Esc to close");
         optionsStubLayout.layout();
-        batch.drawText(optionsStubLayout, width / 2f, height * 0.26f);
+        float hintY = Math.min(musicBar.y, sfxBar.y) - 22f * CanvasRender.layoutScale();
+        batch.drawText(optionsStubLayout, width / 2f, hintY);
     }
 
     /**

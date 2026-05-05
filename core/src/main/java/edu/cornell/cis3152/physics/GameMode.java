@@ -287,8 +287,8 @@ public class GameMode implements Screen, ScreenListener {
             levelLoop  = assets.getEntry("platform-backgroundost", Music.class);
 
             levelLoop.setLooping(true);
-            levelLoop.setVolume(0.25f);
-            levelIntro.setVolume(0.25f);
+            GameAudio.registerMusic(levelIntro);
+            GameAudio.registerMusic(levelLoop);
         }
 
         // reset both tracks first
@@ -308,9 +308,13 @@ public class GameMode implements Screen, ScreenListener {
     private void stopLevelMusic() {
         if (levelIntro != null) {
             levelIntro.stop();
+            GameAudio.unregisterMusic(levelIntro);
+            levelIntro = null;
         }
         if (levelLoop != null) {
             levelLoop.stop();
+            GameAudio.unregisterMusic(levelLoop);
+            levelLoop = null;
         }
         introPlayed = false;
     }

@@ -2,6 +2,9 @@ META-INF/MANIFEST.MF
 assets.json
 assets/save_game.json
 frogtographer_sparklefly_anim-sheet.png
+menubuttonlevel.png
+sliderbar.png
+slidertoggle.png
 loading/GameLogo_animated.png
 loading/boot.json
 loading/main_menu_background.png

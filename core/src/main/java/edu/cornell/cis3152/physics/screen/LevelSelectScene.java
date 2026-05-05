@@ -103,7 +103,7 @@ public class LevelSelectScene implements Screen {
     private static final float TITLE_MAX_HEIGHT_FRAC = 0.26f;
     private static final float TITLE_CENTER_X_FRAC = 0.5f;
     private static final float TITLE_CENTER_Y_FRAC = 0.88f;
-    private static final float MENU_BTN_MAX_W_FRAC = 0.2f;
+    private static final float MENU_BTN_MAX_W_FRAC = 0.08f;
     private static final float MENU_BTN_TOP_MARGIN_REF = 16f;
     private static final float MENU_BTN_RIGHT_MARGIN_REF = 16f;
     private static final float MENU_IDLE_SCALE = 0.92f;
@@ -134,10 +134,8 @@ public class LevelSelectScene implements Screen {
         if (lilyTexture != null) {
                 lilyTexture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
         }
-        this.menuButtonTexture = assets.getEntry("shared-pause-menu", Texture.class);
-        if (menuButtonTexture != null) {
-            menuButtonTexture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
-        }
+        this.menuButtonTexture = new Texture(Gdx.files.internal("menubuttonlevel.png"));
+        this.menuButtonTexture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
 
         this.camera = new OrthographicCamera();
         this.selectedIndex = 0;
@@ -402,7 +400,8 @@ public class LevelSelectScene implements Screen {
         float s = maxW / Math.max(1f, menuButtonTexture.getWidth());
         float bw = menuButtonTexture.getWidth() * s;
         float bh = menuButtonTexture.getHeight() * s;
-        float x = width - marginRight - bw;
+        float marginLeft = MENU_BTN_RIGHT_MARGIN_REF * UI;
+        float x = marginLeft;
         float y = height - marginTop - bh;
         return new Rectangle(x, y, bw, bh);
     }
@@ -544,5 +543,6 @@ public class LevelSelectScene implements Screen {
             titleAnimation = null;
         }
         pixel.dispose();
+        menuButtonTexture.dispose();
     }
 }

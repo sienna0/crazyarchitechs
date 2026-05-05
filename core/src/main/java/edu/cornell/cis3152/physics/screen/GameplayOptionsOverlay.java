@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import edu.cornell.cis3152.physics.CanvasRender;
@@ -39,6 +40,8 @@ public class GameplayOptionsOverlay {
     private final Texture soundOn;
     private final Texture soundOff;
     private final Texture helpTex;
+    private final Texture sliderBarTex;
+    private final Texture sliderToggleTex;
     private final BitmapFont font;
     private final TextLayout textLayout = new TextLayout();
     private final GlyphLayout helpMeasure = new GlyphLayout();
@@ -48,6 +51,8 @@ public class GameplayOptionsOverlay {
     private int height;
     private boolean open;
     private boolean helpOpen;
+    private boolean draggingMusicSlider;
+    private boolean draggingSfxSlider;
 
     public GameplayOptionsOverlay(AssetDirectory assets, SpriteBatch batch, CanvasRender viewport) {
         this.batch = batch;
@@ -58,6 +63,10 @@ public class GameplayOptionsOverlay {
         this.soundOff = assets.getEntry("shared-options-sound-off", Texture.class);
         this.helpTex = assets.getEntry("shared-options-help", Texture.class);
         this.font = assets.getEntry("shared-retro", BitmapFont.class);
+        this.sliderBarTex = new Texture(Gdx.files.internal("sliderbar.png"));
+        this.sliderBarTex.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        this.sliderToggleTex = new Texture(Gdx.files.internal("slidertoggle.png"));
+        this.sliderToggleTex.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
         Pixmap pm = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
         pm.setColor(Color.WHITE);
         pm.fill();
@@ -82,6 +91,8 @@ public class GameplayOptionsOverlay {
     public void hide() {
         open = false;
         helpOpen = false;
+        draggingMusicSlider = false;
+        draggingSfxSlider = false;
     }
 
     public boolean isOpen() {
@@ -89,38 +100,59 @@ public class GameplayOptionsOverlay {
     }
 
     public void update() {
-        if (!open) {
-            return;
-        }
+        if (!open) return;
+
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
-            if (helpOpen) {
-                helpOpen = false;
-            } else {
-                hide();
-            }
+            if (helpOpen) helpOpen = false;
+            else hide();
             return;
         }
-        if (!Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
-            return;
-        }
-        if (helpOpen) {
-            return;
-        }
+
         viewport.screenToCanvas(Gdx.input.getX(), Gdx.input.getY(), pointer);
-        Rectangle[] r = computeOptionIconBounds();
-        if (r[OPT_MUSIC].contains(pointer.x, pointer.y)) {
-            GameAudio.toggleMusic();
-        } else if (r[OPT_SOUND].contains(pointer.x, pointer.y)) {
-            GameAudio.toggleSfx();
-        } else if (r[OPT_HELP].contains(pointer.x, pointer.y)) {
-            helpOpen = true;
+
+        if (helpOpen) return;
+
+        boolean btnDown = Gdx.input.isTouched() && Gdx.input.isButtonPressed(Input.Buttons.LEFT);
+        boolean btnJust = Gdx.input.isButtonJustPressed(Input.Buttons.LEFT);
+
+        if (!btnDown) {
+            draggingMusicSlider = false;
+            draggingSfxSlider = false;
+            return;
+        }
+
+        Rectangle musicBar = getMusicSliderBounds();
+        Rectangle sfxBar   = getSfxSliderBounds();
+
+        // Continue an active drag or start one if the pointer is over a slider bar.
+        // No btnJust requirement for starting — the hit area is small so we allow
+        // latching onto a drag on any held-button frame, not just the first one.
+        if (draggingMusicSlider || musicBar.contains(pointer.x, pointer.y)) {
+            draggingMusicSlider = true;
+            GameAudio.setMusicVolume(MathUtils.clamp((pointer.x - musicBar.x) / musicBar.width, 0f, 1f));
+            return;
+        }
+        if (draggingSfxSlider || sfxBar.contains(pointer.x, pointer.y)) {
+            draggingSfxSlider = true;
+            GameAudio.setSfxVolume(MathUtils.clamp((pointer.x - sfxBar.x) / sfxBar.width, 0f, 1f));
+            return;
+        }
+
+        // Icon toggle clicks — only on the first frame of the press
+        if (btnJust) {
+            Rectangle[] r = computeOptionIconBounds();
+            if (r[OPT_MUSIC].contains(pointer.x, pointer.y)) {
+                GameAudio.toggleMusic();
+            } else if (r[OPT_SOUND].contains(pointer.x, pointer.y)) {
+                GameAudio.toggleSfx();
+            } else if (r[OPT_HELP].contains(pointer.x, pointer.y)) {
+                helpOpen = true;
+            }
         }
     }
 
     public void draw() {
-        if (!open) {
-            return;
-        }
+        if (!open) return;
         float UI = CanvasRender.layoutScale();
         font.getData().setScale(0.5f * UI);
         camera.update();
@@ -139,12 +171,18 @@ public class GameplayOptionsOverlay {
             drawOptionPuck(musicTex, r[OPT_MUSIC], r[OPT_MUSIC].contains(pointer.x, pointer.y), musicTint);
             drawOptionPuck(soundTex, r[OPT_SOUND], r[OPT_SOUND].contains(pointer.x, pointer.y), Color.WHITE);
             drawOptionPuck(helpTex, r[OPT_HELP], r[OPT_HELP].contains(pointer.x, pointer.y), Color.WHITE);
+
+            Rectangle musicBar = getMusicSliderBounds();
+            Rectangle sfxBar   = getSfxSliderBounds();
+            drawSlider(musicBar, GameAudio.getMusicVolume());
+            drawSlider(sfxBar,   GameAudio.getSfxVolume());
+
             textLayout.setFont(font);
             textLayout.setAlignment(TextAlign.middleCenter);
             textLayout.setColor(Color.WHITE);
             textLayout.setText("Press Esc to close");
             textLayout.layout();
-            float hintY = r[0].y - 22f * UI;
+            float hintY = Math.min(musicBar.y, sfxBar.y) - 22f * UI;
             batch.drawText(textLayout, width / 2f, hintY);
         }
         batch.end();
@@ -153,6 +191,8 @@ public class GameplayOptionsOverlay {
 
     public void dispose() {
         pixel.dispose();
+        sliderBarTex.dispose();
+        sliderToggleTex.dispose();
     }
 
     private Rectangle[] computeOptionIconBounds() {
@@ -166,7 +206,7 @@ public class GameplayOptionsOverlay {
         float gap = Math.min(width, height) * 0.065f;
         float totalW = 3f * wIcon + 2f * gap;
         float startX = (width - totalW) / 2f;
-        float rowMidY = height * 0.5f;
+        float rowMidY = height * 0.55f;
         float y = rowMidY - hIcon / 2f;
         return new Rectangle[] {
                 new Rectangle(startX, y, wIcon, hIcon),
@@ -175,10 +215,42 @@ public class GameplayOptionsOverlay {
         };
     }
 
+    private Rectangle getMusicSliderBounds() {
+        Rectangle icon = computeOptionIconBounds()[OPT_MUSIC];
+        return sliderBoundsBelow(icon);
+    }
+
+    private Rectangle getSfxSliderBounds() {
+        Rectangle icon = computeOptionIconBounds()[OPT_SOUND];
+        return sliderBoundsBelow(icon);
+    }
+
+    private Rectangle sliderBoundsBelow(Rectangle icon) {
+        float UI = CanvasRender.layoutScale();
+        float barH = 28f * UI;  // tall enough to click reliably; visual is drawn at half height
+        float gapY = 8f * UI;
+        return new Rectangle(icon.x, icon.y - gapY - barH, icon.width, barH);
+    }
+
+    private void drawSlider(Rectangle bar, float value) {
+        float UI = CanvasRender.layoutScale();
+        float visualH = 14f * UI;
+        float visualY = bar.y + (bar.height - visualH) / 2f;
+
+        // Bar (drawn at visual height, centered in the taller hit rect)
+        batch.setColor(Color.WHITE);
+        batch.draw(sliderBarTex, bar.x, visualY, bar.width, visualH);
+
+        // Toggle knob
+        float knobSize = visualH * 2.2f;
+        float knobX = bar.x + value * bar.width - knobSize / 2f;
+        float knobY = bar.y + bar.height / 2f - knobSize / 2f;
+        batch.draw(sliderToggleTex, knobX, knobY, knobSize, knobSize);
+        batch.setColor(Color.WHITE);
+    }
+
     private void drawOptionPuck(Texture tex, Rectangle bounds, boolean hovered, Color baseTint) {
-        if (tex == null) {
-            return;
-        }
+        if (tex == null) return;
         float tScale = hovered ? 1f : MENU_MAIN_IDLE_SCALE;
         float dw = bounds.width * tScale;
         float dh = bounds.height * tScale;
@@ -218,9 +290,7 @@ public class GameplayOptionsOverlay {
 
         float panelW = maxW + 2f * padX;
         float maxPanelW = width - 24f * UI;
-        if (panelW > maxPanelW) {
-            panelW = maxPanelW;
-        }
+        if (panelW > maxPanelW) panelW = maxPanelW;
         float panelH = totalH + 2f * padY;
         float panelX = (width - panelW) / 2f;
         float centerY = height * 0.5f;
