@@ -63,6 +63,7 @@ platform/zukotonguechunk.png
 platform/zukowalk.png
 platform/zukowalk1.png
 save_game.json
+shared/LevelSelectorBackground.png
 shared/NunitoBoldItalic-RpvlV.ttf
 shared/NunitoExtraboldItalic-8MamM.ttf
 shared/RetroGame.ttf

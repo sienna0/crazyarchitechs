@@ -54,7 +54,7 @@
         "shared-pulley-top": "shared/pulley_top.png",
         "shared-pulley-string": "shared/pulley_string.png",
         "shared-pulley-carry": "shared/pulley_carry.png",
-        "shared-water": "shared/water.png",
+        "shared-water": "shared/LevelSelectorBackground.png",
         "shared-pause-resume": {
             "file": "shared/pause_resume.png",
             "minfilter": "nearest",
