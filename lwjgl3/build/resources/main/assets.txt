@@ -1,6 +1,5 @@
 META-INF/MANIFEST.MF
 assets.json
-assets/save_game.json
 frogtographer_sparklefly_anim-sheet.png
 loading/GameLogo_animated.png
 loading/boot.json
@@ -15,6 +14,7 @@ loading/play.png
 loading/progress.png
 loading/splash.png
 loading/splash1.png
+menubuttonlevel.png
 platform/32zuko.png
 platform/Sprite-0001.aseprite
 platform/cameraflash.png
@@ -106,3 +106,5 @@ shared/pulley_top.png
 shared/pulley_top1.png
 shared/treetile.png
 shared/water.png
+sliderbar.png
+slidertoggle.png

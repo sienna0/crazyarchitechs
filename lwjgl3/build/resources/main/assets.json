@@ -31,6 +31,7 @@
             "wrapV": "repeated"
         },
         "shared-lotus": "shared/lilyflower.png",
+        "shared-lily-gray": "shared/lilyflower_gray.png",
         "shared-lily-1": "shared/lily1.png",
         "shared-lily-2": "shared/lily2.png",
         "shared-lily-3": "shared/lily3.png",

@@ -40,7 +40,7 @@ public class LevelProgress {
         LevelData currLevel = levels.get(level - 1);
         currLevel.complete = true;
         if ((currLevel.minPhotosUsed == -1) || photosUsed < currLevel.minPhotosUsed) {currLevel.minPhotosUsed = photosUsed;}
-        currLevel.flyCount = flyCount;
+        if (currLevel.flyCount == 0 || currLevel.flyCount < flyCount) {currLevel.flyCount = flyCount;}
         if (currLevel.bestTime == 0 || (currLevel.bestTime > timeElapsed)){currLevel.bestTime = timeElapsed;}
         saveGame();
     }
@@ -55,12 +55,9 @@ public class LevelProgress {
      * @return 0-3. 0 == not passed, 1 == passed, 2 == 1 & got second star, 3 == 2 & third star
      */
     public int getLevelScore(int level){
-        if (!isBeaten(level)){return 0;}
-        int score = 1;
         LevelData currLevel = getLevelData(level);
-        if (currLevel.flyCount > 0) {score++;}
-        if (currLevel.minPhotosUsed <= currLevel.goalPhotos) {score++;}
-        return score;
+        return calculateScore(isBeaten(level), currLevel.flyCount,
+                currLevel.minPhotosUsed, currLevel.goalPhotos,currLevel.bestTime);
     }
 
     public int getNumber(int level) { return levels.get(level - 1).minPhotosUsed; }
@@ -120,6 +117,14 @@ public class LevelProgress {
             levels.add(nl);
         }
         saveGame();
+    }
+
+    public int calculateScore(boolean beaten, int flies, int photosUsed, int goalPhotos, float time){
+        int score = 1;
+        if (!beaten){return 0;}
+        if(flies > 0){score++;}
+        if (photosUsed<=goalPhotos){score++;}
+        return score;
     }
 
 

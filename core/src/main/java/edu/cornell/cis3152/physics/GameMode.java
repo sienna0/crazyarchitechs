@@ -113,7 +113,6 @@ public class GameMode implements Screen, ScreenListener {
             stopLevelMusic();
             levelSelectScene.show();
         } else if (exitCode == PhysicsScene.EXIT_WIN) {
-            levelController.markCurrentBeaten();
             levelController.nextLevel();
             levelController.setScreenListener(this);
             showingLevelSelect = false;

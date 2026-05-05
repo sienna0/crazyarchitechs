@@ -113,6 +113,13 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     protected ObjectSet<Fixture> sensorFixtures;
 
     private Texture markerPixel;
+    private Texture lilyFlowerTexture;
+    private Texture lilyFlowerGrayTexture;
+
+    private LevelProgress levelProgress;
+    private int currentScore;
+
+
     /** Rows = stuck-on surface ({@link GameObject} target); cols = photographed type (subject). Filenames: {@code picture_<surface>_with_<photo>.png}. */
     private Texture[][] stuckPictureTextures;
     private LevelPopulation levelPopulation;
@@ -259,6 +266,13 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
                     Gdx.app.error("LevelBaseScene", "Could not load sparkle fly sprite sheet", e);
                 }
             }
+            if (lilyFlowerTexture == null){
+                lilyFlowerTexture = requireTexture("shared-lotus", "shared/lilyflower.png");
+            }
+            if (lilyFlowerGrayTexture == null){
+                lilyFlowerGrayTexture = requireTexture("shared-lily-gray", "shared/lilyflower_gray.png");
+            }
+
             renderer = new LevelRenderer(
                     worldState, inventoryTexture, settingsIconTexture,
                     pauseIconTexture, markerPixel,
@@ -699,6 +713,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             avatar.setJumping(false);
             avatar.stopMotion();
             updateWinOverlayInput();
+            currentScore = markCurrentBeaten();
             return;
         }
         if (!isComplete() && goalContactCount > 0 && isAvatarInGoalCenter()) {
@@ -846,7 +861,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         SoundEffectManager sounds = SoundEffectManager.getInstance();
 
         if (isWalking) {
-            // 🔥 NEW: play immediately when walking starts
+            // NEW: play immediately when walking starts
             if (!wasWalking) {
                 sounds.play("walk", jumpSound, GameAudio.effectiveSfxVolume(volume * 0.5f));
                 walkSoundTimer = 0f;
@@ -1115,11 +1130,29 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         if (winOverlayTexture == null || viewport == null || uiCamera == null) {
             return;
         }
+        Rectangle nextBounds = getWinNextButtonBounds();
 
         viewport.apply();
         batch.begin(uiCamera);
         batch.setColor(Color.WHITE);
         batch.draw(winOverlayTexture, 0, 0, width, height);
+
+        // Draw lilies
+        float lilySize    = width * 0.09f;
+        float lilyGap     = lilySize * 0.25f;
+        float totalWidth  = 3 * lilySize + 2 * lilyGap;
+        float lilyStartX  = (width - totalWidth) * 0.5f;
+        float lilyY = nextBounds.y + nextBounds.height - 25f;
+
+
+        for (int i = 0; i < 3; i++) {
+            float lx = lilyStartX + i * (lilySize + lilyGap);
+            Texture t = (i < currentScore) ? lilyFlowerTexture : lilyFlowerGrayTexture;
+            if (t != null) {
+                batch.setColor(Color.WHITE);
+                batch.draw(t, lx, lilyY, lilySize, lilySize);
+            }
+        }
 
         drawWinOverlayButton(batch, winNextButtonTexture, getWinNextButtonBounds());
         drawWinOverlayButton(batch, winMenuButtonTexture, getWinMenuButtonBounds());
@@ -1150,7 +1183,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         }
         float tint = isPointerInside(bounds) ? WIN_BUTTON_HOVER_TINT : 1f;
         batch.setColor(tint, tint, tint, 1f);
-        batch.draw(texture, bounds.x, bounds.y, bounds.width, bounds.height);
+        batch.draw(texture, bounds.x, bounds.y - 30f, bounds.width, bounds.height);
         batch.setColor(Color.WHITE);
     }
 
@@ -1249,4 +1282,19 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     public int getPhotosUsed() {return photosUsed;}
 
     public float getTimeElapsed(){return timeElapsed;}
+
+    public void setLevelProgress(LevelProgress levelProgress){this.levelProgress = levelProgress;}
+
+    /**
+     *
+     * @return is the score of THIS attempt
+     */
+    public int markCurrentBeaten() {
+        int photosUsed = getPhotosUsed();
+        int flyCount = getFlyCount();
+        float timeElapsed = getTimeElapsed();
+        levelProgress.beatLevel(currentLevel, photosUsed, flyCount, timeElapsed);
+        int goal = levelProgress.getLevelData(currentLevel).goalPhotos;
+        return levelProgress.calculateScore(true,flyCount,photosUsed,goal,timeElapsed);
+    }
 }

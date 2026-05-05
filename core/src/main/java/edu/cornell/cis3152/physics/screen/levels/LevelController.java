@@ -51,7 +51,7 @@ public class LevelController {
         totalLevels = countLevels(assets);
 
         loadLevel(currentLevel);
-        levelProgress = new LevelProgress(totalLevels, "save_game.json", assets.getEntry("platform-constants", JsonValue.class));
+        levelProgress = new LevelProgress(totalLevels, "assets/save_game.json", assets.getEntry("platform-constants", JsonValue.class));
     }
 
     /**
@@ -93,6 +93,7 @@ public class LevelController {
         currentScene.resize(com.badlogic.gdx.Gdx.graphics.getWidth(), com.badlogic.gdx.Gdx.graphics.getHeight());
         currentLevel = level;
         ((LevelBaseScene)currentScene).setLevel(level);
+        ((LevelBaseScene)currentScene).setLevelProgress(levelProgress);
     }
 
     /**
@@ -165,12 +166,6 @@ public class LevelController {
         }
     }
 
-    public void markCurrentBeaten() {
-        int photosUsed = ((LevelBaseScene)currentScene).getPhotosUsed();
-        int flyCount = ((LevelBaseScene)currentScene).getFlyCount();
-        float timeElapsed = ((LevelBaseScene)currentScene).getTimeElapsed();
-        levelProgress.beatLevel(currentLevel, photosUsed, flyCount, timeElapsed);
-    }
 
     public boolean isBeaten(int level) {return levelProgress.isBeaten(level);}
 
