@@ -326,6 +326,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         if (renderer != null && levelData != null) {
             renderer.drawVines(batch, levelData, height / bounds.height);
             renderer.drawLevelTiles(batch, levelData, height / bounds.height);
+            renderer.drawEnv(batch, levelData, height / bounds.height);
         }
     }
 

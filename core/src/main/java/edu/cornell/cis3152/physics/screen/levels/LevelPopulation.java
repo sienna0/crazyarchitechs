@@ -59,10 +59,13 @@ class LevelPopulation {
 
         List<TextureRegion> tileRegions    = new ArrayList<>();
         /** [x, y] screen-space position in pixels for each tile, in the same order as tileRegions. */
-        List<float[]>       tilePositions  = new ArrayList<>();
+        List<float[]> tilePositions  = new ArrayList<>();
         List<TextureRegion> vineRegions    = new ArrayList<>();
         /** [x, y] screen-space position in pixels for each vine tile, in the same order as vineRegions. */
-        List<float[]>       vinePositions  = new ArrayList<>();
+        List<float[]> vinePositions  = new ArrayList<>();
+        List<TextureRegion> envRegions    = new ArrayList<>();
+        /** [x, y] screen-space position in pixels for each vine tile, in the same order as vineRegions. */
+        List<float[]> envPositions  = new ArrayList<>();
         List<BoxSprite> pulleyCarries = new ArrayList<>();
         List<BoxSprite> pulleyRopes = new ArrayList<>();
         List<Vector2> pulleyWheelCenters = new ArrayList<>();
@@ -112,6 +115,9 @@ class LevelPopulation {
 
         Texture vinesTexture = textureResolver.apply("platform-vines", "platform/vines.png");
         parseTileLayer(level.get("vines"), vinesTexture, units, result.vineRegions, result.vinePositions);
+
+        Texture envTexture = textureResolver.apply("platform-env", "platform/env.png");
+        parseTileLayer(level.get("env"), envTexture, units, result.envRegions, result.envPositions);
 
         Texture borderTexture = textureResolver.apply("shared-wall", "shared/treetile.png");
         JsonValue walls = level.get("walls");

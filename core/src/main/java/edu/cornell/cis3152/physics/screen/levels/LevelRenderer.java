@@ -453,6 +453,15 @@ class LevelRenderer {
                 levelData == null ? null : levelData.vinePositions, tileSize);
     }
 
+    /**
+     * Renders decorative environmental tiles.
+     */
+    void drawEnv(SpriteBatch batch, LevelPopulation.Result levelData, float tileSize) {
+        drawTileLayer(batch, levelData == null ? null : levelData.envRegions,
+                levelData == null ? null : levelData.envPositions, tileSize);
+    }
+
+
     private void drawTileLayer(SpriteBatch batch, java.util.List<TextureRegion> regions,
                                java.util.List<float[]> positions, float tileSize) {
         if (regions == null || regions.isEmpty() || positions == null) {
