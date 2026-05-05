@@ -17,6 +17,7 @@ import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.utils.ObjectSet;
+import edu.cornell.cis3152.physics.graphics.SpriteStripAnimation;
 import edu.cornell.cis3152.physics.world.FlyCollectible;
 import java.util.ArrayList;
 import edu.cornell.cis3152.physics.CanvasRender;
@@ -118,6 +119,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     private LevelPopulation.Result levelData;
     private PhotoSystem photoSystem;
     private LevelRenderer renderer;
+    private SpriteStripAnimation sparkleFlyAnim;
 
     private float gooAnimPhaseTimer;
     private int gooAnimCycle;
@@ -132,8 +134,8 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     private FlyCollectible pendingFlyCollection = null;
     /** Whether the tongue was active last frame (for edge-detection). */
     private boolean tonguePreviouslyActive = false;
-    /** Collect range in physics units — matches take_picture_distance. */
-    private float flyCollectRange = 9.0f;
+    /** Collect range in physics units — half of stick_picture_distance. */
+    private float flyCollectRange = 4.5f;
 
     private boolean pendingHazardRestart = false;
     private float hazardTimer = 0f;
@@ -239,7 +241,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             float springK   = gp != null ? gp.getFloat("lift_spring_stiffness", 6.0f) : 6.0f;
             float springD   = gp != null ? gp.getFloat("lift_spring_damping", 3.5f) : 3.5f;
 
-            flyCollectRange = takeDist;
+            flyCollectRange = stickDist * 0.5f;
             photoSystem = new PhotoSystem(
                     worldState, stickDist, takeDist, springK, springD,
                     volume, fireSound, plopSound, constants.get("zuko")
@@ -247,11 +249,22 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             if (stuckPictureTextures == null) {
                 stuckPictureTextures = loadStuckPictureTextures();
             }
+            if (sparkleFlyAnim == null) {
+                try {
+                    sparkleFlyAnim = SpriteStripAnimation.loadSquareStrip(
+                            Gdx.files.internal("frogtographer_sparklefly_anim-sheet.png"),
+                            1f / 8f,
+                            Texture.TextureFilter.Nearest);
+                } catch (Exception e) {
+                    Gdx.app.error("LevelBaseScene", "Could not load sparkle fly sprite sheet", e);
+                }
+            }
             renderer = new LevelRenderer(
                     worldState, inventoryTexture, settingsIconTexture,
                     pauseIconTexture, markerPixel,
                     stuckPictureTextures,
-                    stickDist, takeDist
+                    stickDist, takeDist,
+                    sparkleFlyAnim
             );
         }
     }
@@ -583,7 +596,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     @Override
     public void draw(float dt) {
         super.draw(dt);
-        renderer.draw(batch, viewport, camera, uiCamera, avatar);
+        renderer.draw(batch, viewport, camera, uiCamera, avatar, dt);
         if (winOverlayVisible) {
             drawWinOverlay();
         }
@@ -761,14 +774,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
                 viewport,
                 avatar.getPictureInventory().getSize()
         );
-        photoSystem.handlePictureAction(input, target, avatar, clickedSlot, world);
-
-        if (photoSystem.isPictureTaken()) {
-            photosUsed++;
-            photoSystem.clearPictureTaken();
-        }
-
-        // Fly tongue-completion: collect when tongue finishes retracting
+        // Fly tongue-completion: collect when tongue finishes retracting.
         boolean tongueActive = avatar.isTongueActive();
         if (tonguePreviouslyActive && !tongueActive && pendingFlyCollection != null) {
             flyCount++;
@@ -777,28 +783,44 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         }
         tonguePreviouslyActive = tongueActive;
 
-        // Fly click detection (only when no active picture and no pending collection)
-        if (input.didLeftClick() &&  pendingFlyCollection == null) {
-            // worldState.getActivePicture() == null
-            //                && clickedSlot < 0 &&
+        // Fly click detection runs before the photo system so eating a fly always
+        // takes priority regardless of inventory state.  If a fly is clicked the
+        // photo system's left-click handling is skipped entirely so its own
+        // startTongueAnimation call cannot overwrite the fly tongue animation.
+        boolean flyClicked = false;
+        if (input.didLeftClick() && pendingFlyCollection == null) {
             Vector2 crosshair = input.getCrossHair();
             FlyCollectible clickedFly = findFlyUnderCrosshair(crosshair, units);
             if (clickedFly != null && flyInRange(clickedFly) && flyHasLineOfSight(clickedFly)) {
                 avatar.startTongueAnimation(clickedFly.getObstacle().getX(), clickedFly.getObstacle().getY());
                 pendingFlyCollection = clickedFly;
+                flyClicked = true;
             }
+        }
+
+        if (!flyClicked) {
+            photoSystem.handlePictureAction(input, target, avatar, clickedSlot, world);
+        }
+
+        if (photoSystem.isPictureTaken()) {
+            photosUsed++;
+            photoSystem.clearPictureTaken();
         }
 
         // Rebuild range highlights after all input/selection changes so the UI
         // matches the final state for this frame.
         photoSystem.updateHighlights(avatar, sprites, world);
 
-        // Update in-range fly list for highlight rendering using the same final state.
+        // Update in-range fly list. In-range flies suppress their own draw so the
+        // sparkle animation in LevelRenderer is the sole visual for those flies.
         ArrayList<FlyCollectible> inRangeFlies = new ArrayList<>();
         ArrayList<float[]> inRangeFlyPositions = new ArrayList<>();
         if (levelData != null) {
             for (FlyCollectible fly : levelData.flies) {
-                if (!fly.isCollected() && flyInRange(fly) && flyHasLineOfSight(fly)) {
+                if (fly.isCollected()) continue;
+                boolean inRange = flyInRange(fly) && flyHasLineOfSight(fly);
+                fly.setInRange(inRange);
+                if (inRange) {
                     inRangeFlies.add(fly);
                     inRangeFlyPositions.add(new float[]{
                         fly.getObstacle().getX() * scale.x,

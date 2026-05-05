@@ -66,6 +66,11 @@ public class Surface extends ObstacleSprite {
         obstacle.setRestitution( settings.getFloat( "restitution", 0 ) );
         obstacle.setPhysicsUnits( units );
         obstacle.setUserData( this );
+        // Fatal surfaces (goo) are sensors: they still fire contact callbacks to
+        // kill the player but exert no collision force, so blocks slide over them freely.
+        if (fatal) {
+            obstacle.setSensor( true );
+        }
 
         debug = ParserUtils.parseColor( settings.get("debug"),  Color.WHITE);
 

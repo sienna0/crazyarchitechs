@@ -18,6 +18,7 @@ public class FlyCollectible extends BoxSprite {
     private final TextureRegion[] frames;
     private float animTime = 0f;
     private boolean collected = false;
+    private boolean inRange = false;
 
     public FlyCollectible(float units, float x, float y, Texture sheet, int index) {
         super(units, x, y, FLY_SIZE, FLY_SIZE,
@@ -52,9 +53,13 @@ public class FlyCollectible extends BoxSprite {
         super.update(dt);
     }
 
+    public void setInRange(boolean inRange) {
+        this.inRange = inRange;
+    }
+
     @Override
     public void draw(SpriteBatch batch) {
-        if (collected) return;
+        if (collected || inRange) return;
         super.draw(batch);
     }
 }

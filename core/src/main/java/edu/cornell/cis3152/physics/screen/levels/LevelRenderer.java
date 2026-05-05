@@ -8,6 +8,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import edu.cornell.cis3152.physics.CanvasRender;
+import edu.cornell.cis3152.physics.graphics.SpriteStripAnimation;
 import edu.cornell.cis3152.physics.screen.WorldState;
 import edu.cornell.cis3152.physics.world.FlyCollectible;
 import edu.cornell.cis3152.physics.world.GameObject;
@@ -58,6 +59,8 @@ class LevelRenderer {
     private ArrayList<FlyCollectible> inRangeFlies = new ArrayList<>();
     /** World-pixel positions [x, y] for each in-range fly, computed with scale.x/scale.y. */
     private ArrayList<float[]> inRangeFlyPositions = new ArrayList<>();
+    private final SpriteStripAnimation sparkleFlyAnim;
+    private float flyAnimTime;
 
     void setInRangeFlies(ArrayList<FlyCollectible> flies, ArrayList<float[]> positions) {
         this.inRangeFlies   = flies     != null ? flies     : new ArrayList<>();
@@ -71,7 +74,8 @@ class LevelRenderer {
                   Texture markerPixel,
                   Texture[][] stuckPictureTextures,
                   float stickDistance,
-                  float takeDistance) {
+                  float takeDistance,
+                  SpriteStripAnimation sparkleFlyAnim) {
         this.worldState = worldState;
         this.inventoryTexture = inventoryTexture;
         this.settingsIconTexture = settingsIconTexture;
@@ -80,6 +84,7 @@ class LevelRenderer {
         this.stuckPictureTextures = stuckPictureTextures;
         this.stickDistance = stickDistance;
         this.takeDistance = takeDistance;
+        this.sparkleFlyAnim = sparkleFlyAnim;
     }
 
     /**
@@ -89,10 +94,12 @@ class LevelRenderer {
               CanvasRender viewport,
               com.badlogic.gdx.graphics.OrthographicCamera camera,
               com.badlogic.gdx.graphics.OrthographicCamera uiCamera,
-              Zuko avatar) {
+              Zuko avatar,
+              float dt) {
         if (avatar == null) {
             return;
         }
+        flyAnimTime += dt;
 
         viewport.apply();
         batch.begin(camera);
@@ -105,7 +112,7 @@ class LevelRenderer {
 
         for (int fi = 0; fi < inRangeFlies.size(); fi++) {
             float[] pos = fi < inRangeFlyPositions.size() ? inRangeFlyPositions.get(fi) : null;
-            if (pos != null) drawFlyHighlight(batch, inRangeFlies.get(fi), pos[0], pos[1]);
+            if (pos != null) drawFlyHighlight(batch, inRangeFlies.get(fi), pos[0], pos[1], fi * 0.08f);
         }
 
         if (worldState.isShowRange()) {
@@ -211,11 +218,18 @@ class LevelRenderer {
         }
     }
 
-    private void drawFlyHighlight(SpriteBatch batch, FlyCollectible fly, float cx, float cy) {
-        float dot = fly.getObstacle().getPhysicsUnits() * 0.10f;
-        batch.setColor(0.2f, 0.9f, 0.3f, 0.85f);
-        batch.draw(markerPixel, cx - dot * 0.5f, cy - dot * 0.5f, dot, dot);
-        batch.setColor(Color.WHITE);
+    private void drawFlyHighlight(SpriteBatch batch, FlyCollectible fly, float cx, float cy, float phaseOffset) {
+        if (sparkleFlyAnim != null) {
+            float size = fly.getObstacle().getPhysicsUnits() * FlyCollectible.FLY_SIZE;
+            com.badlogic.gdx.graphics.g2d.TextureRegion frame = sparkleFlyAnim.getKeyFrame(flyAnimTime + phaseOffset);
+            batch.setColor(Color.WHITE);
+            batch.draw(frame, cx - size * 0.5f, cy - size * 0.5f, size, size);
+        } else {
+            float dot = fly.getObstacle().getPhysicsUnits() * 0.10f;
+            batch.setColor(0.2f, 0.9f, 0.3f, 0.85f);
+            batch.draw(markerPixel, cx - dot * 0.5f, cy - dot * 0.5f, dot, dot);
+            batch.setColor(Color.WHITE);
+        }
     }
 
     /**

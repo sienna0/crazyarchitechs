@@ -156,6 +156,9 @@ public class ZukoAnimator {
     public void startDeathMeltAnimation() {
         playingDeathMelt = true;
         deathMeltAnimationTime = 0f;
+        playingJump = false;
+        playingPhoto = false;
+        playingPortal = false;
     }
 
     /**
@@ -398,10 +401,10 @@ public class ZukoAnimator {
 
     public SpriteSheet getActiveSheet(boolean isGrounded, float velocityX) {
         if (playingSpawn && spawnSheet != null) return spawnSheet;
+        if (playingDeathMelt && deathMeltSheet != null) return deathMeltSheet;
         if ((playingPortal || portalFinished) && portalSheet != null) return portalSheet;
         if (playingPhoto && photoSheet != null) return photoSheet;
         if (playingJump && jumpSheet != null) return jumpSheet;
-        if (playingDeathMelt && deathMeltSheet != null) return deathMeltSheet;
         if (walkSheet != null && isGrounded && Math.abs(velocityX) > 0.1f) return walkSheet;
         if (idleSheet != null) return idleSheet;
         return null;
