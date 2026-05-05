@@ -1142,7 +1142,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         float lilyGap     = lilySize * 0.25f;
         float totalWidth  = 3 * lilySize + 2 * lilyGap;
         float lilyStartX  = (width - totalWidth) * 0.5f;
-        float lilyY = nextBounds.y + nextBounds.height - 25f;
+        float lilyY = nextBounds.y + nextBounds.height + 5f;
 
 
         for (int i = 0; i < 3; i++) {
@@ -1183,7 +1183,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         }
         float tint = isPointerInside(bounds) ? WIN_BUTTON_HOVER_TINT : 1f;
         batch.setColor(tint, tint, tint, 1f);
-        batch.draw(texture, bounds.x, bounds.y - 30f, bounds.width, bounds.height);
+        batch.draw(texture, bounds.x, bounds.y, bounds.width, bounds.height);
         batch.setColor(Color.WHITE);
     }
 
@@ -1201,7 +1201,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
                 ? buttonWidth * 0.25f
                 : buttonWidth * ((float) texture.getHeight() / texture.getWidth());
         float x = (width - buttonWidth) * 0.5f;
-        float y = WIN_BUTTON_BOTTOM_MARGIN + stackIndexFromBottom * (buttonHeight + WIN_BUTTON_STACK_GAP);
+        float y = WIN_BUTTON_BOTTOM_MARGIN + stackIndexFromBottom * (buttonHeight + WIN_BUTTON_STACK_GAP) - 30f;
         return new Rectangle(x, y, buttonWidth, buttonHeight);
     }
 
