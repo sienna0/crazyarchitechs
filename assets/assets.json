@@ -130,7 +130,8 @@
     },
     "music" : {
       "platform-backgroundintroost" : "platform/levelostintro.ogg",
-      "platform-backgroundost" : "platform/levelost.ogg"
+      "platform-backgroundost" : "platform/levelost.ogg",
+      "platform-backgroundost2" : "platform/levelost2.ogg"
     },
     "soundfx" : {
         "platform-jump"     : "platform/jump.wav",

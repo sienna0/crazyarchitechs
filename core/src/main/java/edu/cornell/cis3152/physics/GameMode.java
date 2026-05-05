@@ -36,11 +36,18 @@ public class GameMode implements Screen, ScreenListener {
     private WinScene winScene;
 
     private Music levelIntro;
-    private Music levelLoop;
+    private Music levelLoopA;
+    private Music levelLoopB;
+    private boolean usingA = true;
+    private static final float CROSSFADE_DURATION = 0.0f; // tune by ear
+    private static final float LOOP_RESTART_TIME = 72.0f; // start crossfade 2s before end
+    private float crossfadeTimer = -1f; // -1 means not crossfading
     private boolean introPlayed = false;
     private static final float INTRO_TO_LOOP_TIME = 18.0f;
     private boolean loopStarted = false;
     private boolean musicWasOn = true;
+    private float loopPlayTime = 0f;
+    private static final float LOOP_MIN_PLAY_TIME = 5.0f; // ignore "finished" in first 5s
 
     private int width;
     private int height;
@@ -113,6 +120,7 @@ public class GameMode implements Screen, ScreenListener {
             stopLevelMusic();
             levelSelectScene.show();
         } else if (exitCode == PhysicsScene.EXIT_WIN) {
+            //levelController.markCurrentBeaten();
             levelController.nextLevel();
             levelController.setScreenListener(this);
             showingLevelSelect = false;
@@ -140,31 +148,49 @@ public class GameMode implements Screen, ScreenListener {
                 startLevelMusic();
             }
         }
-        if (GameAudio.isMusicOn()
-                && !showingLevelSelect
-                && levelIntro != null
-                && levelLoop != null
-                && levelIntro.isPlaying()
-                && !loopStarted
-                && levelIntro.getPosition() >= 18.0f) {
-            levelLoop.setPosition(0f);
-            levelLoop.play();
-            loopStarted = true;
+        if (GameAudio.isMusicOn() && !showingLevelSelect && levelLoopA != null && loopStarted) {
+
+            Music outgoing = usingA ? levelLoopA : levelLoopB;
+            Music incoming = usingA ? levelLoopB : levelLoopA;
+
+            if (outgoing.isPlaying()) {
+                loopPlayTime += delta;
+            }
+
+            // start crossfade when approaching loop end
+            if (crossfadeTimer < 0 && loopPlayTime >= LOOP_RESTART_TIME) {
+                incoming.setPosition(0f);
+                incoming.setVolume(0f);
+                incoming.play();
+                crossfadeTimer = 0f;
+            }
+
+            // do the crossfade
+            if (crossfadeTimer >= 0) {
+                crossfadeTimer += delta;
+                float t = Math.min(crossfadeTimer / CROSSFADE_DURATION, 1f);
+                outgoing.setVolume(0.25f * (1f - t));
+                incoming.setVolume(0.25f * t);
+
+                if (t >= 1f) {
+                    outgoing.stop();
+                    outgoing.setVolume(0.25f);
+                    usingA = !usingA;
+                    loopPlayTime = 0f;
+                    crossfadeTimer = -1f;
+                }
+            }
         }
         if (!showingLevelSelect
                 && levelIntro != null
-                && levelLoop != null
+                && levelLoopA != null
                 && levelIntro.isPlaying()
                 && !loopStarted
                 && levelIntro.getPosition() >= INTRO_TO_LOOP_TIME) {
 
-            levelLoop.setPosition(0f);
-            levelLoop.play();
+            levelLoopA.setPosition(0f);
+            levelLoopA.play();
             loopStarted = true;
-        }
-        if (introPlayed && levelIntro != null && !levelIntro.isPlaying()) {
-            levelLoop.play();
-            introPlayed = false;
         }
         if (showingLevelSelect) {
             int selectedLevel = levelSelectScene.consumeChosenLevel();
@@ -283,39 +309,40 @@ public class GameMode implements Screen, ScreenListener {
         }
         if (levelIntro == null) {
             levelIntro = assets.getEntry("platform-backgroundintroost", Music.class);
-            levelLoop  = assets.getEntry("platform-backgroundost", Music.class);
+            levelLoopA = assets.getEntry("platform-backgroundost", Music.class);
+            levelLoopB = assets.getEntry("platform-backgroundost2", Music.class);
 
-            levelLoop.setLooping(true);
-            GameAudio.registerMusic(levelIntro);
-            GameAudio.registerMusic(levelLoop);
+            levelLoopA.setLooping(false);
+            levelLoopB.setLooping(false);  // was missing
+            levelLoopA.setVolume(0.25f);
+            levelLoopB.setVolume(0.25f);   // was missing
+            levelIntro.setVolume(0.25f);
         }
 
-        // reset both tracks first
         levelIntro.stop();
-        levelLoop.stop();
+        levelLoopA.stop();
+        levelLoopB.stop();   // was missing
+        levelLoopA.setVolume(0.25f);  // reset in case it was mid-crossfade
+        levelLoopB.setVolume(0.25f);  // reset in case it was mid-crossfade
 
         levelIntro.setPosition(0f);
-        levelLoop.setPosition(0f);
-
-// play intro
         levelIntro.play();
 
-// reset loop trigger
         loopStarted = false;
+        loopPlayTime = 0f;       // was missing
+        crossfadeTimer = -1f;    // was missing
+        usingA = true;           // was missing
     }
 
     private void stopLevelMusic() {
-        if (levelIntro != null) {
-            levelIntro.stop();
-            GameAudio.unregisterMusic(levelIntro);
-            levelIntro = null;
-        }
-        if (levelLoop != null) {
-            levelLoop.stop();
-            GameAudio.unregisterMusic(levelLoop);
-            levelLoop = null;
-        }
+        if (levelIntro != null) levelIntro.stop();
+        if (levelLoopA != null) { levelLoopA.stop(); levelLoopA.setVolume(0.25f); }
+        if (levelLoopB != null) { levelLoopB.stop(); levelLoopB.setVolume(0.25f); }
         introPlayed = false;
+        loopStarted = false;
+        loopPlayTime = 0f;
+        crossfadeTimer = -1f;
+        usingA = true;
     }
 
     /**
@@ -399,9 +426,9 @@ public class GameMode implements Screen, ScreenListener {
             levelIntro = null;
         }
 
-        if (levelLoop != null) {
-            levelLoop.stop();
-            levelLoop = null;
+        if (levelLoopA != null) {
+            levelLoopA.stop();
+            levelLoopA = null;
         }
         if (levelController != null) {
             levelController.dispose();

@@ -27,6 +27,7 @@ platform/hover.wav
 platform/ice.png
 platform/jump.wav
 platform/levelost.ogg
+platform/levelost2.ogg
 platform/levelostintro.ogg
 platform/mosquito.mp3
 platform/oldzuko.png
