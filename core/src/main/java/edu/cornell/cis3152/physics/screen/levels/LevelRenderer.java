@@ -104,7 +104,6 @@ class LevelRenderer {
         viewport.apply();
         batch.begin(camera);
         bindOutlineTexture(batch);
-        batch.setColor(worldState.getActivePicture() != null ? Color.LIME : Color.CORAL);
 
         for (GameObject go : worldState.getHighlighted()) {
             drawHighlight(batch, go);
@@ -195,6 +194,25 @@ class LevelRenderer {
      * Draws a thick colored outline around a highlighted object.
      */
     private void drawHighlight(SpriteBatch batch, GameObject go) {
+        // Set highlight to orange by default
+        batch.setColor(Color.CORAL);
+        // If the object has a picture, default to yellow outline to indicate removable
+        if (go.hasPicture())
+        {
+            batch.setColor(Color.YELLOW);
+        }
+        // If we have a picture active, override to lime to show it can be placed
+        if (worldState.getActivePicture() != null)
+        {
+            batch.setColor(Color.LIME);
+
+            // If the picture is the same object as the object in question, don't do any highlight
+            if (worldState.getActivePicture().getSubjectType() == go.getObjectType())
+            {
+                return;
+            }
+        }
+
         Obstacle obj = go.getObstacle();
         float units = obj.getPhysicsUnits();
         float angle = obj.getAngle();
