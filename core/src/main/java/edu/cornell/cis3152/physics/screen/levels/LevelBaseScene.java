@@ -70,6 +70,8 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     };
     private static final float PARALLAX_SCALE = 2.0f;
     private static final float[] PARALLAX_SPEEDS = {0.025f, 0.09f, 0.16f, 0.26f};
+    private static final float CLOUD_SCROLL_SPEED = 7.5f;
+
     // private static final float[] PARALLAX_VERTICAL_SPEEDS = {0.0005f, 0.02f, 0.035f, 0.55f};
     private static final float[] PARALLAX_VERTICAL_SPEEDS = {0, 0, 0, 0};
     private static final float PARALLAX_VERTICAL_SHIFT = 60;
@@ -357,28 +359,8 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         float visibleHeight = camera.viewportHeight * camera.zoom;
         float visibleLeft = camera.position.x - visibleWidth * 0.5f;
         float visibleBottom = camera.position.y - visibleHeight * 0.5f - PARALLAX_VERTICAL_SHIFT;
-        float scrollX = avatar == null ? camera.position.x : avatar.getPosition().x * scale.x;
-        float scrollY = avatar == null ? camera.position.y : avatar.getPosition().y * scale.y;
-        // float visibleBottom = camera.position.y - visibleHeight * 0.5f - 100;
-        // Interpolate parallax scroll between goal-door world position and Zuko's spawn using the
-        // same smoothstep as the camera, so the background moves as though Zuko were physically
-        // traveling from the door to his spawn.  At s==1 scrollX equals avatar.x*scale.x exactly,
-        // so there is no pop when the intro ends and normal gameplay takes over.
-        //float scrollX;
-       // float scrollY;
-        if (introActive && goalDoor != null && avatar != null) {
-            float t = Math.min(1f, Math.max(0f, (introTimer - INTRO_HOLD) / INTRO_PAN));
-            float s = t * t * (3f - 2f * t);
-            float goalWorldX = goalDoor.getObstacle().getX() * scale.x;
-            float goalWorldY = goalDoor.getObstacle().getY() * scale.y;
-            float zukoWorldX = avatar.getPosition().x * scale.x;
-            float zukoWorldY = avatar.getPosition().y * scale.y;
-            scrollX = goalWorldX + (zukoWorldX - goalWorldX) * s;
-            scrollY = goalWorldY + (zukoWorldY - goalWorldY) * s;
-        } else {
-            scrollX = avatar == null ? camera.position.x : avatar.getPosition().x * scale.x;
-            scrollY = avatar == null ? camera.position.y : avatar.getPosition().y * scale.y;
-        }
+        float scrollX = camera.position.x;
+        float scrollY = camera.position.y;
 
         batch.setColor(Color.WHITE);
         for (int ii = 0; ii < parallaxTextures.length; ii++) {
@@ -390,7 +372,8 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             float scaleToView = (visibleHeight / texture.getHeight()) * PARALLAX_SCALE;
             float layerWidth = texture.getWidth() * scaleToView;
             float layerHeight = texture.getHeight() * scaleToView;
-            float xOffset = positiveMod(scrollX * PARALLAX_SPEEDS[ii], layerWidth);
+            float xScroll = scrollX * PARALLAX_SPEEDS[ii] + (ii == 3 ? timeElapsed * CLOUD_SCROLL_SPEED : 0f);
+            float xOffset = positiveMod(xScroll, layerWidth);
             float yOffset = positiveMod(scrollY * PARALLAX_VERTICAL_SPEEDS[ii], layerHeight);
             float startX = visibleLeft - xOffset;
             float startY = visibleBottom - yOffset;
@@ -653,6 +636,33 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     @Override
     public void update(float dt) {
         timeElapsed += dt;
+
+        // UI buttons are always interactive regardless of game state.
+        viewport.screenToCanvas(Gdx.input.getX(), Gdx.input.getY(), worldState.getPauseMouseCache());
+        Vector2 mouse = worldState.getPauseMouseCache();
+        float pauseRight  = viewport.getWidth()  - LevelHud.margin();
+        float pauseTop    = viewport.getHeight() - LevelHud.margin();
+        float pauseHit    = LevelHud.hoverIconSize() * LevelHud.iconDrawScale();
+        float pauseLeft   = pauseRight - pauseHit;
+        float pauseBottom = pauseTop   - pauseHit;
+        boolean pauseIconHovered = mouse.x >= pauseLeft && mouse.x <= pauseRight
+                && mouse.y >= pauseBottom && mouse.y <= pauseTop;
+        float settingsRight  = pauseLeft - LevelHud.iconGap();
+        float settingsLeft   = settingsRight - pauseHit;
+        boolean settingsIconHovered = settingsIconTexture != null
+                && mouse.x >= settingsLeft && mouse.x <= settingsRight
+                && mouse.y >= (pauseTop - pauseHit) && mouse.y <= pauseTop;
+        if (settingsIconHovered && !worldState.wasSettingsIconHovered())
+            SoundEffectManager.getInstance().play("hover", hoverSound, GameAudio.effectiveSfxVolume(volume * 0.4f));
+        if (pauseIconHovered && !worldState.wasPauseIconHovered())
+            SoundEffectManager.getInstance().play("hover", hoverSound, GameAudio.effectiveSfxVolume(volume * 0.4f));
+        worldState.setSettingsIconHovered(settingsIconHovered);
+        worldState.setSettingsIconWasHovered(settingsIconHovered);
+        worldState.setPauseIconHovered(pauseIconHovered);
+        worldState.setPauseIconWasHovered(pauseIconHovered);
+        if (settingsIconHovered && Gdx.input.justTouched()) settingsClicked = true;
+        else if (pauseIconHovered && Gdx.input.justTouched()) pauseClicked = true;
+
         if (introActive) {
             avatar.setMovement(0f);
             avatar.setJumping(false);
@@ -733,43 +743,6 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         }
         updateGooAnimation(dt);
         photoSystem.update(dt);
-        viewport.screenToCanvas(Gdx.input.getX(), Gdx.input.getY(), worldState.getPauseMouseCache());
-        float pauseRight = viewport.getWidth() - LevelHud.margin();
-        float pauseTop = viewport.getHeight() - LevelHud.margin();
-        Vector2 pauseMouseCache = worldState.getPauseMouseCache();
-        float pauseHit = LevelHud.hoverIconSize() * LevelHud.iconDrawScale();
-        float pauseLeft = pauseRight - pauseHit;
-        float pauseBottom = pauseTop - pauseHit;
-        boolean pauseIconHovered = pauseMouseCache.x >= pauseLeft && pauseMouseCache.x <= pauseRight
-                && pauseMouseCache.y >= pauseBottom && pauseMouseCache.y <= pauseTop;
-
-        float settingsHit = LevelHud.hoverIconSize() * LevelHud.iconDrawScale();
-        float settingsRight = pauseLeft - LevelHud.iconGap();
-        float settingsLeft = settingsRight - settingsHit;
-        float settingsBottom = pauseTop - settingsHit;
-        boolean settingsIconHovered = settingsIconTexture != null
-                && pauseMouseCache.x >= settingsLeft && pauseMouseCache.x <= settingsRight
-                && pauseMouseCache.y >= settingsBottom && pauseMouseCache.y <= pauseTop;
-        worldState.setSettingsIconHovered(settingsIconHovered);
-        if (settingsIconHovered && !worldState.wasSettingsIconHovered()) {
-            SoundEffectManager.getInstance().play("hover", hoverSound,
-                    GameAudio.effectiveSfxVolume(volume * 0.4f));
-        }
-        worldState.setSettingsIconWasHovered(settingsIconHovered);
-
-        worldState.setPauseIconHovered(pauseIconHovered);
-
-        if (pauseIconHovered && !worldState.wasPauseIconHovered()) {
-            SoundEffectManager.getInstance().play("hover", hoverSound,
-                    GameAudio.effectiveSfxVolume(volume * 0.4f));
-        }
-        worldState.setPauseIconWasHovered(pauseIconHovered);
-
-        if (settingsIconHovered && Gdx.input.justTouched()) {
-            settingsClicked = true;
-        } else if (pauseIconHovered && Gdx.input.justTouched()) {
-            pauseClicked = true;
-        }
 
         InputController input = InputController.getInstance();
         if (spawnSequenceActive) {
@@ -784,6 +757,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
 
         GameObject target = photoSystem.resolveCurrentTarget(input, avatar, sprites);
         float units = avatar.getObstacle().getPhysicsUnits();
+        Vector2 pauseMouseCache = worldState.getPauseMouseCache();
         int clickedSlot = renderer.getClickedSlot(
                 pauseMouseCache.x,
                 pauseMouseCache.y,
