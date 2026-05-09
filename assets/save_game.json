@@ -1,56 +1,124 @@
 [
 {
+	"complete": true,
+	"minPhotosUsed": 0,
+	"flyCount": 1,
+	"bestTime": 6.965812,
 	"goalPhotos": 1
 },
 {
+	"complete": true,
+	"minPhotosUsed": 0,
+	"flyCount": 1,
+	"bestTime": 12.483275,
 	"goalPhotos": 1
 },
 {
+	"complete": true,
+	"minPhotosUsed": 1,
+	"bestTime": 9.93228,
 	"goalPhotos": 1
 },
 {
+	"complete": true,
+	"minPhotosUsed": 1,
+	"flyCount": 1,
+	"bestTime": 20.116266,
 	"goalPhotos": 1
 },
 {
+	"complete": true,
+	"minPhotosUsed": 1,
+	"flyCount": 1,
+	"bestTime": 13.500113,
 	"goalPhotos": 1
 },
 {
+	"complete": true,
+	"minPhotosUsed": 2,
+	"flyCount": 1,
+	"bestTime": 16.633104,
 	"goalPhotos": 2
 },
 {
+	"complete": true,
+	"minPhotosUsed": 1,
+	"flyCount": 1,
+	"bestTime": 8.499541,
 	"goalPhotos": 1
 },
 {
+	"complete": true,
+	"minPhotosUsed": 1,
+	"bestTime": 16.150366,
 	"goalPhotos": 1
 },
 {
+	"complete": true,
+	"minPhotosUsed": 2,
+	"flyCount": 1,
+	"bestTime": 16.983295,
 	"goalPhotos": 2
 },
 {
+	"complete": true,
+	"minPhotosUsed": 1,
+	"flyCount": 1,
+	"bestTime": 18.632893,
 	"goalPhotos": 1
 },
 {
+	"complete": true,
+	"minPhotosUsed": 3,
+	"flyCount": 1,
+	"bestTime": 15.037797,
 	"goalPhotos": 2
 },
 {
+	"complete": true,
+	"minPhotosUsed": 1,
+	"flyCount": 1,
+	"bestTime": 16.350662,
 	"goalPhotos": 1
 },
 {
+	"complete": true,
+	"minPhotosUsed": 4,
+	"bestTime": 22.71006,
 	"goalPhotos": 2
 },
 {
+	"complete": true,
+	"minPhotosUsed": 1,
+	"bestTime": 10.451022,
 	"goalPhotos": 1
 },
 {
+	"complete": true,
+	"minPhotosUsed": 1,
+	"bestTime": 25.265902,
 	"goalPhotos": 2
 },
 {
+	"complete": true,
+	"minPhotosUsed": 1,
+	"flyCount": 1,
+	"bestTime": 17.233051,
 	"goalPhotos": 1
+},
+{
+	"complete": true,
+	"minPhotosUsed": 6,
+	"flyCount": 1,
+	"bestTime": 28.350016
 },
 {},
 {},
-{},
 {
+	"complete": true,
+	"minPhotosUsed": 2,
+	"flyCount": 1,
+	"bestTime": 16.835127,
 	"goalPhotos": 2
 },
 {},
@@ -64,6 +132,9 @@
 	"goalPhotos": 1
 },
 {
+	"complete": true,
+	"minPhotosUsed": 3,
+	"bestTime": 21.227238,
 	"goalPhotos": 1
 }
 ]

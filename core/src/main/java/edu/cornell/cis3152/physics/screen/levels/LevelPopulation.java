@@ -1,5 +1,6 @@
 package edu.cornell.cis3152.physics.screen.levels;
 
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
@@ -229,6 +230,19 @@ class LevelPopulation {
         float cloudSize = OBJECT_SIZE;
         Texture cloudTexture = textureResolver.apply("platform-cloud", "platform/cloud.png");
         JsonValue cloudPositions = objectLocations.get("cloud");
+        float minCloudHeight = 1000;
+        float maxCloudHeight = -1000;
+        for (int ii = 0; ii < cloudPositions.size; ii++) {
+            float[] pos = cloudPositions.get(ii).asFloatArray();
+            if (pos[1] > maxCloudHeight)
+            {
+                maxCloudHeight = pos[1];
+            }
+            if (pos[1] < minCloudHeight)
+            {
+                minCloudHeight = pos[1];
+            }
+        }
         for (int ii = 0; ii < cloudPositions.size; ii++) {
             float[] pos = cloudPositions.get(ii).asFloatArray();
             GameObject cloud = new GameObject(
@@ -241,6 +255,12 @@ class LevelPopulation {
             cloud.setTexture(cloudTexture);
             spriteAdder.accept(cloud);
             result.clouds.add(cloud);
+            // Set cloud tint
+            if (minCloudHeight == maxCloudHeight)
+            {
+                minCloudHeight = 0;
+            }
+            cloud.tintCloud(minCloudHeight, maxCloudHeight);
         }
 
         Texture flyTexture = textureResolver.apply("shared-fly", "shared/frogtographer_flies_anim.png");

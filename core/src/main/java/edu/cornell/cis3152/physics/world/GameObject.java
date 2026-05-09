@@ -143,18 +143,6 @@ public class GameObject extends ObstacleSprite {
         float drawW = w * units;
         float drawH = h * units;
         mesh.set(-drawW / 2.0f, -drawH / 2.0f, drawW, drawH);
-
-        if (object == Obj.CLOUD)
-        {
-            // Set gray level of cloud
-            float cloudLerp = MathUtils.clamp((y - 3.0f) / (14.0f - 3.0f), 0.0f, 1.0f) * 0.5f + 0.5f;
-            Color tint = new Color(cloudLerp, cloudLerp, MathUtils.clamp(cloudLerp + 0.1f, 0.0f, 1.0f), 1f);
-            setCloudColor(tint);
-            for (int i = 0; i < 3; i++)
-            {
-                mesh.setColor(i, tint);
-            }
-        }
     }
 
     public float getGravityScale() {
@@ -191,6 +179,17 @@ public class GameObject extends ObstacleSprite {
 
     public void setCloudColor(Color c) {
         cloudColor = c;
+    }
+
+    public void tintCloud(float minCloudHeight, float maxCloudHeight) {
+        // Set gray level of cloud
+        float cloudLerp = MathUtils.clamp((floatHome.y - minCloudHeight) / (maxCloudHeight - minCloudHeight), 0.0f, 1.0f) * 0.5f + 0.5f;
+        Color tint = new Color(cloudLerp, cloudLerp, MathUtils.clamp(cloudLerp + 0.1f, 0.0f, 1.0f), 1f);
+        setCloudColor(tint);
+        for (int i = 0; i < 3; i++)
+        {
+            mesh.setColor(i, tint);
+        };
     }
 
     public boolean hasPicture() { return hasPicture; }
