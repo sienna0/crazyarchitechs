@@ -70,6 +70,8 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     };
     private static final float PARALLAX_SCALE = 2.0f;
     private static final float[] PARALLAX_SPEEDS = {0.025f, 0.09f, 0.16f, 0.26f};
+    private static final float CLOUD_SCROLL_SPEED = 7.5f;
+
     // private static final float[] PARALLAX_VERTICAL_SPEEDS = {0.0005f, 0.02f, 0.035f, 0.55f};
     private static final float[] PARALLAX_VERTICAL_SPEEDS = {0, 0, 0, 0};
     private static final float PARALLAX_VERTICAL_SHIFT = 60;
@@ -357,28 +359,8 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         float visibleHeight = camera.viewportHeight * camera.zoom;
         float visibleLeft = camera.position.x - visibleWidth * 0.5f;
         float visibleBottom = camera.position.y - visibleHeight * 0.5f - PARALLAX_VERTICAL_SHIFT;
-        float scrollX = avatar == null ? camera.position.x : avatar.getPosition().x * scale.x;
-        float scrollY = avatar == null ? camera.position.y : avatar.getPosition().y * scale.y;
-        // float visibleBottom = camera.position.y - visibleHeight * 0.5f - 100;
-        // Interpolate parallax scroll between goal-door world position and Zuko's spawn using the
-        // same smoothstep as the camera, so the background moves as though Zuko were physically
-        // traveling from the door to his spawn.  At s==1 scrollX equals avatar.x*scale.x exactly,
-        // so there is no pop when the intro ends and normal gameplay takes over.
-        //float scrollX;
-       // float scrollY;
-        if (introActive && goalDoor != null && avatar != null) {
-            float t = Math.min(1f, Math.max(0f, (introTimer - INTRO_HOLD) / INTRO_PAN));
-            float s = t * t * (3f - 2f * t);
-            float goalWorldX = goalDoor.getObstacle().getX() * scale.x;
-            float goalWorldY = goalDoor.getObstacle().getY() * scale.y;
-            float zukoWorldX = avatar.getPosition().x * scale.x;
-            float zukoWorldY = avatar.getPosition().y * scale.y;
-            scrollX = goalWorldX + (zukoWorldX - goalWorldX) * s;
-            scrollY = goalWorldY + (zukoWorldY - goalWorldY) * s;
-        } else {
-            scrollX = avatar == null ? camera.position.x : avatar.getPosition().x * scale.x;
-            scrollY = avatar == null ? camera.position.y : avatar.getPosition().y * scale.y;
-        }
+        float scrollX = camera.position.x;
+        float scrollY = camera.position.y;
 
         batch.setColor(Color.WHITE);
         for (int ii = 0; ii < parallaxTextures.length; ii++) {
@@ -390,7 +372,8 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             float scaleToView = (visibleHeight / texture.getHeight()) * PARALLAX_SCALE;
             float layerWidth = texture.getWidth() * scaleToView;
             float layerHeight = texture.getHeight() * scaleToView;
-            float xOffset = positiveMod(scrollX * PARALLAX_SPEEDS[ii], layerWidth);
+            float xScroll = scrollX * PARALLAX_SPEEDS[ii] + (ii == 3 ? timeElapsed * CLOUD_SCROLL_SPEED : 0f);
+            float xOffset = positiveMod(xScroll, layerWidth);
             float yOffset = positiveMod(scrollY * PARALLAX_VERTICAL_SPEEDS[ii], layerHeight);
             float startX = visibleLeft - xOffset;
             float startY = visibleBottom - yOffset;

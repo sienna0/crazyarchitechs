@@ -16,6 +16,7 @@
  */
 package edu.cornell.cis3152.physics.lwjgl3;
 
+import edu.cornell.cis3152.physics.DesktopDisplayLayout;
 import edu.cornell.cis3152.physics.FrogRoot;
 import edu.cornell.gdiac.backend.*;
 
@@ -58,8 +59,8 @@ public class DesktopLauncher {
         // Use windowed mode
         config.fullscreen = false;
         config.resizable = false;
-        config.width = 640;
-        config.height = 360;
+        config.width = DesktopDisplayLayout.largeWindowWidth();
+        config.height = DesktopDisplayLayout.largeWindowHeight();
         config.rawHDPI = true;
 
         // Use OpenGLES 2.0
