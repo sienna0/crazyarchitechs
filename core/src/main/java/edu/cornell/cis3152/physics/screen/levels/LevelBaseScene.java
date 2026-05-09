@@ -636,6 +636,33 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     @Override
     public void update(float dt) {
         timeElapsed += dt;
+
+        // UI buttons are always interactive regardless of game state.
+        viewport.screenToCanvas(Gdx.input.getX(), Gdx.input.getY(), worldState.getPauseMouseCache());
+        Vector2 mouse = worldState.getPauseMouseCache();
+        float pauseRight  = viewport.getWidth()  - LevelHud.margin();
+        float pauseTop    = viewport.getHeight() - LevelHud.margin();
+        float pauseHit    = LevelHud.hoverIconSize() * LevelHud.iconDrawScale();
+        float pauseLeft   = pauseRight - pauseHit;
+        float pauseBottom = pauseTop   - pauseHit;
+        boolean pauseIconHovered = mouse.x >= pauseLeft && mouse.x <= pauseRight
+                && mouse.y >= pauseBottom && mouse.y <= pauseTop;
+        float settingsRight  = pauseLeft - LevelHud.iconGap();
+        float settingsLeft   = settingsRight - pauseHit;
+        boolean settingsIconHovered = settingsIconTexture != null
+                && mouse.x >= settingsLeft && mouse.x <= settingsRight
+                && mouse.y >= (pauseTop - pauseHit) && mouse.y <= pauseTop;
+        if (settingsIconHovered && !worldState.wasSettingsIconHovered())
+            SoundEffectManager.getInstance().play("hover", hoverSound, GameAudio.effectiveSfxVolume(volume * 0.4f));
+        if (pauseIconHovered && !worldState.wasPauseIconHovered())
+            SoundEffectManager.getInstance().play("hover", hoverSound, GameAudio.effectiveSfxVolume(volume * 0.4f));
+        worldState.setSettingsIconHovered(settingsIconHovered);
+        worldState.setSettingsIconWasHovered(settingsIconHovered);
+        worldState.setPauseIconHovered(pauseIconHovered);
+        worldState.setPauseIconWasHovered(pauseIconHovered);
+        if (settingsIconHovered && Gdx.input.justTouched()) settingsClicked = true;
+        else if (pauseIconHovered && Gdx.input.justTouched()) pauseClicked = true;
+
         if (introActive) {
             avatar.setMovement(0f);
             avatar.setJumping(false);
@@ -716,43 +743,6 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         }
         updateGooAnimation(dt);
         photoSystem.update(dt);
-        viewport.screenToCanvas(Gdx.input.getX(), Gdx.input.getY(), worldState.getPauseMouseCache());
-        float pauseRight = viewport.getWidth() - LevelHud.margin();
-        float pauseTop = viewport.getHeight() - LevelHud.margin();
-        Vector2 pauseMouseCache = worldState.getPauseMouseCache();
-        float pauseHit = LevelHud.hoverIconSize() * LevelHud.iconDrawScale();
-        float pauseLeft = pauseRight - pauseHit;
-        float pauseBottom = pauseTop - pauseHit;
-        boolean pauseIconHovered = pauseMouseCache.x >= pauseLeft && pauseMouseCache.x <= pauseRight
-                && pauseMouseCache.y >= pauseBottom && pauseMouseCache.y <= pauseTop;
-
-        float settingsHit = LevelHud.hoverIconSize() * LevelHud.iconDrawScale();
-        float settingsRight = pauseLeft - LevelHud.iconGap();
-        float settingsLeft = settingsRight - settingsHit;
-        float settingsBottom = pauseTop - settingsHit;
-        boolean settingsIconHovered = settingsIconTexture != null
-                && pauseMouseCache.x >= settingsLeft && pauseMouseCache.x <= settingsRight
-                && pauseMouseCache.y >= settingsBottom && pauseMouseCache.y <= pauseTop;
-        worldState.setSettingsIconHovered(settingsIconHovered);
-        if (settingsIconHovered && !worldState.wasSettingsIconHovered()) {
-            SoundEffectManager.getInstance().play("hover", hoverSound,
-                    GameAudio.effectiveSfxVolume(volume * 0.4f));
-        }
-        worldState.setSettingsIconWasHovered(settingsIconHovered);
-
-        worldState.setPauseIconHovered(pauseIconHovered);
-
-        if (pauseIconHovered && !worldState.wasPauseIconHovered()) {
-            SoundEffectManager.getInstance().play("hover", hoverSound,
-                    GameAudio.effectiveSfxVolume(volume * 0.4f));
-        }
-        worldState.setPauseIconWasHovered(pauseIconHovered);
-
-        if (settingsIconHovered && Gdx.input.justTouched()) {
-            settingsClicked = true;
-        } else if (pauseIconHovered && Gdx.input.justTouched()) {
-            pauseClicked = true;
-        }
 
         InputController input = InputController.getInstance();
         if (spawnSequenceActive) {
@@ -767,6 +757,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
 
         GameObject target = photoSystem.resolveCurrentTarget(input, avatar, sprites);
         float units = avatar.getObstacle().getPhysicsUnits();
+        Vector2 pauseMouseCache = worldState.getPauseMouseCache();
         int clickedSlot = renderer.getClickedSlot(
                 pauseMouseCache.x,
                 pauseMouseCache.y,
