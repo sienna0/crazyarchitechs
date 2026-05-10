@@ -90,6 +90,8 @@ shared/levelbackgroundfuture.png
 shared/lily1.png
 shared/lily2.png
 shared/lily3.png
+shared/lilyflower-gray-levelselect.png
+shared/lilyflower-levelselect.png
 shared/lilyflower.png
 shared/lilyflower_gray.png
 shared/lotus.png

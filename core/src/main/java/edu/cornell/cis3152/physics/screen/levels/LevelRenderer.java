@@ -1,5 +1,4 @@
 package edu.cornell.cis3152.physics.screen.levels;
-
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
@@ -217,18 +216,22 @@ class LevelRenderer {
         float units = obj.getPhysicsUnits();
         float angle = obj.getAngle();
         Vector2 position = obj.getPosition();
-        highlightTransform.idt();
-        highlightTransform.preRotate((float) (angle * 180.0f / Math.PI));
-        highlightTransform.preTranslate(position.x * units, position.y * units);
-        batch.outline(obj.getOutline(), highlightTransform);
+        // This block is drawn over by the loops, doesn't do anything
+        // FIXME
+//        highlightTransform.idt();
+//        highlightTransform.preRotate((float) (angle * 180.0f / Math.PI));
+//        highlightTransform.preTranslate(position.x * units, position.y * units);
+//        batch.outline(obj.getOutline(), highlightTransform);
 
-        for (int offset = -2; offset <= 2; offset++) {
+        for (int offset = -1; offset <= 1; offset++) {
+            if (offset == 0) continue;
             highlightTransform.idt();
             highlightTransform.preRotate((float) (angle * 180.0f / Math.PI));
             highlightTransform.preTranslate(position.x * units + offset, position.y * units);
             batch.outline(obj.getOutline(), highlightTransform);
         }
-        for (int offset = -2; offset <= 2; offset++) {
+        for (int offset = -1; offset <= 1; offset++) {
+            if (offset == 0) continue;
             highlightTransform.idt();
             highlightTransform.preRotate((float) (angle * 180.0f / Math.PI));
             highlightTransform.preTranslate(position.x * units, position.y * units + offset);

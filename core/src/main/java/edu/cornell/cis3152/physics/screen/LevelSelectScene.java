@@ -39,6 +39,7 @@ public class LevelSelectScene implements Screen {
     private SpriteStripAnimation titleAnimation;
     /** Lily pad buttons for levels 1-3 */
     private final Texture lilyTexture;
+
     /** Title screen–style control; returns to main menu */
     private final Texture menuButtonTexture;
     /** Solid pixel used to draw button rectangles */
@@ -108,9 +109,13 @@ public class LevelSelectScene implements Screen {
     private static final float MENU_BTN_RIGHT_MARGIN_REF = 16f;
     private static final float MENU_IDLE_SCALE = 0.92f;
     private static final Color MENU_HOVER_TINT = new Color(0.52f, 0.52f, 0.55f, 1f);
+    private static final float LILY_ARCH_OFFSET = 5f;
 
     private final LevelController controller;
     private final Texture starTexture;
+    private final Texture lilyFlowerGrayTexture;
+
+
 
     public LevelSelectScene(AssetDirectory assets, SpriteBatch batch, CanvasRender viewport, int totalLevels, LevelController controller) {
         this.batch = batch;
@@ -176,6 +181,7 @@ public class LevelSelectScene implements Screen {
         rightArrowBounds = new Rectangle();
 
         this.starTexture = assets.getEntry("shared-lotus", Texture.class);
+        this.lilyFlowerGrayTexture = assets.getEntry("shared-lily-gray", Texture.class);
         this.controller = controller;
 
         resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -439,20 +445,22 @@ public class LevelSelectScene implements Screen {
 
             int score = controller.getLevelScore(ii + 1);
             if (starTexture != null && score > 0) {
-                float starSize = size * 0.35f;
-                float sx = pos.x + size * 0.25f - starSize / 2;
-                float sy = pos.y + size * 0.25f - starSize / 2;
+                int maxScore  = 3;
+                float starSize = size * 0.3f;
+                float gap      = starSize * 0.1f;
+                float totalW   = maxScore * starSize + (maxScore - 1) * gap;
+                float startX   = pos.x - totalW / 2f;
+                float flowerY  = pos.y + size / 2f;
+
                 batch.setColor(Color.WHITE);
-                batch.draw(starTexture, sx, sy, starSize, starSize);
-                if (score > 1) {
-                    float sx2 = pos.x - size * 0.2f - starSize / 2;
-                    float sy2 = pos.y - size * 0.2f - starSize / 2;
-                    batch.draw(starTexture, sx2, sy2, starSize, starSize);
-                }
-                if (score > 2) {
-                    float sx2 = pos.x - size * 0.2f - starSize / 2;
-                    float sy2 = pos.y + size * 0.2f - starSize / 2;
-                    batch.draw(starTexture, sx2, sy2, starSize, starSize);
+                for (int s = 0; s < maxScore; s++) {
+                    int i = s == 1 ? 0 : -1;
+                    float fx = startX + s * (starSize + gap);
+                    if (s < score) {
+                        batch.draw(starTexture, fx, flowerY + i * LILY_ARCH_OFFSET, starSize, starSize);
+                    } else if (lilyFlowerGrayTexture != null) {
+                        batch.draw(lilyFlowerGrayTexture, fx, flowerY + i * LILY_ARCH_OFFSET, starSize, starSize);
+                    }
                 }
             }
 

@@ -54,7 +54,7 @@ public class DesktopLauncher {
      */
     private static GDXAppSettings configureApplication() {
         GDXAppSettings config = new GDXAppSettings();
-        config.title = "Physics";
+        config.title = "Frogtographer";
 
         // Use windowed mode
         config.fullscreen = false;
