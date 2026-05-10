@@ -420,7 +420,7 @@ class LevelRenderer {
             if (ii == worldState.getSelectedSlotIndex()) {
                 batch.setColor(Color.GOLD);
                 batch.draw(markerPixel,
-                        slotX - highlightPad, slotY - highlightPad,
+                        slotX - highlightPad, slotY - highlightPad + padding,
                         scaledSlotSize + 2 * highlightPad, scaledSlotSize + 2 * highlightPad);
             }
 
@@ -430,12 +430,12 @@ class LevelRenderer {
                 if (inventoryObject.object == Obj.CLOUD) {
                     batch.setColor(inventoryObject.getCloudColor());
                 }
-                batch.draw(inventoryObject.getTexture(), slotX + frameInnerPad, slotY + frameInnerPad,
+                batch.draw(inventoryObject.getTexture(), slotX + frameInnerPad, slotY + frameInnerPad + padding,
                         (scaledSlotSize - 2f * frameInnerPad), (scaledSlotSize - 2f * frameInnerPad));
                 batch.setColor(Color.WHITE);
             }
             batch.setColor(Color.WHITE);
-            batch.draw(inventoryTexture, slotX, slotY, scaledSlotSize, scaledSlotSize);
+            batch.draw(inventoryTexture, slotX, slotY + padding, scaledSlotSize, scaledSlotSize);
         }
         batch.setColor(Color.WHITE);
     }

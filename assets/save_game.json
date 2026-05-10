@@ -1,21 +1,21 @@
 [
 {
-	"complete": true,
-	"minPhotosUsed": 0,
-	"bestTime": 4.017538,
 	"goalPhotos": 1
 },
 {
-	"complete": true,
-	"minPhotosUsed": 0,
-	"bestTime": 4.126667,
 	"goalPhotos": 1
 },
 {
-	"complete": true,
-	"minPhotosUsed": 4,
-	"bestTime": 19.333323,
 	"goalPhotos": 1
+},
+{
+	"goalPhotos": 1
+},
+{
+	"goalPhotos": 1
+},
+{
+	"goalPhotos": 2
 },
 {
 	"goalPhotos": 1
@@ -29,16 +29,7 @@
 {
 	"complete": true,
 	"minPhotosUsed": 1,
-	"bestTime": 7.2820425,
-	"goalPhotos": 1
-},
-{
-	"goalPhotos": 1
-},
-{
-	"goalPhotos": 2
-},
-{
+	"bestTime": 12.70001,
 	"goalPhotos": 1
 },
 {

@@ -76,6 +76,8 @@
             "minfilter": "nearest",
             "magfilter": "nearest"
         },
+        "shared-wooden-border" : "shared/woodenborder.png",
+        "shared-gray-lilypad" : "shared/graylilypad.png",
         "shared-goal":   "platform/walltile.png",
         "platform-traci"    : "platform/zuko.png",
         "platform-updatedwalk"     : "platform/zukowalk.png",

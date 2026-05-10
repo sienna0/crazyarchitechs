@@ -47,6 +47,7 @@ public class PauseMenuScene implements Screen {
     private final Texture pauseRestart;
     private final Texture pauseHelp;
     private final Texture pauseMenu;
+    private final Texture woodenBorder;
     private boolean active;
 
     private int width;
@@ -88,6 +89,7 @@ public class PauseMenuScene implements Screen {
         this.pauseRestart = assets.getEntry("shared-pause-restart", Texture.class);
         this.pauseHelp = assets.getEntry("shared-pause-help", Texture.class);
         this.pauseMenu = assets.getEntry("shared-pause-menu", Texture.class);
+        this.woodenBorder = assets.getEntry("shared-wooden-border", Texture.class);
         for (Texture t : new Texture[] {pauseResume, pauseRestart, pauseHelp, pauseMenu}) {
             if (t != null) {
                 t.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
@@ -246,6 +248,14 @@ public class PauseMenuScene implements Screen {
         titleLayout.setText("PAUSED");
         titleLayout.layout();
         batch.drawText(titleLayout, width / 2f, height * 0.88f);
+        float scaleWood = 5/6f;
+        float drawW = width * scaleWood;
+        float drawH = height * scaleWood;
+        float wx = (width  - drawW) / 2f;
+        float wy = (height - drawH) / 2f;
+
+        batch.setColor(Color.WHITE);
+        batch.draw(woodenBorder,wx, wy,drawW,drawH);
 
         int mouseHover = getHoveredMenuIndex(UI);
         for (int i = 0; i < MENU_BUTTON_COUNT; i++) {

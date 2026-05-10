@@ -84,6 +84,7 @@ shared/frogtographer_flies_anim.png
 shared/goo_0.png
 shared/goo_1.png
 shared/goo_2.png
+shared/graylilypad.png
 shared/inventory.png
 shared/levelbackground.png
 shared/levelbackgroundfuture.png
@@ -110,5 +111,6 @@ shared/pulley_top.png
 shared/pulley_top1.png
 shared/treetile.png
 shared/water.png
+shared/woodenborder.png
 sliderbar.png
 slidertoggle.png

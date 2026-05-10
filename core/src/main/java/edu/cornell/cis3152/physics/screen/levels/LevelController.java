@@ -171,5 +171,6 @@ public class LevelController {
 
     public LevelProgress getLevelProgress() {return levelProgress;}
     public int getLevelScore(int level) {return levelProgress.getLevelScore(level);}
+    public boolean isLevelOpen(int level){return levelProgress.isLevelOpen(level);}
 
 }

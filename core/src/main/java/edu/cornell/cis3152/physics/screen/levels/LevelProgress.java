@@ -49,6 +49,10 @@ public class LevelProgress {
 
     public LevelData getLevelData(int level){return levels.get(level - 1);}
 
+    public boolean isLevelOpen(int level){
+        return (level == 1) || isBeaten(level) || isBeaten(level - 1);
+    }
+
     /**
      *
      * @param level is level to query

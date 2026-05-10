@@ -114,6 +114,9 @@ public class LevelSelectScene implements Screen {
     private final LevelController controller;
     private final Texture starTexture;
     private final Texture lilyFlowerGrayTexture;
+    private final Texture grayLilyPad;
+    public boolean MASTER_UNLOCK = false;
+    private boolean masterUnlockPrev = false;
 
 
 
@@ -182,6 +185,7 @@ public class LevelSelectScene implements Screen {
 
         this.starTexture = assets.getEntry("shared-lotus", Texture.class);
         this.lilyFlowerGrayTexture = assets.getEntry("shared-lily-gray", Texture.class);
+        this.grayLilyPad = assets.getEntry("shared-gray-lilypad", Texture.class);
         this.controller = controller;
 
         resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -245,6 +249,9 @@ public class LevelSelectScene implements Screen {
         boolean confirmPressed = Gdx.input.isKeyPressed(Input.Keys.ENTER) || Gdx.input.isKeyPressed(Input.Keys.SPACE);
         boolean exitPressed = Gdx.input.isKeyPressed(Input.Keys.ESCAPE);
         boolean clickPressed = Gdx.input.isButtonPressed(Input.Buttons.LEFT);
+        if (Gdx.input.isKeyJustPressed(Input.Keys.K)) {
+            MASTER_UNLOCK = !MASTER_UNLOCK;
+        }
 
         if (upPressed && !upPrevious) {
             selectedIndex = (selectedIndex + totalLevels - 1) % totalLevels;
@@ -364,6 +371,7 @@ public class LevelSelectScene implements Screen {
         for (int ii = startIndex; ii < endIndex; ii++) {
             Vector2 pos = getLevelPosition(ii);
             if (pointer.dst(pos) < hoverRad) {
+                if (!(MASTER_UNLOCK || controller.isLevelOpen(ii + 1))){return -1;}
                 return ii;
             }
         }
@@ -436,14 +444,20 @@ public class LevelSelectScene implements Screen {
             Vector2 pos = getLevelPosition(ii);
             pos.x += xOffset;
             boolean selected = ii == selectedIndex;
-            float size = selected ? lilySizeSelected() : lilySizeNormal();
 
-            if (lilyTexture != null) {
+            int score = controller.getLevelScore(ii+1);
+            boolean unlocked = MASTER_UNLOCK || controller.isLevelOpen(ii+1);
+
+            float size = selected && unlocked ? lilySizeSelected() : lilySizeNormal();
+
+            if (lilyTexture != null && unlocked) {
                 batch.setColor(selected ? Color.WHITE : new Color(0.82f, 0.82f, 0.82f, 1.0f));
                 batch.draw(lilyTexture, pos.x - size / 2, pos.y - size / 2, size, size);
+            } else {
+                batch.setColor(Color.WHITE);
+                batch.draw(grayLilyPad, pos.x - size / 2, pos.y - size / 2, size, size);
             }
 
-            int score = controller.getLevelScore(ii + 1);
             if (starTexture != null && score > 0) {
                 int maxScore  = 3;
                 float starSize = size * 0.3f;
