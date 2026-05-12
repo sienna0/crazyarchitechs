@@ -125,7 +125,27 @@
         "platform-picture-ice-with-cloud": "platform/picture_ice_with_cloud.png",
         "platform-picture-ice-with-honey": "platform/picture_ice_with_honey.png",
         "platform-tileset"  : "platform/tileset.png",
-        "platform-vines"    : "platform/vines.png"
+        "platform-vines"    : "platform/vines.png",
+        "numbers-W0" : "numbers/white0.png",
+        "numbers-W1" : "numbers/white1.png",
+        "numbers-W2" : "numbers/white2.png",
+       "numbers-W3" : "numbers/white3.png",
+      "numbers-W4" : "numbers/white4.png",
+       "numbers-W5" : "numbers/white5.png",
+       "numbers-W6" : "numbers/white6.png",
+       "numbers-W7" : "numbers/white7.png",
+       "numbers-W8" : "numbers/white8.png",
+       "numbers-W9" : "numbers/white9.png",
+      "numbers-B0" : "numbers/black0.png",
+      "numbers-B1" : "numbers/black1.png",
+      "numbers-B2" : "numbers/black2.png",
+      "numbers-B3" : "numbers/black3.png",
+      "numbers-B4" : "numbers/black4.png",
+      "numbers-B5" : "numbers/black5.png",
+      "numbers-B6" : "numbers/black6.png",
+      "numbers-B7" : "numbers/black7.png",
+      "numbers-B8" : "numbers/black8.png",
+      "numbers-B9" : "numbers/black9.png"
     },
     "jsons"  : {
         "platform-constants": "platform/constants.json"

@@ -12,6 +12,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
 import edu.cornell.cis3152.physics.CanvasRender;
 import edu.cornell.cis3152.physics.graphics.SpriteStripAnimation;
@@ -110,13 +111,19 @@ public class LevelSelectScene implements Screen {
     private static final float MENU_IDLE_SCALE = 0.92f;
     private static final Color MENU_HOVER_TINT = new Color(0.52f, 0.52f, 0.55f, 1f);
     private static final float LILY_ARCH_OFFSET = 5f;
+    private static final float DIGIT_HEIGHT_RATIO = 0.3f;  // digit height as fraction of lily size
+    private static final float DIGIT_GAP_RATIO    = 0.025f;  // gap between digits, also a fraction of size
+    private static final float DIGIT_Y_RATIO      = 0.0f; // vertical nudge if the lily's visual center is off from its texture center
 
     private final LevelController controller;
     private final Texture starTexture;
     private final Texture lilyFlowerGrayTexture;
     private final Texture grayLilyPad;
     public boolean MASTER_UNLOCK = false;
-    private boolean masterUnlockPrev = false;
+
+    private Texture[] numbersBlack = new Texture[10];
+    private Texture[] numbersWhite = new Texture[10];
+
 
 
 
@@ -187,6 +194,7 @@ public class LevelSelectScene implements Screen {
         this.lilyFlowerGrayTexture = assets.getEntry("shared-lily-gray", Texture.class);
         this.grayLilyPad = assets.getEntry("shared-gray-lilypad", Texture.class);
         this.controller = controller;
+        loadNumberTexures(assets);
 
         resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
     }
@@ -457,7 +465,7 @@ public class LevelSelectScene implements Screen {
                 batch.setColor(Color.WHITE);
                 batch.draw(grayLilyPad, pos.x - size / 2, pos.y - size / 2, size, size);
             }
-
+            // Drawing the lilies
             if (starTexture != null && score > 0) {
                 int maxScore  = 3;
                 float starSize = size * 0.3f;
@@ -478,14 +486,39 @@ public class LevelSelectScene implements Screen {
                 }
             }
 
-            font.getData().setScale(0.85f * CanvasRender.layoutScale());
-            optionLayout.setColor(Color.WHITE);
-            optionLayout.setText(String.valueOf(ii + 1));
-            optionLayout.layout();
-            float labelLift = 5f * CanvasRender.layoutScale();
-            batch.drawText(optionLayout, pos.x, pos.y + labelLift);
+            // Drawing the numbers
+            batch.setColor(Color.WHITE);
+            Texture[] nums = unlocked ? numbersBlack : numbersWhite;
+            int levelNum = ii + 1;
+
+            float digitHeight = size * DIGIT_HEIGHT_RATIO;
+            float gap         = size * DIGIT_GAP_RATIO;
+            float cy          = pos.y + size * DIGIT_Y_RATIO;   // center line for the digits
+            float y           = cy - digitHeight / 2f;
+
+            if (levelNum > 9) {
+                Texture tens = nums[levelNum / 10];
+                Texture ones = nums[levelNum % 10];
+
+                float tensW = digitHeight * (float) tens.getWidth() / tens.getHeight();
+                float onesW = digitHeight * (float) ones.getWidth() / ones.getHeight();
+                float totalW = tensW + gap + onesW;
+                float startX = pos.x - totalW / 2f;
+
+                drawDigit(batch, tens, startX,                 y, digitHeight);
+                drawDigit(batch, ones, startX + tensW + gap,   y, digitHeight);
+            } else {
+                Texture d = nums[levelNum];
+                float w = digitHeight * (float) d.getWidth() / d.getHeight();
+                drawDigit(batch, d, pos.x - w / 2f, y, digitHeight);
+            }
         }
         font.getData().setScale(1.0f);
+    }
+
+    private void drawDigit(SpriteBatch batch, Texture tex, float x, float y, float targetHeight) {
+        float aspect = (float) tex.getWidth() / tex.getHeight();
+        batch.draw(tex, x, y, targetHeight * aspect, targetHeight);
     }
 
     private void drawArrow(boolean isRight, boolean active) {
@@ -566,5 +599,13 @@ public class LevelSelectScene implements Screen {
         }
         pixel.dispose();
         menuButtonTexture.dispose();
+    }
+
+    private void loadNumberTexures(AssetDirectory assets){
+        for (int i = 0; i < 10; i++){
+            String s = String.valueOf(i);
+            numbersBlack[i] = assets.getEntry("numbers-B"+s, Texture.class);
+            numbersWhite[i] = assets.getEntry("numbers-W"+s, Texture.class);
+        }
     }
 }
