@@ -54,7 +54,8 @@ public class LoadingScene implements Screen {
 
     public static final int MENU_PLAY = 0;
     public static final int MENU_OPTIONS = 1;
-    private static final int MENU_BUTTON_COUNT = 2;
+    public static final int MENU_QUIT = 2;
+    private static final int MENU_BUTTON_COUNT = 3;
 
     /** Hard cap: max button width vs logical canvas (inner menu panel scale). */
     private static final float MENU_BUTTON_PANEL_MAX_WIDTH_FRAC = 0.34f;
@@ -413,6 +414,8 @@ public class LoadingScene implements Screen {
                     playButtonPress();
                     optionsOpen = true;
                 }
+                case MENU_QUIT -> Gdx.app.exit();
+
                 default -> { /* ignore */ }
             }
         }
@@ -526,6 +529,7 @@ public class LoadingScene implements Screen {
         float nudgeDown = MENU_BUTTON_EXTRA_DOWN_REF * layout;
         float yPlay;
         float yOptions;
+        float yQuit;
         float totalH = MENU_BUTTON_COUNT * bh + (MENU_BUTTON_COUNT - 1) * gapBetween;
         if (titleR.height > 0f) {
             float playTopMax = titleR.y - gapBelowTitle - nudgeDown;
@@ -537,25 +541,39 @@ public class LoadingScene implements Screen {
                 bw *= factor;
                 totalH = MENU_BUTTON_COUNT * bh + (MENU_BUTTON_COUNT - 1) * gapBetween;
             }
-            yPlay = playTopMax - bh;
-            yOptions = yPlay - gapBetween - bh;
+            yPlay = playTopMax - bh + 15;
+            yOptions = yPlay - gapBetween - bh + 5 ;
+            yQuit = yOptions - gapBetween - bh + 5;
+
         } else {
             float centerY = height * MENU_STACK_CENTER_Y_FRAC;
             float startY = centerY + totalH / 2f;
             yPlay = startY - bh - nudgeDown;
             yOptions = yPlay - gapBetween - bh;
+            yQuit = yOptions - gapBetween - bh;
+
         }
         if (yOptions < 4f) {
             float lift = 4f - yOptions;
             yPlay += lift;
             yOptions += lift;
+            yQuit += lift;
+
         }
         float anchorX = titleR.width > 0f
                 ? titleR.x + titleR.width * 0.5f
                 : width * TITLE_CENTER_X_FRAC;
         float x = anchorX - bw * 0.5f;
         x = MathUtils.clamp(x, 0f, Math.max(0f, width - bw));
-        float y = (index == MENU_PLAY) ? yPlay : yOptions;
+        float y;
+        if (index == MENU_PLAY) {
+            y = yPlay;
+        } else if (index == MENU_OPTIONS) {
+            y = yOptions;
+
+        } else {
+            y = yQuit;
+        }
         return new Rectangle(x, y, bw, bh);
     }
 
@@ -572,6 +590,8 @@ public class LoadingScene implements Screen {
     private void drawMainMenu() {
         Texture playTex = internal.getEntry("menuPlay", Texture.class);
         Texture optionsTex = internal.getEntry("menuOptions", Texture.class);
+        Texture quitTex = internal.getEntry("menuQuit", Texture.class);
+
         int mouseHover = getHoveredMenuIndex();
         for (int i = 0; i < MENU_BUTTON_COUNT; i++) {
             Rectangle b = getMenuButtonBounds(i);
@@ -583,7 +603,15 @@ public class LoadingScene implements Screen {
             float dx = b.x + (b.width - dw) / 2f;
             float dy = b.y + (b.height - dh) / 2f;
             batch.setColor(hover ? MENU_MAIN_HOVER_TINT : Color.WHITE);
-            Texture tex = (i == MENU_PLAY) ? playTex : optionsTex;
+
+            Texture tex;
+            if (i == MENU_PLAY) {
+                tex = playTex;
+            } else if (i == MENU_OPTIONS) {
+                tex = optionsTex;
+            } else {
+                tex = quitTex;
+            }
             batch.draw(tex, dx, dy, dw, dh);
         }
         batch.setColor(Color.WHITE);

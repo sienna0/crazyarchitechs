@@ -1,20 +1,43 @@
 [
 {
+	"complete": true,
+	"minPhotosUsed": 0,
+	"flyCount": 1,
+	"bestTime": 4.4489665,
 	"goalPhotos": 1
 },
 {
+	"complete": true,
+	"minPhotosUsed": 0,
+	"flyCount": 1,
+	"bestTime": 6.2831516,
 	"goalPhotos": 1
 },
 {
+	"complete": true,
+	"minPhotosUsed": 1,
+	"flyCount": 1,
+	"bestTime": 23.183355,
 	"goalPhotos": 1
 },
 {
+	"complete": true,
+	"minPhotosUsed": 2,
+	"flyCount": 1,
+	"bestTime": 41.51672,
 	"goalPhotos": 1
 },
 {
+	"complete": true,
+	"minPhotosUsed": 2,
+	"flyCount": 1,
+	"bestTime": 22.20357,
 	"goalPhotos": 1
 },
 {
+	"complete": true,
+	"minPhotosUsed": 3,
+	"bestTime": 37.317192,
 	"goalPhotos": 2
 },
 {

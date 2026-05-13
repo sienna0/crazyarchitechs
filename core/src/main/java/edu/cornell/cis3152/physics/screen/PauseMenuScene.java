@@ -24,17 +24,17 @@ public class PauseMenuScene implements Screen {
     public static final int RESUME = 0;
     public static final int RESTART = 1;
     public static final int QUIT = 2;
+    public static final int HOW_TO_PLAY = 3;
 
-    private static final int BTN_RESUME = 0;
-    private static final int BTN_RESTART = 1;
+    private static final int BTN_RESTART = 0;
+    private static final int BTN_MENU = 1;
     private static final int BTN_HELP = 2;
-    private static final int BTN_MENU = 3;
-    private static final int MENU_BUTTON_COUNT = 4;
+    private static final int MENU_BUTTON_COUNT = 3;
 
     /** Same visual language as {@link LoadingScene} main menu. */
     private static final float PAUSE_BTN_MAX_WIDTH_FRAC = 0.38f;
     private static final float PAUSE_BTN_SCALE = 0.55f;
-    private static final float PAUSE_BTN_GAP_REF = 20f;
+    private static final float PAUSE_BTN_GAP_REF = 15f;
     private static final float MENU_IDLE_SCALE = 0.92f;
     private static final Color MENU_HOVER_TINT = new Color(0.52f, 0.52f, 0.55f, 1f);
 
@@ -47,7 +47,10 @@ public class PauseMenuScene implements Screen {
     private final Texture pauseRestart;
     private final Texture pauseHelp;
     private final Texture pauseMenu;
-    private final Texture woodenBorder;
+    private final Texture exitButton;
+
+    private final Texture pauseText;
+    private final Texture borderWooden;
     private boolean active;
 
     private int width;
@@ -55,8 +58,6 @@ public class PauseMenuScene implements Screen {
 
     private int selectedIndex;
     private int chosenOption = -1;
-
-    private boolean showingControls;
 
     private boolean upPrev;
     private boolean downPrev;
@@ -67,6 +68,9 @@ public class PauseMenuScene implements Screen {
 
     private final TextLayout titleLayout;
     private final TextLayout optionLayout;
+    private static final float PANEL_W_FRAC = 5 / 6f;
+    private static final float PANEL_H_FRAC = 5 / 6f;
+    private static final float EXIT_W_FRAC = 0.09f;
 
     /** Shared with main-menu options help; keep in sync with pause “How to play”. */
     public static final String HOW_TO_PLAY_TITLE = "HOW TO PLAY";
@@ -85,11 +89,15 @@ public class PauseMenuScene implements Screen {
         this.viewport = viewport;
         this.batch = batch;
         this.font = assets.getEntry("shared-retro", BitmapFont.class);
+
         this.pauseResume = assets.getEntry("shared-pause-resume", Texture.class);
         this.pauseRestart = assets.getEntry("shared-pause-restart", Texture.class);
         this.pauseHelp = assets.getEntry("shared-pause-help", Texture.class);
         this.pauseMenu = assets.getEntry("shared-pause-menu", Texture.class);
-        this.woodenBorder = assets.getEntry("shared-wooden-border", Texture.class);
+        this.pauseText = assets.getEntry("shared-pause-text", Texture.class);
+        this.exitButton = assets.getEntry("shared-exit-button-options", Texture.class);
+
+        this.borderWooden = assets.getEntry("shared-border-wooden", Texture.class);
         for (Texture t : new Texture[] {pauseResume, pauseRestart, pauseHelp, pauseMenu}) {
             if (t != null) {
                 t.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
@@ -117,24 +125,23 @@ public class PauseMenuScene implements Screen {
 
     private Texture textureForMenuIndex(int index) {
         return switch (index) {
-            case BTN_RESUME -> pauseResume;
             case BTN_RESTART -> pauseRestart;
-            case BTN_HELP -> pauseHelp;
             case BTN_MENU -> pauseMenu;
-            default -> pauseResume;
+            case BTN_HELP -> pauseHelp;
+            default -> pauseRestart;
         };
     }
 
     /** Maps menu row index to {@link #consumeChoice()} value, or -1 for Help (opens overlay). */
     private int choiceForMenuIndex(int menuIndex) {
-        if (menuIndex == BTN_RESUME) {
-            return RESUME;
-        }
         if (menuIndex == BTN_RESTART) {
             return RESTART;
         }
         if (menuIndex == BTN_MENU) {
             return QUIT;
+        }
+        if (menuIndex == BTN_HELP) {
+            return HOW_TO_PLAY;
         }
         return -1;
     }
@@ -149,7 +156,6 @@ public class PauseMenuScene implements Screen {
     public void show() {
         active = true;
         selectedIndex = 0;
-        showingControls = false;
     }
 
     @Override
@@ -175,47 +181,38 @@ public class PauseMenuScene implements Screen {
         boolean escapePressed = Gdx.input.isKeyPressed(Input.Keys.ESCAPE);
         boolean clickPressed = Gdx.input.isButtonPressed(Input.Buttons.LEFT);
 
-        if (showingControls) {
-            if (escapePressed && !escapePrev) {
-                showingControls = false;
-            }
-            if (clickPressed && !clickPrev && isBackButtonHovered(UI)) {
-                showingControls = false;
-            }
-        } else {
-            if (upPressed && !upPrev) {
-                selectedIndex = (selectedIndex + MENU_BUTTON_COUNT - 1) % MENU_BUTTON_COUNT;
-            }
-            if (downPressed && !downPrev) {
-                selectedIndex = (selectedIndex + 1) % MENU_BUTTON_COUNT;
-            }
+        if (upPressed && !upPrev) {
+            selectedIndex = (selectedIndex + MENU_BUTTON_COUNT - 1) % MENU_BUTTON_COUNT;
+        }
+        if (downPressed && !downPrev) {
+            selectedIndex = (selectedIndex + 1) % MENU_BUTTON_COUNT;
+        }
 
-            if (escapePressed && !escapePrev) {
+        if (escapePressed && !escapePrev) {
+            chosenOption = RESUME;
+        }
+
+        if (confirmPressed && !confirmPrev) {
+            chosenOption = choiceForMenuIndex(selectedIndex);
+        }
+
+        if (clickPressed && !clickPrev) {
+            viewport.screenToCanvas(Gdx.input.getX(), Gdx.input.getY(), pointer);
+            if (getExitBounds().contains(pointer.x, pointer.y)) {
                 chosenOption = RESUME;
-            }
-
-            if (confirmPressed && !confirmPrev) {
-                if (selectedIndex == BTN_HELP) {
-                    showingControls = true;
-                } else {
-                    chosenOption = choiceForMenuIndex(selectedIndex);
-                }
-            }
-
-            if (clickPressed && !clickPrev) {
+            } else {
                 int clicked = getHoveredMenuIndex(UI);
-                if (clicked == BTN_HELP) {
-                    showingControls = true;
-                } else if (clicked >= 0) {
+                if (clicked >= 0) {
                     chosenOption = choiceForMenuIndex(clicked);
                 }
-            } else {
-                int hovered = getHoveredMenuIndex(UI);
-                if (hovered >= 0) {
-                    selectedIndex = hovered;
-                }
+            }
+        } else {
+            int hovered = getHoveredMenuIndex(UI);
+            if (hovered >= 0) {
+                selectedIndex = hovered;
             }
         }
+
 
         upPrev = upPressed;
         downPrev = downPressed;
@@ -234,20 +231,16 @@ public class PauseMenuScene implements Screen {
         batch.setColor(new Color(0.2f, 0.45f, 0.2f, 0.6f));
         batch.draw(pixel, 0, 0, width, height);
 
-        if (showingControls) {
-            drawControls(UI);
-        } else {
-            drawMenuButtons(UI);
-        }
+
+        drawMenuButtons(UI);
+        drawExit();
+
 
         batch.end();
         viewport.reset();
     }
 
     private void drawMenuButtons(float UI) {
-        titleLayout.setText("PAUSED");
-        titleLayout.layout();
-        batch.drawText(titleLayout, width / 2f, height * 0.88f);
         float scaleWood = 5/6f;
         float drawW = width * scaleWood;
         float drawH = height * scaleWood;
@@ -255,7 +248,17 @@ public class PauseMenuScene implements Screen {
         float wy = (height - drawH) / 2f;
 
         batch.setColor(Color.WHITE);
-        batch.draw(woodenBorder,wx, wy,drawW,drawH);
+        batch.draw(borderWooden,wx, wy,drawW,drawH);
+
+        if (pauseText != null) {
+            float maxW = width * 0.3f;
+            float scale = maxW / pauseText.getWidth();
+            float tw = pauseText.getWidth() * scale;
+            float th = pauseText.getHeight() * scale;
+            batch.setColor(Color.WHITE);
+            batch.draw(pauseText, (width - tw) / 2f, height * 0.7f, tw, th);
+
+        }
 
         int mouseHover = getHoveredMenuIndex(UI);
         for (int i = 0; i < MENU_BUTTON_COUNT; i++) {
@@ -266,13 +269,23 @@ public class PauseMenuScene implements Screen {
             }
             boolean hover = mouseHover == i;
             float tScale = hover ? 1f : MENU_IDLE_SCALE;
-            float dw = b.width * tScale;
-            float dh = b.height * tScale;
+            float dw = b.width * tScale * 0.87f;
+            float dh = b.height * tScale * 0.87f;
             float dx = b.x + (b.width - dw) / 2f;
             float dy = b.y + (b.height - dh) / 2f;
             batch.setColor(hover ? MENU_HOVER_TINT : Color.WHITE);
             batch.draw(tex, dx, dy, dw, dh);
         }
+        batch.setColor(Color.WHITE);
+    }
+
+    private void drawExit() {
+        if (exitButton == null) return;
+        viewport.screenToCanvas(Gdx.input.getX(), Gdx.input.getY(), pointer);
+        Rectangle eb = getExitBounds();
+        boolean hov = eb.contains(pointer.x, pointer.y);
+        batch.setColor(hov ? new Color(0.75f, 0.75f, 0.75f, 1f) : Color.WHITE);
+        batch.draw(exitButton, eb.x, eb.y, eb.width, eb.height);
         batch.setColor(Color.WHITE);
     }
 
@@ -298,7 +311,7 @@ public class PauseMenuScene implements Screen {
                 totalH += gap;
             }
         }
-        float yTop = height * 0.52f + totalH * 0.5f;
+        float yTop = height * 0.45f + totalH * 0.5f;
         float yCursor = yTop;
         for (int j = 0; j < index; j++) {
             yCursor -= hArr[j] + gap;
@@ -308,6 +321,21 @@ public class PauseMenuScene implements Screen {
         float x = (width - bw) / 2f;
         float y = yCursor - bh;
         return new Rectangle(x, y, bw, bh);
+    }
+
+    private Rectangle getPanelBounds() {
+        float pw = width * PANEL_W_FRAC;
+        float ph = height * PANEL_H_FRAC;
+        return new Rectangle((width - pw) / 2f, (height - ph) / 2f, pw, ph);
+    }
+
+    private Rectangle getExitBounds() {
+        Rectangle panel = getPanelBounds();
+        float ew = panel.width * EXIT_W_FRAC;
+        float eh = (exitButton != null) ? ew * exitButton.getHeight() / Math.max(1, exitButton.getWidth()) : ew;
+        float ex = panel.x + panel.width - ew * 1.3f;
+        float ey = panel.y + panel.height - eh * 0.9f;
+        return new Rectangle(ex, ey, ew, eh);
     }
 
     private int getHoveredMenuIndex(float UI) {
@@ -320,44 +348,7 @@ public class PauseMenuScene implements Screen {
         return -1;
     }
 
-    private void drawControls(float UI) {
-        titleLayout.setText(HOW_TO_PLAY_TITLE);
-        titleLayout.layout();
-        batch.drawText(titleLayout, width / 2f, height * 0.85f);
 
-        float cy = height * 0.75f;
-        float lineStep = 40f * UI;
-        for (String line : HOW_TO_PLAY_LINES) {
-            optionLayout.setColor(new Color(0.84f, 0.84f, 0.80f, 1f));
-            optionLayout.setText(line);
-            optionLayout.layout();
-            batch.drawText(optionLayout, width / 2f, cy);
-            cy -= lineStep;
-        }
-
-        Rectangle back = getBackButtonBounds(UI);
-        boolean hovered = isBackButtonHovered(UI);
-        batch.setColor(hovered
-                ? new Color(0.80f, 0.31f, 0.18f, 1f)
-                : new Color(0.23f, 0.29f, 0.33f, 0.9f));
-        batch.draw(pixel, back.x, back.y, back.width, back.height);
-
-        optionLayout.setColor(Color.WHITE);
-        optionLayout.setText("< BACK");
-        optionLayout.layout();
-        batch.drawText(optionLayout, back.x + back.width / 2f, back.y + back.height / 2f + 18f * UI);
-        batch.setColor(Color.WHITE);
-    }
-
-    private Rectangle getBackButtonBounds(float UI) {
-        float m = 40f * UI;
-        return new Rectangle(m, m, 160f * UI, 50f * UI);
-    }
-
-    private boolean isBackButtonHovered(float UI) {
-        viewport.screenToCanvas(Gdx.input.getX(), Gdx.input.getY(), pointer);
-        return getBackButtonBounds(UI).contains(pointer.x, pointer.y);
-    }
 
     @Override
     public void resize(int width, int height) {

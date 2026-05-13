@@ -21,6 +21,7 @@ import edu.cornell.gdiac.assets.AssetDirectory;
 import edu.cornell.gdiac.graphics.SpriteBatch;
 import edu.cornell.gdiac.graphics.TextAlign;
 import edu.cornell.gdiac.graphics.TextLayout;
+import org.w3c.dom.css.Rect;
 
 /**
  * Simple menu screen for selecting a level.
@@ -40,7 +41,10 @@ public class LevelSelectScene implements Screen {
     private SpriteStripAnimation titleAnimation;
     /** Lily pad buttons for levels 1-3 */
     private final Texture lilyTexture;
-
+    private final Texture helpButtonTexture;
+    private final Texture homeButtonTexture;
+    private final Texture leftArrow;
+    private final Texture rightArrow;
     /** Title screen–style control; returns to main menu */
     private final Texture menuButtonTexture;
     /** Solid pixel used to draw button rectangles */
@@ -61,6 +65,8 @@ public class LevelSelectScene implements Screen {
     private int chosenLevel;
     /** Whether the menu requested exit */
     private boolean exitRequested;
+    /** Whether the how to play is requested */
+    private boolean howToPlayRequested;
     /** Whether this screen is active */
     private boolean active;
 
@@ -152,6 +158,18 @@ public class LevelSelectScene implements Screen {
         this.menuButtonTexture = new Texture(Gdx.files.internal("menubuttonlevel.png"));
         this.menuButtonTexture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
 
+        this.helpButtonTexture = assets.getEntry("shared-help", Texture.class);
+        this.helpButtonTexture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+
+        this.homeButtonTexture = assets.getEntry("shared-home", Texture.class);
+        this.homeButtonTexture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+
+        this.leftArrow = assets.getEntry("shared-left-arrow", Texture.class);
+        this.leftArrow.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+
+        this.rightArrow = assets.getEntry("shared-right-arrow", Texture.class);
+        this.rightArrow.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+
         this.camera = new OrthographicCamera();
         this.selectedIndex = 0;
         this.chosenLevel = -1;
@@ -212,6 +230,12 @@ public class LevelSelectScene implements Screen {
     public boolean consumeExitRequested() {
         boolean result = exitRequested;
         exitRequested = false;
+        return result;
+    }
+
+    public boolean consumeHowToPlayRequested() {
+        boolean result = howToPlayRequested;
+        howToPlayRequested = false;
         return result;
     }
 
@@ -278,9 +302,13 @@ public class LevelSelectScene implements Screen {
 
         if (clickPressed && !clickPrevious) {
             viewport.screenToCanvas(Gdx.input.getX(), Gdx.input.getY(), pointer);
-            if (getMenuButtonBounds().contains(pointer.x, pointer.y)) {
+            if (getHomeButtonBounds().contains(pointer.x, pointer.y)) {
                 exitRequested = true;
-            } else if (leftArrowBounds.contains(pointer)) {
+            }
+            else if (getHelpButtonBounds().contains(pointer.x, pointer.y)) {
+                howToPlayRequested = true;
+            }
+            else if (leftArrowBounds.contains(pointer)) {
                 changePage(-1);
             } else if (rightArrowBounds.contains(pointer)) {
                 changePage(1);
@@ -335,7 +363,7 @@ public class LevelSelectScene implements Screen {
         drawArrow(false, displayPage > 0);
         drawArrow(true, displayPage < pageCount() - 1);
 
-        drawMenuButton();
+        drawButton();
 
         batch.end();
         viewport.reset();
@@ -369,7 +397,10 @@ public class LevelSelectScene implements Screen {
 
     private int getHoveredIndex() {
         viewport.screenToCanvas(Gdx.input.getX(), Gdx.input.getY(), pointer);
-        if (getMenuButtonBounds().contains(pointer.x, pointer.y)) {
+        if (getHomeButtonBounds().contains(pointer.x, pointer.y)) {
+            return -1;
+        }
+        if (getHelpButtonBounds().contains(pointer.x, pointer.y)) {
             return -1;
         }
 
@@ -411,37 +442,50 @@ public class LevelSelectScene implements Screen {
         sliding = true;
     }
 
-    private Rectangle getMenuButtonBounds() {
-        if (menuButtonTexture == null) {
+    private Rectangle getHomeButtonBounds() {
+        if (homeButtonTexture == null) {
             return new Rectangle(0, 0, 0, 0);
         }
         float UI = CanvasRender.layoutScale();
         float marginTop = MENU_BTN_TOP_MARGIN_REF * UI;
-        float marginRight = MENU_BTN_RIGHT_MARGIN_REF * UI;
         float maxW = width * MENU_BTN_MAX_W_FRAC;
-        float s = maxW / Math.max(1f, menuButtonTexture.getWidth());
-        float bw = menuButtonTexture.getWidth() * s;
-        float bh = menuButtonTexture.getHeight() * s;
-        float marginLeft = MENU_BTN_RIGHT_MARGIN_REF * UI;
-        float x = marginLeft;
+        float s = maxW / Math.max(1f, homeButtonTexture.getWidth());
+        float bw = menuButtonTexture.getWidth() * s * 0.7f;
+        float bh = menuButtonTexture.getHeight() * s * 0.7f;
+        float x = width - marginTop - bw;
         float y = height - marginTop - bh;
         return new Rectangle(x, y, bw, bh);
     }
 
-    private void drawMenuButton() {
-        if (menuButtonTexture == null) {
-            return;
+    private Rectangle getHelpButtonBounds() {
+        if (helpButtonTexture == null) {
+            return new Rectangle(0, 0, 0, 0);
         }
-        Rectangle b = getMenuButtonBounds();
+        float UI = CanvasRender.layoutScale();
+        float marginTop = MENU_BTN_TOP_MARGIN_REF * UI;
+        float maxW = width * MENU_BTN_MAX_W_FRAC;
+        float s = maxW / Math.max(1f, homeButtonTexture.getWidth());
+        float bw = menuButtonTexture.getWidth() * s * 0.7f;
+        float bh = menuButtonTexture.getHeight() * s * 0.7f;
+        Rectangle home = getHomeButtonBounds();
+        float x = home.x - marginTop - bw - 3;
+        float y = height - marginTop - bh;
+        return new Rectangle(x, y, bw, bh);
+    }
+
+    private void drawButton() {
+        Rectangle hb = getHomeButtonBounds();
+        Rectangle helpB = getHelpButtonBounds();
         viewport.screenToCanvas(Gdx.input.getX(), Gdx.input.getY(), pointer);
-        boolean hover = b.contains(pointer.x, pointer.y);
-        float tScale = hover ? 1f : MENU_IDLE_SCALE;
-        float dw = b.width * tScale;
-        float dh = b.height * tScale;
-        float dx = b.x + (b.width - dw) / 2f;
-        float dy = b.y + (b.height - dh) / 2f;
-        batch.setColor(hover ? MENU_HOVER_TINT : Color.WHITE);
-        batch.draw(menuButtonTexture, dx, dy, dw, dh);
+
+        boolean homeHover = hb.contains(pointer.x, pointer.y);
+        batch.setColor(homeHover ? MENU_HOVER_TINT : Color.WHITE);
+        batch.draw(homeButtonTexture, hb.x, hb.y, hb.width, hb.height);
+
+        boolean helpHover = helpB.contains(pointer.x, pointer.y);
+        batch.setColor(helpHover ? MENU_HOVER_TINT : Color.WHITE);
+        batch.draw(helpButtonTexture, helpB.x, helpB.y, helpB.width, helpB.height);
+
         batch.setColor(Color.WHITE);
     }
 
@@ -526,26 +570,20 @@ public class LevelSelectScene implements Screen {
         float arrowSize = ARROW_SIZE_REF * UI;
         float arrowPad = ARROW_PADDING_REF * UI;
         float cy = height * 0.5f;
-        float x = isRight
-                ? width - arrowPad - arrowSize
-                : arrowPad;
+        float x = isRight ? width - arrowPad - arrowSize : arrowPad;
+        float y = cy - arrowSize / 2f;
 
         Rectangle bounds = isRight ? rightArrowBounds : leftArrowBounds;
-        bounds.set(x, cy - arrowSize / 2, arrowSize, arrowSize);
+        bounds.set(x, y, arrowSize, arrowSize);
 
-        Color bgColor = active
-                ? new Color(0f, 0f, 0f, 0.5f)
-                : new Color(0f, 0f, 0f, 0.25f);
-        batch.setColor(bgColor);
-        batch.draw(pixel, x, cy - arrowSize / 2, arrowSize, arrowSize);
+        if (!active) return;
 
-        font.getData().setScale(0.9f * UI);
-        arrowLayout.setColor(active ? Color.WHITE : new Color(1f, 1f, 1f, 0.3f));
-        arrowLayout.setText(isRight ? ">" : "<");
-        arrowLayout.layout();
+        Texture tex = isRight ? rightArrow : leftArrow;
+        viewport.screenToCanvas(Gdx.input.getX(), Gdx.input.getY(), pointer);
+        boolean hovered = bounds.contains(pointer.x, pointer.y);
+        batch.setColor(hovered ? MENU_HOVER_TINT : Color.WHITE);
+        batch.draw(tex, x, y, arrowSize, arrowSize);
         batch.setColor(Color.WHITE);
-        batch.drawText(arrowLayout, x + arrowSize / 2, cy + 5f * UI);
-        font.getData().setScale(1.0f);
     }
 
     private void drawTitle() {

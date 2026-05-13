@@ -32,6 +32,7 @@ public class GameMode implements Screen, ScreenListener {
     private LevelController levelController;
     private LevelSelectScene levelSelectScene;
     private PauseMenuScene pauseMenuScene;
+    private HowToPlayScene howToPlayScene;
     private GameplayOptionsOverlay gameplayOptionsOverlay;
     private WinScene winScene;
 
@@ -58,6 +59,7 @@ public class GameMode implements Screen, ScreenListener {
     private boolean showingWin;
     /** Level select Menu/Esc: defer {@link ScreenListener#exitScreen} until after {@link #draw()} (avoid disposing mid-render). */
     private boolean pendingReturnToTitle;
+    private boolean showingHowToPlay;
 
 //    private float playerX;
 ////    private float playerY;
@@ -79,6 +81,7 @@ public class GameMode implements Screen, ScreenListener {
         pauseMenuScene = new PauseMenuScene(assets, batch, viewport);
         gameplayOptionsOverlay = new GameplayOptionsOverlay(assets, batch, viewport);
         winScene = new WinScene(assets, batch, viewport);
+        howToPlayScene = new HowToPlayScene(assets, batch, viewport);
 
         camera = new OrthographicCamera();
         resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -204,6 +207,10 @@ public class GameMode implements Screen, ScreenListener {
                 }
             } else if (levelSelectScene.consumeExitRequested() && listener != null) {
                 pendingReturnToTitle = true;
+            } else if (levelSelectScene.consumeHowToPlayRequested()) {
+                showingHowToPlay = true;
+                levelSelectScene.hide();
+                howToPlayScene.show(HowToPlayScene.Origin.LEVEL_SELECT);
             }
         } else {
             if (gameplayOptionsOverlay.isOpen()) {
@@ -255,6 +262,20 @@ public class GameMode implements Screen, ScreenListener {
                     showingLevelSelect = true;
                     levelSelectScene.show();
                 }
+                if (choice == PauseMenuScene.HOW_TO_PLAY)    {
+                    pauseMenuScene.hide();
+                    showingHowToPlay = true;
+                    howToPlayScene.show(HowToPlayScene.Origin.PAUSE_MENU);
+                }
+            }
+            PhysicsScene currentScene = levelController.getCurrentScene();
+            if (currentScene instanceof LevelBaseScene levelScene) {
+                if (levelScene.consumeWinTriggered()) {
+                    showingWin = true;
+                    winScene.setScore(levelScene.getCurrentScore());
+                    winScene.setStats(levelScene.getFlyCount(), levelScene.getPhotosUsed());
+                    winScene.show();
+                }
             }
             if (showingWin) {
                 int choice = winScene.consumeChoice();
@@ -263,15 +284,20 @@ public class GameMode implements Screen, ScreenListener {
                     winScene.hide();
                     levelController.nextLevel();
                     levelController.setScreenListener(this);
-                } else if (choice == WinScene.QUIT) {
+                }
+                else if (choice == WinScene.QUIT) {
                     showingWin = false;
                     winScene.hide();
                     showingLevelSelect = true;
                     stopLevelMusic();
                     levelSelectScene.show();
                 }
+                if (choice == WinScene.RESTART) {
+                    showingWin = false;
+                    winScene.hide();
+                    levelController.restartCurrentLevel();
+                }
             }
-            PhysicsScene currentScene = levelController.getCurrentScene();
             if (!blockPauseForOptions && currentScene instanceof LevelBaseScene levelScene && levelScene.consumeHazardRestart()) {
                 levelController.restartCurrentLevel();
                 return;
@@ -300,6 +326,7 @@ public class GameMode implements Screen, ScreenListener {
             if (showingWin) {
                 winScene.render(Gdx.graphics.getDeltaTime());
             }
+
         }
     }
 
@@ -354,7 +381,31 @@ public class GameMode implements Screen, ScreenListener {
     public void render(float delta) {
         if (active) {
             update(delta);
-            draw();
+
+            if (showingHowToPlay) {
+                if (showingLevelSelect) {
+                    levelSelectScene.render(0f);
+                } else {
+                    draw();
+                }
+                howToPlayScene.render(delta);
+                if (howToPlayScene.isExiting()) {
+                    howToPlayScene.consumeExit();
+                    showingHowToPlay = false;
+                    if (howToPlayScene.getOrigin() == HowToPlayScene.Origin.PAUSE_MENU) {
+                        paused = true;
+                        pauseMenuScene.show();
+
+                    }
+                    else if (howToPlayScene.getOrigin() == HowToPlayScene.Origin.LEVEL_SELECT)  {
+                        showingLevelSelect = true;
+                        levelSelectScene.show();
+                    }
+
+                }
+            } else {
+                draw();
+            }
         }
         if (pendingReturnToTitle && listener != null) {
             pendingReturnToTitle = false;

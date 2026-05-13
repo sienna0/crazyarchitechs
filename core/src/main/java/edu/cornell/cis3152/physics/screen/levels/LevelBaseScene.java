@@ -167,20 +167,8 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     private int goalContactCount = 0;
     private boolean portalTriggered = false;
     private boolean spawnSequenceActive = false;
-    private Texture winOverlayTexture;
-    private Texture winNextButtonTexture;
-    private Texture winMenuButtonTexture;
-    private boolean awaitingWinOverlay = false;
-    private float winOverlayDelayTimer = 0f;
     private boolean winOverlayVisible = false;
-    private boolean winOverlayClickPrevious = false;
 
-    private static final float WIN_OVERLAY_DELAY = 0.5f;
-    private static final float WIN_BUTTON_WIDTH_RATIO = 0.34f;
-    private static final float WIN_BUTTON_SCALE = 0.75f;
-    private static final float WIN_BUTTON_BOTTOM_MARGIN = 85f;
-    private static final float WIN_BUTTON_STACK_GAP = 18f;
-    private static final float WIN_BUTTON_HOVER_TINT = 0.92f;
 
     /**
      * Lazily creates sound handles, textures, {@link WorldState}, contact tracking,
@@ -227,15 +215,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         if (inventoryTexture == null) {
             inventoryTexture = requireTexture("shared-inventory", "shared/inventory.png");
         }
-        if (winOverlayTexture == null) {
-            winOverlayTexture = requireTexture("platform-win", "platform/win.png");
-        }
-        if (winNextButtonTexture == null) {
-            winNextButtonTexture = requireTexture("shared-next", "shared/next.png");
-        }
-        if (winMenuButtonTexture == null) {
-            winMenuButtonTexture = requireTexture("shared-pause-menu", "shared/pause_menu.png");
-        }
+
         if (levelPopulation == null) {
             levelPopulation = new LevelPopulation(constants, this::requireTexture, this::addSprite);
         }
@@ -489,10 +469,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         hazardTimer = 0f;
         hazardTriggered = false;
         spawnSequenceActive = false;
-        awaitingWinOverlay = false;
-        winOverlayDelayTimer = 0f;
         winOverlayVisible = false;
-        winOverlayClickPrevious = false;
 
         populateLevel();
         photosUsed = 0;
@@ -595,9 +572,6 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     public void draw(float dt) {
         super.draw(dt);
         renderer.draw(batch, viewport, camera, uiCamera, avatar, dt);
-        if (winOverlayVisible) {
-            drawWinOverlay();
-        }
     }
 
     /**
@@ -616,6 +590,17 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         super.postUpdate(dt);
     }
 
+    /** Returns true once the portal animation is done and the win screen should show. */
+    public boolean consumeWinTriggered() {
+        if (winOverlayVisible) {
+            winOverlayVisible = false;
+            currentScore = markCurrentBeaten();
+            return true;
+        }
+        return false;
+    }
+
+    public int getCurrentScore() { return currentScore; }
     @Override
     public boolean preUpdate(float dt) {
         if (!super.preUpdate(dt)) {
@@ -700,30 +685,17 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             avatar.stopMotion();
             if (avatar.hasFinishedPortalAnimation()) {
                 portalTriggered = false;
-                awaitingWinOverlay = true;
-                winOverlayDelayTimer = 0f;
-            }
-            return;
-        }
-        if (awaitingWinOverlay) {
-            updateGooAnimation(dt);
-            avatar.setMovement(0f);
-            avatar.setJumping(false);
-            avatar.stopMotion();
-            winOverlayDelayTimer += dt;
-            if (winOverlayDelayTimer >= WIN_OVERLAY_DELAY) {
-                awaitingWinOverlay = false;
                 winOverlayVisible = true;
+
             }
             return;
         }
+
         if (winOverlayVisible) {
             updateGooAnimation(dt);
             avatar.setMovement(0f);
             avatar.setJumping(false);
             avatar.stopMotion();
-            updateWinOverlayInput();
-            currentScore = markCurrentBeaten();
             return;
         }
         if (!isComplete() && goalContactCount > 0 && isAvatarInGoalCenter()) {
@@ -1098,94 +1070,6 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         avatar.stopMotion();
         avatar.startPortalAnimation();
         SoundEffectManager.getInstance().play("portal-enter", portalEnterSound, GameAudio.effectiveSfxVolume(volume * 0.5f));
-    }
-
-    private void drawWinOverlay() {
-        if (winOverlayTexture == null || viewport == null || uiCamera == null) {
-            return;
-        }
-        Rectangle nextBounds = getWinNextButtonBounds();
-
-        viewport.apply();
-        batch.begin(uiCamera);
-        batch.setColor(Color.WHITE);
-        batch.draw(winOverlayTexture, 0, 0, width, height);
-
-        // Draw lilies
-        float lilySize    = width * 0.09f;
-        float lilyGap     = lilySize * 0.25f;
-        float totalWidth  = 3 * lilySize + 2 * lilyGap;
-        float lilyStartX  = (width - totalWidth) * 0.5f;
-        float lilyY = nextBounds.y + nextBounds.height + 5f;
-
-
-        for (int i = 0; i < 3; i++) {
-            float lx = lilyStartX + i * (lilySize + lilyGap);
-            Texture t = (i < currentScore) ? lilyFlowerTexture : lilyFlowerGrayTexture;
-            if (t != null) {
-                batch.setColor(Color.WHITE);
-                batch.draw(t, lx, lilyY, lilySize, lilySize);
-            }
-        }
-
-        drawWinOverlayButton(batch, winNextButtonTexture, getWinNextButtonBounds());
-        drawWinOverlayButton(batch, winMenuButtonTexture, getWinMenuButtonBounds());
-
-        batch.end();
-        viewport.reset();
-    }
-
-    private void updateWinOverlayInput() {
-        boolean clickPressed = Gdx.input.isButtonPressed(com.badlogic.gdx.Input.Buttons.LEFT);
-        boolean justClicked = clickPressed && !winOverlayClickPrevious;
-        if (justClicked) {
-            if (isPointerInside(getWinNextButtonBounds())) {
-                winOverlayVisible = false;
-                setComplete(true);
-                requestExit(EXIT_WIN);
-            } else if (isPointerInside(getWinMenuButtonBounds())) {
-                winOverlayVisible = false;
-                requestExit(EXIT_QUIT);
-            }
-        }
-        winOverlayClickPrevious = clickPressed;
-    }
-
-    private void drawWinOverlayButton(SpriteBatch batch, Texture texture, Rectangle bounds) {
-        if (texture == null || bounds == null) {
-            return;
-        }
-        float tint = isPointerInside(bounds) ? WIN_BUTTON_HOVER_TINT : 1f;
-        batch.setColor(tint, tint, tint, 1f);
-        batch.draw(texture, bounds.x, bounds.y, bounds.width, bounds.height);
-        batch.setColor(Color.WHITE);
-    }
-
-    private Rectangle getWinNextButtonBounds() {
-        return getWinButtonBounds(winNextButtonTexture, 1);
-    }
-
-    private Rectangle getWinMenuButtonBounds() {
-        return getWinButtonBounds(winMenuButtonTexture, 0);
-    }
-
-    private Rectangle getWinButtonBounds(Texture texture, int stackIndexFromBottom) {
-        float buttonWidth = Math.min(width * WIN_BUTTON_WIDTH_RATIO, 420f) * WIN_BUTTON_SCALE;
-        float buttonHeight = texture == null || texture.getWidth() <= 0
-                ? buttonWidth * 0.25f
-                : buttonWidth * ((float) texture.getHeight() / texture.getWidth());
-        float x = (width - buttonWidth) * 0.5f;
-        float y = WIN_BUTTON_BOTTOM_MARGIN + stackIndexFromBottom * (buttonHeight + WIN_BUTTON_STACK_GAP) - 30f;
-        return new Rectangle(x, y, buttonWidth, buttonHeight);
-    }
-
-    private boolean isPointerInside(Rectangle bounds) {
-        if (viewport == null || worldState == null) {
-            return false;
-        }
-        Vector2 pointer = worldState.getPauseMouseCache();
-        viewport.screenToCanvas(Gdx.input.getX(), Gdx.input.getY(), pointer);
-        return bounds.contains(pointer);
     }
 
     /**

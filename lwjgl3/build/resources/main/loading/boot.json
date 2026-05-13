@@ -15,6 +15,11 @@
             "minfilter": "nearest",
             "magfilter": "nearest"
         },
+        "menuQuit": {
+          "file" : "loading/menu_quit.png",
+          "minfilter" : "nearest",
+          "magfilter" : "nearest"
+        },
         "optionsMusic": {
             "file": "loading/options_music.png",
             "minfilter": "nearest",
