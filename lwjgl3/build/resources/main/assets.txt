@@ -99,6 +99,8 @@ shared/backgroundmeasure.png
 shared/blank-lily.png
 shared/borderwooden.png
 shared/borderwoodenfull.png
+shared/creditsnametext.png
+shared/creditstextmain.png
 shared/cursor.png
 shared/earthtile.png
 shared/exitbuttonoptions.png

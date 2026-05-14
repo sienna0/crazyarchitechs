@@ -228,7 +228,7 @@ public class PauseMenuScene implements Screen {
         viewport.apply();
         batch.begin(camera);
 
-        batch.setColor(new Color(0.2f, 0.45f, 0.2f, 0.6f));
+        batch.setColor(new Color(0f, 0f, 0f, 0.55f));
         batch.draw(pixel, 0, 0, width, height);
 
 

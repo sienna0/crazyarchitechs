@@ -261,7 +261,12 @@ public class HowToPlayScene implements Screen {
         viewport.apply();
         batch.begin(camera);
 
-        batch.setColor(new Color(0.2f, 0.45f, 0.2f, 0.6f));
+        if (origin == Origin.PAUSE_MENU) {
+            batch.setColor(new Color(0f, 0f, 0f, 0.55f));
+        } else {
+            batch.setColor(new Color(0.2f, 0.46f, 0.46f, 0.1f));
+
+        }
         batch.draw(pixel, 0, 0, width, height);
 
         batch.setColor(Color.WHITE);
