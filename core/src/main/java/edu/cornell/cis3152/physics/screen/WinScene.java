@@ -161,7 +161,7 @@ public class WinScene implements Screen {
         viewport.apply();
         batch.begin(camera);
 
-        batch.setColor(new Color(0f, 0f, 0f, 0.55f));
+        batch.setColor(new Color(0f, 0f, 0f, 0.1f));
         batch.draw(pixel, 0, 0, width, height);
         batch.setColor(Color.WHITE);
 

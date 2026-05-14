@@ -765,8 +765,8 @@ class LevelPopulation {
 
             TextureRegion region = new TextureRegion(
                     texture,
-                    col * TILE_PX, row * TILE_PX,
-                    TILE_PX, TILE_PX
+                    col * TILE_PX + 1, row * TILE_PX + 1,
+                    TILE_PX -2, TILE_PX -2
             );
             regions.add(region);
             positions.add(new float[]{ tx * units, ty * units });

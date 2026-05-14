@@ -162,6 +162,41 @@
             "minfilter": "nearest",
             "magfilter": "nearest"
         },
+      "shared-options-music-icon": {
+        "file": "shared/musiciconoptions.png",
+        "minfilter": "nearest",
+        "magfilter": "nearest"
+      },
+      "shared-options-sound-icon": {
+        "file": "shared/soundiconoptions.png",
+        "minfilter": "nearest",
+        "magfilter": "nearest"
+      },
+      "shared-options-sound-text": {
+        "file": "shared/soundtextoptions.png",
+        "minfilter": "nearest",
+        "magfilter": "nearest"
+      },
+      "shared-options-music-text": {
+        "file": "shared/musictextoptions.png",
+        "minfilter": "nearest",
+        "magfilter": "nearest"
+      },
+      "shared-options-text": {
+        "file": "shared/optionstext.png",
+        "minfilter": "nearest",
+        "magfilter": "nearest"
+      },
+      "shared-credits-text": {
+        "file": "shared/creditstextmain.png",
+        "minfilter": "nearest",
+        "magfilter": "nearest"
+      },
+      "shared-credits-name": {
+        "file": "shared/creditsnametext.png",
+        "minfilter": "nearest",
+        "magfilter": "nearest"
+      },
 
         "platform-picture-cloud-with-honey": "platform/picture_cloud_with_honey.png",
         "platform-picture-cloud-with-ice": "platform/picture_cloud_with_ice.png",

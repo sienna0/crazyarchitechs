@@ -154,8 +154,11 @@ shared/lilyflower-levelselect.png
 shared/lilyflower.png
 shared/lilyflower_gray.png
 shared/lotus.png
+shared/musiciconoptions.png
+shared/musictextoptions.png
 shared/next.png
 shared/nextbuttonwin.png
+shared/optionstext.png
 shared/parallax-demon-woods-bg.png
 shared/parallax-demon-woods-close-trees.png
 shared/parallax-demon-woods-far-trees.png
@@ -173,6 +176,8 @@ shared/pulley_top1.png
 shared/restartbuttonwin.png
 shared/ribbittext.png
 shared/rightarrow.png
+shared/soundiconoptions.png
+shared/soundtextoptions.png
 shared/treetile.png
 shared/water.png
 sliderbar.png

@@ -297,6 +297,8 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             texture = new Texture(Gdx.files.internal(fallbackPath));
         }
         texture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        texture.setWrap(Texture.TextureWrap.ClampToEdge, Texture.TextureWrap.ClampToEdge);
+
         return texture;
     }
 
@@ -684,7 +686,6 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             avatar.setJumping(false);
             avatar.stopMotion();
             if (avatar.hasFinishedPortalAnimation()) {
-                portalTriggered = false;
                 winOverlayVisible = true;
 
             }
@@ -1060,10 +1061,11 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
         float centerHalfSpan = goalDoor.getSize() * GOAL_CENTER_TILE_RATIO * 0.5f;
         float dx = Math.abs(avatar.getPosition().x - goalDoor.getObstacle().getX());
         float dy = Math.abs(avatar.getPosition().y - goalDoor.getObstacle().getY());
-        return dx <= centerHalfSpan && dy <= centerHalfSpan;
+        return dx <= centerHalfSpan && dy <= goalDoor.getSize();
     }
 
     private void triggerPortalEntry() {
+        if (portalTriggered) return;
         portalTriggered = true;
         avatar.setMovement(0f);
         avatar.setJumping(false);

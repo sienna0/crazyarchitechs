@@ -17,6 +17,7 @@ public final class GameAudio {
     private static float preMuteMusicVolume = 1.0f;
     private static float preMuteSfxVolume = 1.0f;
     private static final Array<Music> registeredMusic = new Array<>();
+    private static final Array<Music> pausedByMute = new Array<>();
 
     private GameAudio() {
     }
@@ -48,12 +49,35 @@ public final class GameAudio {
     public static void setMusicVolume(float v) {
         musicVolume = Math.max(0f, Math.min(1f, v));
         // If dragging above 0 while muted, unmute automatically.
-        if (musicVolume > 0f && !musicOn) {
-            musicOn = true;
+        if (musicVolume == 0f) {
+            musicOn = false;
+            pausedByMute.clear();
+            for (Music m : registeredMusic) {
+                if (m != null && m.isPlaying()) {
+                    pausedByMute.add(m);  // remember only what was actually playing
+                    m.setVolume(0f);
+                    m.pause();
+                }
+            }
+
+        } else {
+                if (!musicOn) {
+                    musicOn = true;
+                    for (Music m : pausedByMute) {  // only resume what was playing before
+                        if (m != null) {
+                            m.setVolume(musicVolume);
+                            m.play();
+                        }
+                    }
+                    pausedByMute.clear();
+                } else {
+                    for (Music m : registeredMusic) {
+                        if (m != null) m.setVolume(musicVolume);
+                    }
+                }
+
         }
-        for (Music m : registeredMusic) {
-            if (m != null) m.setVolume(musicVolume);
-        }
+
     }
 
     public static float getSfxVolume() { return sfxVolume; }

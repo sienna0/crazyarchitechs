@@ -26,31 +26,37 @@ public class GameplayOptionsOverlay {
     private static final float MENU_MAIN_IDLE_SCALE = 0.92f;
     private static final Color MENU_MAIN_HOVER_TINT = new Color(0.52f, 0.52f, 0.55f, 1f);
     private static final Color OPTIONS_SCRIM = new Color(0f, 0f, 0f, 0.55f);
-    private static final Color HELP_PANEL_FILL = new Color(0.07f, 0.09f, 0.11f, 0.88f);
-    private static final Color HELP_PANEL_BORDER = new Color(0.42f, 0.45f, 0.50f, 0.72f);
     private static final int OPT_MUSIC = 0;
     private static final int OPT_SOUND = 1;
-    private static final int OPT_HELP = 2;
+
+    private static final float PANEL_W_FRAC = 5 / 6f;
+    private static final float PANEL_H_FRAC = 5 / 6f;
+    private static final float EXIT_W_FRAC = 0.09f;
 
     private final SpriteBatch batch;
     private final CanvasRender viewport;
     private final OrthographicCamera camera;
     private final Texture pixel;
-    private final Texture musicTex;
-    private final Texture soundOn;
-    private final Texture soundOff;
-    private final Texture helpTex;
+
     private final Texture sliderBarTex;
     private final Texture sliderToggleTex;
+
+    private final Texture musicIcon;
+    private final Texture soundIcon;
+    private final Texture musicText;
+    private final Texture soundText;
+    private final Texture exitButton;
+
+    private final Texture optionsTitle;
+    private final Texture borderWooden;
+
     private final BitmapFont font;
     private final TextLayout textLayout = new TextLayout();
-    private final GlyphLayout helpMeasure = new GlyphLayout();
     private final Vector2 pointer = new Vector2();
 
     private int width;
     private int height;
     private boolean open;
-    private boolean helpOpen;
     private boolean draggingMusicSlider;
     private boolean draggingSfxSlider;
 
@@ -58,16 +64,23 @@ public class GameplayOptionsOverlay {
         this.batch = batch;
         this.viewport = viewport;
         this.camera = new OrthographicCamera();
-        this.musicTex = assets.getEntry("shared-options-music", Texture.class);
-        this.soundOn = assets.getEntry("shared-options-sound-on", Texture.class);
-        this.soundOff = assets.getEntry("shared-options-sound-off", Texture.class);
-        this.helpTex = assets.getEntry("shared-options-help", Texture.class);
         this.font = assets.getEntry("shared-retro", BitmapFont.class);
         this.sliderBarTex = new Texture(Gdx.files.internal("sliderbar.png"));
         this.sliderBarTex.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
         this.sliderToggleTex = new Texture(Gdx.files.internal("slidertoggle.png"));
         this.sliderToggleTex.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        this.musicIcon = assets.getEntry("shared-options-music-icon", Texture.class);
+        this.soundIcon = assets.getEntry("shared-options-sound-icon", Texture.class);
+        this.musicText = assets.getEntry("shared-options-music-text", Texture.class);
+        this.soundText = assets.getEntry("shared-options-sound-text", Texture.class);
+        this.exitButton = assets.getEntry("shared-exit-button-options", Texture.class);
+        this.optionsTitle = assets.getEntry("shared-options-text", Texture.class);
+        this.borderWooden = assets.getEntry("shared-border-wooden", Texture.class);
+        this.exitButton.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        this.borderWooden.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+
         Pixmap pm = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
+
         pm.setColor(Color.WHITE);
         pm.fill();
         pixel = new Texture(pm);
@@ -85,12 +98,10 @@ public class GameplayOptionsOverlay {
 
     public void show() {
         open = true;
-        helpOpen = false;
     }
 
     public void hide() {
         open = false;
-        helpOpen = false;
         draggingMusicSlider = false;
         draggingSfxSlider = false;
     }
@@ -102,15 +113,7 @@ public class GameplayOptionsOverlay {
     public void update() {
         if (!open) return;
 
-        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
-            if (helpOpen) helpOpen = false;
-            else hide();
-            return;
-        }
-
         viewport.screenToCanvas(Gdx.input.getX(), Gdx.input.getY(), pointer);
-
-        if (helpOpen) return;
 
         boolean btnDown = Gdx.input.isTouched() && Gdx.input.isButtonPressed(Input.Buttons.LEFT);
         boolean btnJust = Gdx.input.isButtonJustPressed(Input.Buttons.LEFT);
@@ -121,8 +124,8 @@ public class GameplayOptionsOverlay {
             return;
         }
 
-        Rectangle musicBar = getMusicSliderBounds();
-        Rectangle sfxBar   = getSfxSliderBounds();
+        Rectangle musicBar = getSliderBounds(OPT_MUSIC);
+        Rectangle sfxBar = getSliderBounds(OPT_SOUND);
 
         // Continue an active drag or start one if the pointer is over a slider bar.
         // No btnJust requirement for starting — the hit area is small so we allow
@@ -137,18 +140,11 @@ public class GameplayOptionsOverlay {
             GameAudio.setSfxVolume(MathUtils.clamp((pointer.x - sfxBar.x) / sfxBar.width, 0f, 1f));
             return;
         }
-
-        // Icon toggle clicks — only on the first frame of the press
-        if (btnJust) {
-            Rectangle[] r = computeOptionIconBounds();
-            if (r[OPT_MUSIC].contains(pointer.x, pointer.y)) {
-                GameAudio.toggleMusic();
-            } else if (r[OPT_SOUND].contains(pointer.x, pointer.y)) {
-                GameAudio.toggleSfx();
-            } else if (r[OPT_HELP].contains(pointer.x, pointer.y)) {
-                helpOpen = true;
-            }
+        if (btnJust && getExitBounds().contains(pointer.x, pointer.y)) {
+            hide();
         }
+        // Icon toggle clicks — only on the first frame of the press
+
     }
 
     public void draw() {
@@ -161,30 +157,7 @@ public class GameplayOptionsOverlay {
         batch.setColor(OPTIONS_SCRIM);
         batch.draw(pixel, 0, 0, width, height);
         batch.setColor(Color.WHITE);
-        if (helpOpen) {
-            drawHelpPanel(UI);
-        } else {
-            Rectangle[] r = computeOptionIconBounds();
-            viewport.screenToCanvas(Gdx.input.getX(), Gdx.input.getY(), pointer);
-            Color musicTint = GameAudio.isMusicOn() ? Color.WHITE : new Color(0.5f, 0.5f, 0.52f, 1f);
-            Texture soundTex = GameAudio.isSfxOn() ? soundOn : soundOff;
-            drawOptionPuck(musicTex, r[OPT_MUSIC], r[OPT_MUSIC].contains(pointer.x, pointer.y), musicTint);
-            drawOptionPuck(soundTex, r[OPT_SOUND], r[OPT_SOUND].contains(pointer.x, pointer.y), Color.WHITE);
-            drawOptionPuck(helpTex, r[OPT_HELP], r[OPT_HELP].contains(pointer.x, pointer.y), Color.WHITE);
-
-            Rectangle musicBar = getMusicSliderBounds();
-            Rectangle sfxBar   = getSfxSliderBounds();
-            drawSlider(musicBar, GameAudio.getMusicVolume());
-            drawSlider(sfxBar,   GameAudio.getSfxVolume());
-
-            textLayout.setFont(font);
-            textLayout.setAlignment(TextAlign.middleCenter);
-            textLayout.setColor(Color.WHITE);
-            textLayout.setText("Press Esc to close");
-            textLayout.layout();
-            float hintY = Math.min(musicBar.y, sfxBar.y) - 22f * UI;
-            batch.drawText(textLayout, width / 2f, hintY);
-        }
+        drawOptionsPanel(UI);
         batch.end();
         viewport.reset();
     }
@@ -195,42 +168,97 @@ public class GameplayOptionsOverlay {
         sliderToggleTex.dispose();
     }
 
-    private Rectangle[] computeOptionIconBounds() {
-        Texture ref = musicTex;
-        int tw = ref != null ? ref.getWidth() : 1;
-        int th = ref != null ? ref.getHeight() : 1;
-        float sz = Math.min(width, height) * 0.16f;
-        float s = sz / Math.max(1, Math.max(tw, th));
-        float wIcon = tw * s;
-        float hIcon = th * s;
-        float gap = Math.min(width, height) * 0.065f;
-        float totalW = 3f * wIcon + 2f * gap;
-        float startX = (width - totalW) / 2f;
-        float rowMidY = height * 0.55f;
-        float y = rowMidY - hIcon / 2f;
-        return new Rectangle[] {
-                new Rectangle(startX, y, wIcon, hIcon),
-                new Rectangle(startX + wIcon + gap, y, wIcon, hIcon),
-                new Rectangle(startX + 2f * (wIcon + gap), y, wIcon, hIcon),
-        };
+    private Rectangle getPanelBounds() {
+        float pw = width * PANEL_W_FRAC;
+        float ph = height * PANEL_H_FRAC;
+        return new Rectangle((width - pw) / 2f, (height - ph) / 2f, pw, ph);
     }
 
-    private Rectangle getMusicSliderBounds() {
-        Rectangle icon = computeOptionIconBounds()[OPT_MUSIC];
-        return sliderBoundsBelow(icon);
+    private Rectangle getExitBounds() {
+        Rectangle panel = getPanelBounds();
+        float ew = panel.width * EXIT_W_FRAC;
+        float eh = (exitButton != null) ? ew * exitButton.getHeight() / Math.max(1, exitButton.getWidth()) : ew;
+        float ex = panel.x + panel.width - ew * 1.3f;
+        float ey = panel.y + panel.height - eh * 0.9f;
+        return new Rectangle(ex, ey, ew, eh);
     }
 
-    private Rectangle getSfxSliderBounds() {
-        Rectangle icon = computeOptionIconBounds()[OPT_SOUND];
-        return sliderBoundsBelow(icon);
+    private float[] getIconBounds(float UI) {
+        Rectangle panel = getPanelBounds();
+        float     iconSize = panel.height * 0.14f;
+        float     rowHeight = panel.height * 0.22f;
+        float     contentH = 2 * rowHeight;
+        float     startY = panel.y + (panel.height - contentH) / 2f + rowHeight * 0.8f;
+        float     iconX = panel.x + panel.width * 0.15f;
+        float     soundY = startY + (rowHeight - iconSize) / 2f;
+        float     musicY = startY - rowHeight + (rowHeight - iconSize) / 2f;
+        return new float[]{ iconX, soundY, iconSize, iconSize, iconX, musicY, iconSize, iconSize };
     }
 
-    private Rectangle sliderBoundsBelow(Rectangle icon) {
+    private Rectangle getSliderBounds(int row) {
         float UI = CanvasRender.layoutScale();
-        float barH = 28f * UI;  // tall enough to click reliably; visual is drawn at half height
-        float gapY = 8f * UI;
-        return new Rectangle(icon.x, icon.y - gapY - barH, icon.width, barH);
+        Rectangle panel = getPanelBounds();
+        float[] icons = getIconBounds(UI);
+        float iconSize = icons[2];
+        float iconX = icons[0];
+        float iconY = (row == OPT_SOUND) ? icons[1] : icons[5];
+        float sliderX = iconX + iconSize + panel.width * 0.4f;
+        float sliderW = iconSize * 2.5f;
+        float barH = 28f * UI;
+        float sliderY = iconY + (iconSize - barH) / 2f;
+        return new Rectangle(sliderX, sliderY, sliderW, barH);
     }
+
+    private void drawOptionsPanel(float UI) {
+        Rectangle panel = getPanelBounds();
+        batch.setColor(Color.WHITE);
+        if (borderWooden != null) {
+            batch.draw(borderWooden, panel.x, panel.y, panel.width, panel.height);
+        }
+        if (optionsTitle != null) {
+            float maxW = panel.width * 0.45f;
+            float scale = maxW / optionsTitle.getWidth() * 0.8f;
+            float tw = optionsTitle.getWidth() * scale;
+            float th = optionsTitle.getHeight() * scale;
+            batch.draw(optionsTitle, panel.x + (panel.width - tw) / 2f, panel.y + panel.height * 0.72f, tw, th);
+        }
+        viewport.screenToCanvas(Gdx.input.getX(), Gdx.input.getY(), pointer);
+        float[] icons = getIconBounds(UI);
+        float iconSize = icons[2];
+
+        Rectangle soundIconRect = new Rectangle(icons[0], icons[1], iconSize, iconSize);
+        drawOptionPuck(soundIcon, soundIconRect, soundIconRect.contains(pointer.x, pointer.y), Color.WHITE);
+        if (soundText != null) {
+            float th = iconSize * 0.45f;
+            float tw = soundText.getWidth() * (th / soundText.getHeight());
+            batch.setColor(Color.WHITE);
+            batch.draw(soundText, soundIconRect.x + iconSize + 8f * UI, soundIconRect.y + (iconSize - th) / 2f, tw, th);
+        }
+        drawSlider(getSliderBounds(OPT_SOUND), GameAudio.getSfxVolume());
+
+        Rectangle musicIconRect = new Rectangle(icons[4], icons[5], iconSize, iconSize);
+        drawOptionPuck(musicIcon, musicIconRect, musicIconRect.contains(pointer.x, pointer.y), Color.WHITE);
+        if (musicText != null) {
+            float th = iconSize * 0.45f;
+            float tw = musicText.getWidth() * (th / musicText.getHeight());
+            batch.setColor(Color.WHITE);
+            batch.draw(musicText, musicIconRect.x + iconSize + 8f * UI, musicIconRect.y + (iconSize - th) / 2f, tw, th);
+        }
+        drawSlider(getSliderBounds(OPT_MUSIC), GameAudio.getMusicVolume());
+
+        drawExit();
+
+    }
+
+    private void drawExit() {
+        if (exitButton == null) return;
+        Rectangle eb = getExitBounds();
+        boolean hov = eb.contains(pointer.x, pointer.y);
+        batch.setColor(hov ? new Color(0.75f, 0.75f, 0.75f, 1f) : Color.WHITE);
+        batch.draw(exitButton, eb.x, eb.y, eb.width, eb.height);
+        batch.setColor(Color.WHITE);
+    }
+
 
     private void drawSlider(Rectangle bar, float value) {
         float UI = CanvasRender.layoutScale();
@@ -265,57 +293,5 @@ public class GameplayOptionsOverlay {
         batch.setColor(c);
         batch.draw(tex, dx, dy, dw, dh);
         batch.setColor(Color.WHITE);
-    }
-
-    private void drawHelpPanel(float UI) {
-        float scaleSave = font.getData().scaleX;
-        font.getData().setScale(0.5f * UI);
-        textLayout.setFont(font);
-        textLayout.setAlignment(TextAlign.middleCenter);
-
-        float lineStep = 40f * UI;
-        float padX = 28f * UI;
-        float padY = 22f * UI;
-        float border = Math.max(1.5f, 2f * UI);
-        String[] lines = PauseMenuScene.HOW_TO_PLAY_LINES;
-        int rowCount = lines.length + 1;
-        float totalH = rowCount * lineStep;
-
-        helpMeasure.setText(font, PauseMenuScene.HOW_TO_PLAY_TITLE);
-        float maxW = helpMeasure.width;
-        for (String line : lines) {
-            helpMeasure.setText(font, line);
-            maxW = Math.max(maxW, helpMeasure.width);
-        }
-
-        float panelW = maxW + 2f * padX;
-        float maxPanelW = width - 24f * UI;
-        if (panelW > maxPanelW) panelW = maxPanelW;
-        float panelH = totalH + 2f * padY;
-        float panelX = (width - panelW) / 2f;
-        float centerY = height * 0.5f;
-        float panelY = centerY - panelH / 2f;
-
-        batch.setColor(HELP_PANEL_BORDER);
-        batch.draw(pixel, panelX - border, panelY - border, panelW + 2f * border, panelH + 2f * border);
-        batch.setColor(HELP_PANEL_FILL);
-        batch.draw(pixel, panelX, panelY, panelW, panelH);
-        batch.setColor(Color.WHITE);
-
-        float yTitle = centerY + (rowCount - 1) * lineStep * 0.5f;
-        textLayout.setColor(Color.WHITE);
-        textLayout.setText(PauseMenuScene.HOW_TO_PLAY_TITLE);
-        textLayout.layout();
-        batch.drawText(textLayout, width / 2f, yTitle);
-        float cy = yTitle - lineStep;
-        for (String line : lines) {
-            textLayout.setColor(new Color(0.84f, 0.84f, 0.80f, 1f));
-            textLayout.setText(line);
-            textLayout.layout();
-            batch.drawText(textLayout, width / 2f, cy);
-            cy -= lineStep;
-        }
-
-        font.getData().setScale(scaleSave);
     }
 }

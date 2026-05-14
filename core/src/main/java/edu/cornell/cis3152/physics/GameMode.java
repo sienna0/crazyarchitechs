@@ -172,12 +172,13 @@ public class GameMode implements Screen, ScreenListener {
             if (crossfadeTimer >= 0) {
                 crossfadeTimer += delta;
                 float t = Math.min(crossfadeTimer / CROSSFADE_DURATION, 1f);
-                outgoing.setVolume(0.25f * (1f - t));
-                incoming.setVolume(0.25f * t);
+                float vol = GameAudio.getMusicVolume();
+                outgoing.setVolume(vol * (1f - t));
+                incoming.setVolume(vol * t);
 
                 if (t >= 1f) {
                     outgoing.stop();
-                    outgoing.setVolume(0.25f);
+                    outgoing.setVolume(vol);
                     usingA = !usingA;
                     loopPlayTime = 0f;
                     crossfadeTimer = -1f;
@@ -313,15 +314,17 @@ public class GameMode implements Screen, ScreenListener {
         if (showingLevelSelect) {
             levelSelectScene.render(Gdx.graphics.getDeltaTime());
         } else {
-            PhysicsScene currentScene = levelController.getCurrentScene();
-            if (currentScene != null) {
-                currentScene.render(Gdx.graphics.getDeltaTime());
-            }
-            if (gameplayOptionsOverlay.isOpen()) {
-                gameplayOptionsOverlay.draw();
-            }
-            if (paused) {
-                pauseMenuScene.render(Gdx.graphics.getDeltaTime());
+            if (!showingWin) {
+                PhysicsScene currentScene = levelController.getCurrentScene();
+                if (currentScene != null) {
+                    currentScene.render(Gdx.graphics.getDeltaTime());
+                }
+                if (gameplayOptionsOverlay.isOpen()) {
+                    gameplayOptionsOverlay.draw();
+                }
+                if (paused) {
+                    pauseMenuScene.render(Gdx.graphics.getDeltaTime());
+                }
             }
             if (showingWin) {
                 winScene.render(Gdx.graphics.getDeltaTime());
@@ -341,16 +344,17 @@ public class GameMode implements Screen, ScreenListener {
 
             levelLoopA.setLooping(false);
             levelLoopB.setLooping(false);  // was missing
-            levelLoopA.setVolume(0.25f);
-            levelLoopB.setVolume(0.25f);   // was missing
-            levelIntro.setVolume(0.25f);
+            GameAudio.registerMusic(levelIntro);
+            GameAudio.registerMusic(levelLoopA);
+            GameAudio.registerMusic(levelLoopB);
         }
 
         levelIntro.stop();
         levelLoopA.stop();
         levelLoopB.stop();   // was missing
-        levelLoopA.setVolume(0.25f);  // reset in case it was mid-crossfade
-        levelLoopB.setVolume(0.25f);  // reset in case it was mid-crossfade
+        levelIntro.setVolume(GameAudio.getMusicVolume());
+        levelLoopA.setVolume(GameAudio.getMusicVolume());
+        levelLoopB.setVolume(GameAudio.getMusicVolume());
 
         levelIntro.setPosition(0f);
         levelIntro.play();
@@ -363,8 +367,8 @@ public class GameMode implements Screen, ScreenListener {
 
     private void stopLevelMusic() {
         if (levelIntro != null) levelIntro.stop();
-        if (levelLoopA != null) { levelLoopA.stop(); levelLoopA.setVolume(0.25f); }
-        if (levelLoopB != null) { levelLoopB.stop(); levelLoopB.setVolume(0.25f); }
+        if (levelLoopA != null) { levelLoopA.stop();}
+        if (levelLoopB != null) { levelLoopB.stop();  }
         introPlayed = false;
         loopStarted = false;
         loopPlayTime = 0f;
