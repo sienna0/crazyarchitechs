@@ -156,6 +156,7 @@ class LevelPopulation {
         addTilemapColliders(level, floors, units);
 
         Texture zukoTexture  = textureResolver.apply("platform-traci",  "platform/traci.png");
+        Texture tongueSprite  = textureResolver.apply("platform-tonguesprite",  "platform/zukotonguetexture.png");
         Texture walkSheet    = textureResolver.apply("platform-updatedwalk",   "platform/zukowalk.png");
         Texture photoSheet   = textureResolver.apply("platform-camera", "platform/cameraflash.png");
         Texture jumpSheet    = textureResolver.apply("platform-jumpupdated",   "platform/zukojumpupdated.png");
@@ -170,7 +171,7 @@ class LevelPopulation {
         float spawnX = posJson.get("pos").getFloat(0);
         float spawnY = posJson.get("pos").getFloat(1) + SPAWN_DROP_TILES;
         result.avatar = buildZuko(units, constants.get("zuko"), spawnX, spawnY,
-                zukoTexture, walkSheet, photoSheet, jumpSheet, deathMeltSheet, idleSheet, portalSheet, spawnSheet, tongueTexture, "avatar",levelPlayerSettings);
+                zukoTexture, walkSheet, photoSheet, jumpSheet, deathMeltSheet, idleSheet, portalSheet, spawnSheet, tongueTexture, tongueSprite, "avatar",levelPlayerSettings);
         spriteAdder.accept(result.avatar);
         result.avatar.createSensor();
 
@@ -183,7 +184,7 @@ class LevelPopulation {
                         level.get("objectLocations").get("zukoPos"), pos[0], pos[1]);
 
                 Zuko extra = buildZuko(units, syntheticZuko,pos[0], pos[1],
-                        zukoTexture, walkSheet, photoSheet, jumpSheet, deathMeltSheet, idleSheet, portalSheet, spawnSheet, tongueTexture,
+                        zukoTexture, walkSheet, photoSheet, jumpSheet, deathMeltSheet, idleSheet, portalSheet, spawnSheet, tongueTexture, tongueSprite,
                         "zukosprite" + ii, levelPlayerSettings);
                 spriteAdder.accept(extra);
                 extra.createSensor();
@@ -666,7 +667,7 @@ class LevelPopulation {
      */
     private Zuko buildZuko(float units, JsonValue zukoJson, float xStartingPos, float yStartingPos,
                            Texture zukoTexture, Texture walkSheet,
-                           Texture photoSheet, Texture jumpSheet, Texture deathMeltSheet, Texture idleSheet, Texture portalSheet, Texture spawnSheet, Texture tongueTexture,
+                           Texture photoSheet, Texture jumpSheet, Texture deathMeltSheet, Texture idleSheet, Texture portalSheet, Texture spawnSheet, Texture tongueTexture, Texture tongueSprite,
                            String name, JsonValue levelPlayerSettings) {
         Zuko zuko = new Zuko(units, zukoJson, xStartingPos, yStartingPos, levelPlayerSettings);
         zuko.setTexture(zukoTexture);
@@ -680,6 +681,7 @@ class LevelPopulation {
         zuko.setPortalAnimation(portalSheet, 1, 15, 15);
         zuko.setSpawnAnimation(spawnSheet, 1, 15, 15);
         zuko.setTongueSegment(tongueTexture);
+        zuko.setTongueSpriteTexture(tongueSprite);
 
         return zuko;
     }

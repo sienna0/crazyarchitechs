@@ -124,6 +124,7 @@
       "shared-win-polaroid": "shared/polaroidPI.png",
         "shared-goal":   "platform/walltile.png",
         "platform-traci"    : "platform/zuko.png",
+        "platform-tonguesprite" : "platform/zukotonguetexture.png",
         "platform-updatedwalk"     : "platform/zukowalk.png",
         "platform-camera"   : "platform/cameraflash.png",
         "platform-jump"     : "platform/zukojumpupdated.png",

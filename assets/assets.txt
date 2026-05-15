@@ -86,6 +86,7 @@ platform/zukojumpupdated.png
 platform/zukoportal.png
 platform/zukospawn.png
 platform/zukotonguechunk.png
+platform/zukotonguetexture.png
 platform/zukowalk.png
 platform/zukowalk1.png
 save_game.json

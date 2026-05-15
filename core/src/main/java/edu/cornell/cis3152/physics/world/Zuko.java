@@ -168,6 +168,10 @@ public class Zuko extends ObstacleSprite {
         animator.startSpawnAnimation();
     }
 
+    public void setTongueSpriteTexture(Texture texture) {
+        animator.setTongueSpriteTexture(texture);
+    }
+
 
 
     /**
@@ -335,15 +339,24 @@ public class Zuko extends ObstacleSprite {
     @Override
     public void draw(SpriteBatch batch) {
         if (!drawVisible) return;
-        SpriteSheet activeSheet = animator.getActiveSheet(
-                movement.isGrounded(),
-                obstacle.getVX(),
-                obstacle.getVY()
-        );
-        if (activeSheet != null) {
-            setSpriteSheet(activeSheet);
-        } else if (animator.getBaseTexture() != null) {
-            setTexture(animator.getBaseTexture());
+        if (animator.isTongueActive() &&
+                animator.getTongueSpriteTexture() != null) {
+
+            setTexture(animator.getTongueSpriteTexture());
+
+        } else {
+
+            SpriteSheet activeSheet = animator.getActiveSheet(
+                    movement.isGrounded(),
+                    obstacle.getVX(),
+                    obstacle.getVY()
+            );
+
+            if (activeSheet != null) {
+                setSpriteSheet(activeSheet);
+            } else if (animator.getBaseTexture() != null) {
+                setTexture(animator.getBaseTexture());
+            }
         }
 
         if (animator.isPlayingSpawn()) {
@@ -352,7 +365,12 @@ public class Zuko extends ObstacleSprite {
         } else if (animator.isPlayingPortal()) {
             float yOffset = (portalDrawHeight - drawSize) / 2.0f;
             mesh.set(-drawSize/2.0f, -portalDrawHeight/2.0f + yOffset, drawSize, portalDrawHeight);
-        } else if (animator.isPlayingJump() && !animator.isPlayingPhoto() && !animator.isPlayingDeathMelt()) {
+        } else if (
+                (animator.isPlayingJump() ||
+                        animator.isFalling(movement.isGrounded(), obstacle.getVY()))
+                        && !animator.isPlayingPhoto()
+                        && !animator.isPlayingDeathMelt()
+        ) {
             float yOffset = (jumpDrawHeight - drawSize) / 2.0f;
             mesh.set(-drawSize/2.0f, -jumpDrawHeight/2.0f + yOffset, drawSize, jumpDrawHeight);
         } else {

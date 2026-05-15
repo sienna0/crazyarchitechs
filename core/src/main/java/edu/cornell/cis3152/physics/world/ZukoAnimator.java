@@ -75,6 +75,7 @@ public class ZukoAnimator {
     /** Whether the spawn animation has reached its last frame */
     private boolean spawnFinished = false;
 
+    private Texture tongueSpriteTexture;
     /** The Texture of one segment of Zuko's tongue */
     private Texture tongueSegment;
     /** The progress of the tongue to the target. 0 = fully retracted, 1 = fully extended */
@@ -232,6 +233,14 @@ public class ZukoAnimator {
      */
     public void setTongueSegment(Texture texture) {
         this.tongueSegment = texture;
+    }
+
+    public void setTongueSpriteTexture(Texture texture) {
+        tongueSpriteTexture = texture;
+    }
+
+    public Texture getTongueSpriteTexture() {
+        return tongueSpriteTexture;
     }
 
     /**
@@ -428,5 +437,9 @@ public class ZukoAnimator {
     public boolean hasFinishedSpawnAnimation() { return spawnFinished; }
 
     public boolean isTongueActive() { return tongueState != 0; }
+
+    public boolean isFalling(boolean isGrounded, float velocityY) {
+        return !isGrounded && velocityY < -0.1f;
+    }
 
 }
