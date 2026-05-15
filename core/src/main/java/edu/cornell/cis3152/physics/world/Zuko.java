@@ -317,7 +317,7 @@ public class Zuko extends ObstacleSprite {
     public void update(float dt) {
         // Apply cooldowns
         movement.updateCooldown();
-        animator.update(dt, movement.isGrounded(), obstacle.getVX());
+        animator.update(dt, movement.isGrounded(), obstacle.getVX(), obstacle.getVY());
         super.update(dt);
     }
 
@@ -335,7 +335,11 @@ public class Zuko extends ObstacleSprite {
     @Override
     public void draw(SpriteBatch batch) {
         if (!drawVisible) return;
-        SpriteSheet activeSheet = animator.getActiveSheet(movement.isGrounded(), obstacle.getVX());
+        SpriteSheet activeSheet = animator.getActiveSheet(
+                movement.isGrounded(),
+                obstacle.getVX(),
+                obstacle.getVY()
+        );
         if (activeSheet != null) {
             setSpriteSheet(activeSheet);
         } else if (animator.getBaseTexture() != null) {

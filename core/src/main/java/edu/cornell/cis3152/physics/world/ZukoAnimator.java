@@ -304,7 +304,7 @@ public class ZukoAnimator {
         );
     }
 
-    public void update(float dt, boolean isGrounded, float velocityX) {
+    public void update(float dt, boolean isGrounded, float velocityX, float velocityY) {
         if (playingDeathMelt && deathMeltSheet != null) {
             deathMeltAnimationTime += dt;
             int frame = (int)(deathMeltAnimationTime / deathMeltFrameDuration);
@@ -358,10 +358,12 @@ public class ZukoAnimator {
             int frame = (int)(jumpAnimationTime / jumpFrameDuration);
             if (frame >= jumpSheet.getSize()) {
                 playingJump = false;
-                jumpSheet.setFrame(0);
+                jumpSheet.setFrame(jumpSheet.getSize() - 1);
             } else {
                 jumpSheet.setFrame(frame);
             }
+        } else if (!isGrounded && velocityY < -0.1f && jumpSheet != null) {
+            jumpSheet.setFrame(jumpSheet.getSize() - 1);
         } else if (walkSheet != null && isGrounded && Math.abs(velocityX) > 0.1f) {
             walkAnimationTime += dt;
             int frame = ((int)(walkAnimationTime / walkFrameDuration)) % walkSheet.getSize();
@@ -399,12 +401,13 @@ public class ZukoAnimator {
         return flipCache;
     }
 
-    public SpriteSheet getActiveSheet(boolean isGrounded, float velocityX) {
+    public SpriteSheet getActiveSheet(boolean isGrounded, float velocityX, float velocityY) {
         if (playingSpawn && spawnSheet != null) return spawnSheet;
         if (playingDeathMelt && deathMeltSheet != null) return deathMeltSheet;
         if ((playingPortal || portalFinished) && portalSheet != null) return portalSheet;
         if (playingPhoto && photoSheet != null) return photoSheet;
         if (playingJump && jumpSheet != null) return jumpSheet;
+        if (!isGrounded && velocityY < -0.1f && jumpSheet != null) return jumpSheet;
         if (walkSheet != null && isGrounded && Math.abs(velocityX) > 0.1f) return walkSheet;
         if (idleSheet != null) return idleSheet;
         return null;

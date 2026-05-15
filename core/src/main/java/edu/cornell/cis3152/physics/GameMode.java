@@ -330,6 +330,7 @@ public class GameMode implements Screen, ScreenListener {
                     winScene.setScore(levelScene.getCurrentScore());
                     winScene.setStats(levelScene.getFlyCount(), levelScene.getPhotosUsed());
                     winScene.show();
+                    levelScene.setGamePaused(true);
                 }
             }
             if (showingWin) {
@@ -350,7 +351,14 @@ public class GameMode implements Screen, ScreenListener {
                 if (choice == WinScene.RESTART) {
                     showingWin = false;
                     winScene.hide();
+
                     levelController.restartCurrentLevel();
+                    levelController.setScreenListener(this);
+
+                    if (levelController.getCurrentScene() != null) {
+                        levelController.getCurrentScene().show();
+                        levelController.getCurrentScene().setGamePaused(false);
+                    }
                 }
             }
             if (!blockPauseForOptions && currentScene instanceof LevelBaseScene levelScene && levelScene.consumeHazardRestart()) {
@@ -379,7 +387,9 @@ public class GameMode implements Screen, ScreenListener {
                 pauseMenuScene.render(Gdx.graphics.getDeltaTime());
             }
             if (showingWin) {
+                currentScene.setGamePaused(true);
                 winScene.render(Gdx.graphics.getDeltaTime());
+                return;
             }
 
         }
@@ -550,6 +560,9 @@ public class GameMode implements Screen, ScreenListener {
         }
         if (gameplayOptionsOverlay != null) {
             gameplayOptionsOverlay.resize(width, height);
+        }
+        if (winScene != null) {
+            winScene.resize(width, height);
         }
     }
 
