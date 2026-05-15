@@ -60,7 +60,7 @@ public class LoadingScene implements Screen {
     /** Hard cap: max button width vs logical canvas (inner menu panel scale). */
     private static final float MENU_BUTTON_PANEL_MAX_WIDTH_FRAC = 0.34f;
     /** Extra linear scale on button size (1 = use cap as-is; 0.6 = 60% width/height). */
-    private static final float MENU_BUTTON_SCALE = 0.6f;
+    private static final float MENU_BUTTON_SCALE = 0.38f;
     /** Also never wider than this fraction of the title’s fitted bbox (when a title exists). */
     private static final float MENU_BUTTON_WIDTH_VS_TITLE = 0.98f;
     /** If no title GIF, same as panel cap. */
@@ -68,9 +68,9 @@ public class LoadingScene implements Screen {
     /** Gap between title bottom and top of PLAY stack (canvas pixels, scaled). */
     private static final float MENU_GAP_BELOW_TITLE = 12f;
     /** Gap between PLAY and OPTIONS (canvas pixels, scaled). */
-    private static final float MENU_GAP_BETWEEN = 22f;
+    private static final float MENU_GAP_BETWEEN = 20f;
     /** Extra shift downward for PLAY/OPTIONS stack (reference px × {@link CanvasRender#layoutScale()}, y-up). */
-    private static final float MENU_BUTTON_EXTRA_DOWN_REF = 20f;
+    private static final float MENU_BUTTON_EXTRA_DOWN_REF = 58f;
     /** Min bottom edge for OPTIONS when the stack would clip off-screen (fraction of canvas height, y-up). */
     private static final float MENU_BUTTON_STACK_AREA_BOTTOM_FRAC = 0.10f;
     /** Fallback: vertical center of stack when title is missing (y-up, 0–1). */
