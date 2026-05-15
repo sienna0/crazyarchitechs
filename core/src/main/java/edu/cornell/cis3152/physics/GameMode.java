@@ -193,7 +193,7 @@ public class GameMode implements Screen, ScreenListener {
                 && levelIntro.getPosition() >= INTRO_TO_LOOP_TIME) {
 
             levelIntro.stop();
-            levelLoopA.setVolume(0.25f);
+            levelLoopA.setVolume(GameAudio.getMusicVolume());
             levelLoopA.setLooping(false);
             levelLoopA.play();
 
@@ -465,16 +465,17 @@ public class GameMode implements Screen, ScreenListener {
 
             levelLoopA.setLooping(false);
             levelLoopB.setLooping(false);  // was missing
-            levelLoopA.setVolume(0.25f);
-            levelLoopB.setVolume(0.25f);   // was missing
-            levelIntro.setVolume(0.25f);
+            GameAudio.registerMusic(levelIntro);
+            GameAudio.registerMusic(levelLoopA);
+            GameAudio.registerMusic(levelLoopB);
         }
 
         levelIntro.stop();
         levelLoopA.stop();
         levelLoopB.stop();   // was missing
-        levelLoopA.setVolume(0.25f);  // reset in case it was mid-crossfade
-        levelLoopB.setVolume(0.25f);  // reset in case it was mid-crossfade
+        levelIntro.setVolume(GameAudio.getMusicVolume());
+        levelLoopA.setVolume(GameAudio.getMusicVolume());
+        levelLoopB.setVolume(GameAudio.getMusicVolume());
 
         levelIntro.setPosition(0f);
         levelIntro.play();
@@ -487,8 +488,8 @@ public class GameMode implements Screen, ScreenListener {
 
     private void stopLevelMusic() {
         if (levelIntro != null) levelIntro.stop();
-        if (levelLoopA != null) { levelLoopA.stop(); levelLoopA.setVolume(0.25f); }
-        if (levelLoopB != null) { levelLoopB.stop(); levelLoopB.setVolume(0.25f); }
+        if (levelLoopA != null) { levelLoopA.stop(); }
+        if (levelLoopB != null) { levelLoopB.stop(); }
         introPlayed = false;
         loopStarted = false;
         loopPlayTime = 0f;

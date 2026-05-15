@@ -25,6 +25,16 @@
           "minfilter": "nearest",
           "magfilter": "nearest"
         },
+       "cameraFocusRight": {
+        "file": "loading/camera_focus_right.png",
+        "minfilter": "nearest",
+        "magfilter": "nearest"
+        },
+       "cameraFocusLeft": {
+        "file": "loading/camera_focus_left.png",
+        "minfilter": "nearest",
+        "magfilter": "nearest"
+        },
         "optionsMusic": {
             "file": "loading/options_music.png",
             "minfilter": "nearest",

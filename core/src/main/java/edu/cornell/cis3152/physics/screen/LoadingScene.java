@@ -60,15 +60,15 @@ public class LoadingScene implements Screen {
     /** Hard cap: max button width vs logical canvas (inner menu panel scale). */
     private static final float MENU_BUTTON_PANEL_MAX_WIDTH_FRAC = 0.34f;
     /** Extra linear scale on button size (1 = use cap as-is; 0.6 = 60% width/height). */
-    private static final float MENU_BUTTON_SCALE = 0.38f;
+    private static final float MENU_BUTTON_SCALE = 0.48f;
     /** Also never wider than this fraction of the title’s fitted bbox (when a title exists). */
     private static final float MENU_BUTTON_WIDTH_VS_TITLE = 0.98f;
     /** If no title GIF, same as panel cap. */
     private static final float MENU_BUTTON_FALLBACK_MAX_WIDTH_FRAC = MENU_BUTTON_PANEL_MAX_WIDTH_FRAC;
     /** Gap between title bottom and top of PLAY stack (canvas pixels, scaled). */
-    private static final float MENU_GAP_BELOW_TITLE = 12f;
+    private static final float MENU_GAP_BELOW_TITLE = -9f;
     /** Gap between PLAY and OPTIONS (canvas pixels, scaled). */
-    private static final float MENU_GAP_BETWEEN = 20f;
+    private static final float MENU_GAP_BETWEEN = 18f;
     /** Extra shift downward for PLAY/OPTIONS stack (reference px × {@link CanvasRender#layoutScale()}, y-up). */
     private static final float MENU_BUTTON_EXTRA_DOWN_REF = 58f;
     /** Min bottom edge for OPTIONS when the stack would clip off-screen (fraction of canvas height, y-up). */
@@ -79,13 +79,6 @@ public class LoadingScene implements Screen {
     private static final float MENU_MAIN_IDLE_SCALE = 0.92f;
     /** Darken on hover (keyboard or mouse). */
     private static final Color MENU_MAIN_HOVER_TINT = new Color(0.52f, 0.52f, 0.55f, 1f);
-    private static final Color OPTIONS_SCRIM = new Color(0f, 0f, 0f, 0.55f);
-    /** Options → How to play: panel behind text (RGB + alpha). */
-    private static final Color HELP_PANEL_FILL = new Color(0.07f, 0.09f, 0.11f, 0.88f);
-    private static final Color HELP_PANEL_BORDER = new Color(0.42f, 0.45f, 0.50f, 0.72f);
-    private static final int OPT_MUSIC = 0;
-    private static final int OPT_SOUND = 1;
-    private static final int OPT_HELP = 2;
     /** Default budget for asset loader (do nothing but load 60 fps) */
     private static int DEFAULT_BUDGET = 15;
 
@@ -152,11 +145,6 @@ public class LoadingScene implements Screen {
     private int menuSelectedIndex;
     private int menuChosenOption = -1;
     private boolean optionsOpen;
-    private boolean optionsHelpOpen;
-    private boolean draggingMusicSlider;
-    private boolean draggingSfxSlider;
-    private Texture sliderBarTex;
-    private Texture sliderToggleTex;
     private boolean mainAssetsFinalized;
     /** Set when Play is chosen; {@link ScreenListener#exitScreen} runs after {@link #draw()} this frame. */
     private boolean pendingExitToGame;
@@ -213,7 +201,6 @@ public class LoadingScene implements Screen {
      */
     public void prepareReturnFromGame() {
         optionsOpen = false;
-        optionsHelpOpen = false;
         menuChosenOption = -1;
         menuSelectedIndex = MENU_PLAY;
         pendingExitToGame = false;
@@ -589,7 +576,8 @@ public class LoadingScene implements Screen {
         Texture playTex = internal.getEntry("menuPlay", Texture.class);
         Texture optionsTex = internal.getEntry("menuOptions", Texture.class);
         Texture quitTex = internal.getEntry("menuQuit", Texture.class);
-        Texture focusTex = internal.getEntry("cameraFocus", Texture.class);
+        Texture focusRightTex = internal.getEntry("cameraFocusRight", Texture.class);
+        Texture focusLeftTex = internal.getEntry("cameraFocusLeft", Texture.class);
 
 
         int mouseHover = getHoveredMenuIndex();
@@ -613,15 +601,17 @@ public class LoadingScene implements Screen {
                 tex = quitTex;
             }
             batch.draw(tex, dx, dy, dw, dh);
-        }
 
-        if (focusTex != null) {
-            float fw = focusTex.getWidth();
-            float fh = focusTex.getHeight();
-            float fx = pointer.x - fw / 2f;
-            float fy = pointer.y - fh / 2f;
-            batch.setColor(Color.WHITE);
-            batch.draw(focusTex, fx, fy, fw, fh);
+            if (hover && focusLeftTex != null && focusRightTex != null) {
+                float bracketScale = 1.4f;
+                float bw = focusLeftTex.getWidth() * bracketScale;
+                float bh = focusLeftTex.getHeight() * bracketScale;
+                float bracketY = dy + (dh - bh) / 2f;
+
+                batch.setColor(Color.WHITE);
+                batch.draw(focusLeftTex, dx - bw, bracketY, bw, bh);
+                batch.draw(focusRightTex, dx + dw, bracketY, focusRightTex.getWidth(), bh);
+            }
         }
 
         batch.setColor(Color.WHITE);
