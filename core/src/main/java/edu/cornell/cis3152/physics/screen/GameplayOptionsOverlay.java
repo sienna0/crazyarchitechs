@@ -185,13 +185,13 @@ public class GameplayOptionsOverlay {
 
     private float[] getIconBounds(float UI) {
         Rectangle panel = getPanelBounds();
-        float     iconSize = panel.height * 0.14f;
-        float     rowHeight = panel.height * 0.22f;
-        float     contentH = 2 * rowHeight;
-        float     startY = panel.y + (panel.height - contentH) / 2f + rowHeight * 0.8f;
-        float     iconX = panel.x + panel.width * 0.15f;
-        float     soundY = startY + (rowHeight - iconSize) / 2f;
-        float     musicY = startY - rowHeight + (rowHeight - iconSize) / 2f;
+        float iconSize = panel.height * 0.12f;
+        float rowHeight = panel.height * 0.22f;
+        float contentH = 2 * rowHeight;
+        float startY = panel.y + (panel.height - contentH) / 2f + rowHeight * 0.8f;
+        float iconX = panel.x + panel.width * 0.2f;
+        float soundY = startY + (rowHeight - iconSize) / 2f;
+        float musicY = startY - rowHeight + (rowHeight - iconSize) / 2f;
         return new float[]{ iconX, soundY, iconSize, iconSize, iconX, musicY, iconSize, iconSize };
     }
 
@@ -202,7 +202,7 @@ public class GameplayOptionsOverlay {
         float iconSize = icons[2];
         float iconX = icons[0];
         float iconY = (row == OPT_SOUND) ? icons[1] : icons[5];
-        float sliderX = iconX + iconSize + panel.width * 0.4f;
+        float sliderX = iconX + iconSize + panel.width * 0.35f;
         float sliderW = iconSize * 2.5f;
         float barH = 28f * UI;
         float sliderY = iconY + (iconSize - barH) / 2f;
@@ -262,18 +262,19 @@ public class GameplayOptionsOverlay {
 
     private void drawSlider(Rectangle bar, float value) {
         float UI = CanvasRender.layoutScale();
-        float visualH = 14f * UI;
-        float visualY = bar.y + (bar.height - visualH) / 2f;
+        float visualH = 20f * UI;
+        float visualY = bar.y + ((bar.height - visualH) / 2f) * 1.3f;
 
         // Bar (drawn at visual height, centered in the taller hit rect)
         batch.setColor(Color.WHITE);
         batch.draw(sliderBarTex, bar.x, visualY, bar.width, visualH);
 
         // Toggle knob
-        float knobSize = visualH * 2.2f;
-        float knobX = bar.x + value * bar.width - knobSize / 2f;
-        float knobY = bar.y + bar.height / 2f - knobSize / 2f;
-        batch.draw(sliderToggleTex, knobX, knobY, knobSize, knobSize);
+        float knobW = 17f * 1.5f * UI;
+        float knobH = 27f * 1.5f * UI;
+        float knobX = bar.x + value * bar.width - knobW / 2f;
+        float knobY = bar.y + bar.height / 2f - knobH / 2f;
+        batch.draw(sliderToggleTex, knobX, knobY, knobW, knobH);
         batch.setColor(Color.WHITE);
     }
 

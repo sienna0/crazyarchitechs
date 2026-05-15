@@ -4,6 +4,7 @@ assets/save_game.json
 frogtographer_sparklefly_anim-sheet.png
 loading/GameLogo_animated.png
 loading/boot.json
+loading/camera_focus.png
 loading/main_menu_background.png
 loading/menu_options.png
 loading/menu_play.png

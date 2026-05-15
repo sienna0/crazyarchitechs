@@ -589,6 +589,8 @@ public class LoadingScene implements Screen {
         Texture playTex = internal.getEntry("menuPlay", Texture.class);
         Texture optionsTex = internal.getEntry("menuOptions", Texture.class);
         Texture quitTex = internal.getEntry("menuQuit", Texture.class);
+        Texture focusTex = internal.getEntry("cameraFocus", Texture.class);
+
 
         int mouseHover = getHoveredMenuIndex();
         for (int i = 0; i < MENU_BUTTON_COUNT; i++) {
@@ -612,6 +614,16 @@ public class LoadingScene implements Screen {
             }
             batch.draw(tex, dx, dy, dw, dh);
         }
+
+        if (focusTex != null) {
+            float fw = focusTex.getWidth();
+            float fh = focusTex.getHeight();
+            float fx = pointer.x - fw / 2f;
+            float fy = pointer.y - fh / 2f;
+            batch.setColor(Color.WHITE);
+            batch.draw(focusTex, fx, fy, fw, fh);
+        }
+
         batch.setColor(Color.WHITE);
     }
 
