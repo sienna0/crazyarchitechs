@@ -12,6 +12,9 @@ import edu.cornell.gdiac.assets.AssetDirectory;
 import edu.cornell.gdiac.audio.SoundEffect;
 import edu.cornell.gdiac.graphics.SpriteBatch;
 import edu.cornell.gdiac.util.ScreenListener;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.Texture;
 
 /**
  * A simple example gameplay screen.
@@ -36,11 +39,23 @@ public class GameMode implements Screen, ScreenListener {
     private GameplayOptionsOverlay gameplayOptionsOverlay;
     private WinScene winScene;
 
+    private boolean transitioning = false;
+    private float transitionTimer = 0f;
+    private static final float TRANSITION_DURATION = 0.5f;
+    private boolean transitionSwapped = false;
+    private int pendingLevel = -1;
+
+    private boolean deathTransitioning = false;
+    private float deathTransitionTimer = 0f;
+    private boolean deathRestarted = false;
+    private static final float DEATH_TRANSITION_DURATION = 0.7f;
+
+    private Texture pixel;
+
     private Music levelIntro;
     private Music levelLoopA;
     private Music levelLoopB;
     private boolean usingA = true;
-    private static final float CROSSFADE_DURATION = 0.0f; // tune by ear
     private static final float LOOP_RESTART_TIME = 72.0f; // start crossfade 2s before end
     private float crossfadeTimer = -1f; // -1 means not crossfading
     private boolean introPlayed = false;
@@ -89,6 +104,11 @@ public class GameMode implements Screen, ScreenListener {
         active = true;
         showingLevelSelect = true;
         stopLevelMusic();
+        Pixmap pixmap = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
+        pixmap.setColor(Color.WHITE);
+        pixmap.fill();
+        pixel = new Texture(pixmap);
+        pixmap.dispose();
     }
 
     /**
@@ -128,9 +148,7 @@ public class GameMode implements Screen, ScreenListener {
             levelController.setScreenListener(this);
             showingLevelSelect = false;
         } else if (exitCode == PhysicsScene.EXIT_LOSE) {
-            SoundEffect deathSound = assets.getEntry("platform-death", SoundEffect.class);
-            deathSound.play();
-            levelController.restartCurrentLevel();
+            startDeathTransition();
         }
 
     }
@@ -152,7 +170,6 @@ public class GameMode implements Screen, ScreenListener {
             }
         }
         if (GameAudio.isMusicOn() && !showingLevelSelect && levelLoopA != null && loopStarted) {
-
             Music outgoing = usingA ? levelLoopA : levelLoopB;
             Music incoming = usingA ? levelLoopB : levelLoopA;
 
@@ -160,29 +177,12 @@ public class GameMode implements Screen, ScreenListener {
                 loopPlayTime += delta;
             }
 
-            // start crossfade when approaching loop end
-            if (crossfadeTimer < 0 && loopPlayTime >= LOOP_RESTART_TIME) {
-                incoming.setPosition(0f);
-                incoming.setVolume(0f);
+            if (loopPlayTime >= LOOP_RESTART_TIME) {
+                incoming.setVolume(outgoing.getVolume());
                 incoming.play();
-                crossfadeTimer = 0f;
-            }
-
-            // do the crossfade
-            if (crossfadeTimer >= 0) {
-                crossfadeTimer += delta;
-                float t = Math.min(crossfadeTimer / CROSSFADE_DURATION, 1f);
-                float vol = GameAudio.getMusicVolume();
-                outgoing.setVolume(vol * (1f - t));
-                incoming.setVolume(vol * t);
-
-                if (t >= 1f) {
-                    outgoing.stop();
-                    outgoing.setVolume(vol);
-                    usingA = !usingA;
-                    loopPlayTime = 0f;
-                    crossfadeTimer = -1f;
-                }
+                outgoing.stop();
+                usingA = !usingA;
+                loopPlayTime = 0f;
             }
         }
         if (!showingLevelSelect
@@ -192,20 +192,74 @@ public class GameMode implements Screen, ScreenListener {
                 && !loopStarted
                 && levelIntro.getPosition() >= INTRO_TO_LOOP_TIME) {
 
-            levelLoopA.setPosition(0f);
+            levelIntro.stop();
+            levelLoopA.setVolume(0.25f);
+            levelLoopA.setLooping(false);
             levelLoopA.play();
+
             loopStarted = true;
+            loopPlayTime = 0f;
+        }
+        if (deathTransitioning) {
+            deathTransitionTimer += delta;
+            float progress = deathTransitionTimer / DEATH_TRANSITION_DURATION;
+
+            if (!deathRestarted && progress >= 0.5f) {
+                deathRestarted = true;
+                levelController.restartCurrentLevel();
+
+                if (levelController.getCurrentScene() != null) {
+                    levelController.getCurrentScene().show();
+                    levelController.getCurrentScene().setGamePaused(true);
+                }
+            }
+
+            if (progress >= 1f) {
+                deathTransitioning = false;
+
+                if (levelController.getCurrentScene() != null) {
+                    levelController.getCurrentScene().setGamePaused(false);
+                }
+            }
+
+            return;
+        }
+
+        if (transitioning) {
+            transitionTimer += delta;
+            float progress = transitionTimer / TRANSITION_DURATION;
+
+            if (!transitionSwapped && progress >= 0.5f) {
+                transitionSwapped = true;
+
+                SoundEffect shutter = assets.getEntry("platform-plop", SoundEffect.class);
+                if (shutter != null) {
+                    shutter.play(0.3f);
+                }
+
+                levelController.loadLevel(pendingLevel);
+                levelController.setScreenListener(this);
+                showingLevelSelect = false;
+                startLevelMusic();
+
+                if (levelController.getCurrentScene() != null) {
+                    levelController.getCurrentScene().show();
+                }
+            }
+
+            if (progress >= 1f) {
+                transitioning = false;
+            }
+
+            return;
         }
         if (showingLevelSelect) {
             int selectedLevel = levelSelectScene.consumeChosenLevel();
             if (selectedLevel > 0) {
-                levelController.loadLevel(selectedLevel);
-                levelController.setScreenListener(this);
-                showingLevelSelect = false;
-                startLevelMusic();
-                if (levelController.getCurrentScene() != null) {
-                    levelController.getCurrentScene().show();
-                }
+                transitioning = true;
+                transitionTimer = 0f;
+                transitionSwapped = false;
+                pendingLevel = selectedLevel;
             } else if (levelSelectScene.consumeExitRequested() && listener != null) {
                 pendingReturnToTitle = true;
             } else if (levelSelectScene.consumeHowToPlayRequested()) {
@@ -300,7 +354,7 @@ public class GameMode implements Screen, ScreenListener {
                 }
             }
             if (!blockPauseForOptions && currentScene instanceof LevelBaseScene levelScene && levelScene.consumeHazardRestart()) {
-                levelController.restartCurrentLevel();
+                startDeathTransition();
                 return;
             }
         }
@@ -314,22 +368,79 @@ public class GameMode implements Screen, ScreenListener {
         if (showingLevelSelect) {
             levelSelectScene.render(Gdx.graphics.getDeltaTime());
         } else {
-            if (!showingWin) {
-                PhysicsScene currentScene = levelController.getCurrentScene();
-                if (currentScene != null) {
-                    currentScene.render(Gdx.graphics.getDeltaTime());
-                }
-                if (gameplayOptionsOverlay.isOpen()) {
-                    gameplayOptionsOverlay.draw();
-                }
-                if (paused) {
-                    pauseMenuScene.render(Gdx.graphics.getDeltaTime());
-                }
+            PhysicsScene currentScene = levelController.getCurrentScene();
+            if (currentScene != null) {
+                currentScene.render(Gdx.graphics.getDeltaTime());
+            }
+            if (gameplayOptionsOverlay.isOpen()) {
+                gameplayOptionsOverlay.draw();
+            }
+            if (paused) {
+                pauseMenuScene.render(Gdx.graphics.getDeltaTime());
             }
             if (showingWin) {
                 winScene.render(Gdx.graphics.getDeltaTime());
             }
 
+        }
+        if (transitioning) {
+            drawShutterTransition();
+        }
+        if (deathTransitioning) {
+            drawDeathWashTransition();
+        }
+    }
+
+    private void drawShutterTransition() {
+        float t = transitionTimer / TRANSITION_DURATION;
+
+        float bladeT;
+        if (t < 0.5f) {
+            bladeT = t / 0.5f;
+        } else {
+            bladeT = 1f - ((t - 0.5f) / 0.5f);
+        }
+
+        bladeT = bladeT * bladeT;
+
+        float travel = (height / 2f) * bladeT;
+
+        batch.begin(camera);
+
+        batch.setColor(0.08f, 0.12f, 0.10f, 1f);
+        batch.draw(pixel, 0, height - travel, width, travel);
+        batch.draw(pixel, 0, 0, width, travel);
+
+        batch.setColor(1, 1, 1, 1);
+        batch.end();
+    }
+
+    private void drawDeathWashTransition() {
+        float t = Math.min(deathTransitionTimer / DEATH_TRANSITION_DURATION, 1f);
+
+        float wipeWidth = width * 1.25f;
+        float x = -wipeWidth + t * (width + wipeWidth);
+
+        batch.begin(camera);
+
+        batch.setColor(0f, 0f, 0f, 1f);
+        batch.draw(pixel, x, 0, wipeWidth, height);
+
+        batch.setColor(1f, 1f, 1f, 1f);
+        batch.end();
+    }
+
+    private void startDeathTransition() {
+        if (deathTransitioning) {
+            return;
+        }
+
+        deathTransitioning = true;
+        deathTransitionTimer = 0f;
+        deathRestarted = false;
+
+        if (levelController.getCurrentScene() != null) {
+            levelController.getCurrentScene().setGamePaused(true);
         }
     }
 
@@ -344,17 +455,16 @@ public class GameMode implements Screen, ScreenListener {
 
             levelLoopA.setLooping(false);
             levelLoopB.setLooping(false);  // was missing
-            GameAudio.registerMusic(levelIntro);
-            GameAudio.registerMusic(levelLoopA);
-            GameAudio.registerMusic(levelLoopB);
+            levelLoopA.setVolume(0.25f);
+            levelLoopB.setVolume(0.25f);   // was missing
+            levelIntro.setVolume(0.25f);
         }
 
         levelIntro.stop();
         levelLoopA.stop();
         levelLoopB.stop();   // was missing
-        levelIntro.setVolume(GameAudio.getMusicVolume());
-        levelLoopA.setVolume(GameAudio.getMusicVolume());
-        levelLoopB.setVolume(GameAudio.getMusicVolume());
+        levelLoopA.setVolume(0.25f);  // reset in case it was mid-crossfade
+        levelLoopB.setVolume(0.25f);  // reset in case it was mid-crossfade
 
         levelIntro.setPosition(0f);
         levelIntro.play();
@@ -367,8 +477,8 @@ public class GameMode implements Screen, ScreenListener {
 
     private void stopLevelMusic() {
         if (levelIntro != null) levelIntro.stop();
-        if (levelLoopA != null) { levelLoopA.stop();}
-        if (levelLoopB != null) { levelLoopB.stop();  }
+        if (levelLoopA != null) { levelLoopA.stop(); levelLoopA.setVolume(0.25f); }
+        if (levelLoopB != null) { levelLoopB.stop(); levelLoopB.setVolume(0.25f); }
         introPlayed = false;
         loopStarted = false;
         loopPlayTime = 0f;
@@ -480,10 +590,13 @@ public class GameMode implements Screen, ScreenListener {
             levelIntro.stop();
             levelIntro = null;
         }
-
         if (levelLoopA != null) {
             levelLoopA.stop();
             levelLoopA = null;
+        }
+        if (pixel != null) {
+            pixel.dispose();
+            pixel = null;
         }
         if (levelController != null) {
             levelController.dispose();
