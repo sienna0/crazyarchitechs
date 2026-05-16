@@ -11,6 +11,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
@@ -325,9 +326,9 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     protected void drawBackground(SpriteBatch batch) {
         drawParallaxBackground(batch);
         if (renderer != null && levelData != null) {
-            renderer.drawVines(batch, levelData, height / bounds.height);
-            renderer.drawLevelTiles(batch, levelData, height / bounds.height);
-            renderer.drawEnv(batch, levelData, height / bounds.height);
+            renderer.drawVines(batch, levelData);
+            renderer.drawLevelTiles(batch, levelData);
+            renderer.drawEnv(batch, levelData);
         }
     }
 
