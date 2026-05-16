@@ -59,14 +59,14 @@ class LevelPopulation {
         List<edu.cornell.cis3152.physics.world.FlyCollectible> flies = new ArrayList<>();
 
         List<TextureRegion> tileRegions    = new ArrayList<>();
-        /** [x, y] screen-space position in pixels for each tile, in the same order as tileRegions. */
-        List<float[]> tilePositions  = new ArrayList<>();
+        /** [x, y, w, h] screen-space position and size in pixels for each tile. */
+        List<int[]> tilePositions  = new ArrayList<>();
         List<TextureRegion> vineRegions    = new ArrayList<>();
-        /** [x, y] screen-space position in pixels for each vine tile, in the same order as vineRegions. */
-        List<float[]> vinePositions  = new ArrayList<>();
+        /** [x, y, w, h] screen-space position and size in pixels for each vine tile. */
+        List<int[]> vinePositions  = new ArrayList<>();
         List<TextureRegion> envRegions    = new ArrayList<>();
-        /** [x, y] screen-space position in pixels for each vine tile, in the same order as vineRegions. */
-        List<float[]> envPositions  = new ArrayList<>();
+        /** [x, y, w, h] screen-space position and size in pixels for each vine tile. */
+        List<int[]> envPositions  = new ArrayList<>();
         List<BoxSprite> pulleyCarries = new ArrayList<>();
         List<BoxSprite> pulleyRopes = new ArrayList<>();
         List<Vector2> pulleyWheelCenters = new ArrayList<>();
@@ -753,7 +753,7 @@ class LevelPopulation {
     }
 
     private void parseTileLayer(JsonValue layer, Texture texture, float units,
-                                List<TextureRegion> regions, List<float[]> positions) {
+                                List<TextureRegion> regions, List<int[]> positions) {
         if (layer == null || texture == null) {
             return;
         }
@@ -767,11 +767,17 @@ class LevelPopulation {
 
             TextureRegion region = new TextureRegion(
                     texture,
-                    col * TILE_PX + 1, row * TILE_PX + 1,
-                    TILE_PX -2, TILE_PX -2
+                    col * TILE_PX, row * TILE_PX,
+                    TILE_PX, TILE_PX
             );
             regions.add(region);
-            positions.add(new float[]{ tx * units, ty * units });
+            
+            int x1 = MathUtils.round(tx * units);
+            int y1 = MathUtils.round(ty * units);
+            int x2 = MathUtils.round((tx + 1) * units);
+            int y2 = MathUtils.round((ty + 1) * units);
+            
+            positions.add(new int[]{ x1, y1, x2 - x1, y2 - y1 });
         }
     }
 

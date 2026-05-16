@@ -493,43 +493,41 @@ class LevelRenderer {
     /**
      * Renders the tilemap background tiles.
      */
-    void drawLevelTiles(SpriteBatch batch, LevelPopulation.Result levelData, float tileSize) {
+    void drawLevelTiles(SpriteBatch batch, LevelPopulation.Result levelData) {
         drawTileLayer(batch, levelData == null ? null : levelData.tileRegions,
-                levelData == null ? null : levelData.tilePositions, tileSize);
+                levelData == null ? null : levelData.tilePositions);
     }
 
     /**
      * Renders decorative vine overlay tiles.
      */
-    void drawVines(SpriteBatch batch, LevelPopulation.Result levelData, float tileSize) {
+    void drawVines(SpriteBatch batch, LevelPopulation.Result levelData) {
         drawTileLayer(batch, levelData == null ? null : levelData.vineRegions,
-                levelData == null ? null : levelData.vinePositions, tileSize);
+                levelData == null ? null : levelData.vinePositions);
     }
 
     /**
      * Renders decorative environmental tiles.
      */
-    void drawEnv(SpriteBatch batch, LevelPopulation.Result levelData, float tileSize) {
+    void drawEnv(SpriteBatch batch, LevelPopulation.Result levelData) {
         drawTileLayer(batch, levelData == null ? null : levelData.envRegions,
-                levelData == null ? null : levelData.envPositions, tileSize);
+                levelData == null ? null : levelData.envPositions);
     }
 
 
     private void drawTileLayer(SpriteBatch batch, java.util.List<TextureRegion> regions,
-                               java.util.List<float[]> positions, float tileSize) {
+                               java.util.List<int[]> positions) {
         if (regions == null || regions.isEmpty() || positions == null) {
             return;
         }
 
-        float snappedTileSize = MathUtils.round(tileSize);
         batch.setColor(Color.WHITE);
         for (int ii = 0; ii < regions.size(); ii++) {
             TextureRegion region = regions.get(ii);
-            float[] position = positions.get(ii);
-            float snappedX = MathUtils.round(position[0]);
-            float snappedY = MathUtils.round(position[1]);
-            // Match the editor: snap to whole pixels and slightly overdraw to hide seams.
-            batch.draw(region, snappedX, snappedY, snappedTileSize + 1f, snappedTileSize + 1f);
+            int[] pos = positions.get(ii);
+            // Match the editor: snap to whole pixels and slightly overdraw by 1px to hide seams.
+            // i changed this to .25
+            batch.draw(region, pos[0], pos[1], pos[2] + 0.25f, pos[3] + 0.25f);
         }
     }
 }

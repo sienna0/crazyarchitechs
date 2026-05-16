@@ -239,8 +239,16 @@ public class LevelSelectScene implements Screen {
     @Override
     public void show() {
         active = true;
+        chosenLevel = -1;
+        exitRequested = false;
+        howToPlayRequested = false;
         selectedIndex = Math.max(0, Math.min(selectedIndex, totalLevels - 1));
         currentPage = pageForIndex(selectedIndex);
+        upPrevious = Gdx.input.isKeyPressed(Input.Keys.UP);
+        downPrevious = Gdx.input.isKeyPressed(Input.Keys.DOWN);
+        confirmPrevious = Gdx.input.isKeyPressed(Input.Keys.ENTER) || Gdx.input.isKeyPressed(Input.Keys.SPACE);
+        exitPrevious = Gdx.input.isKeyPressed(Input.Keys.ESCAPE);
+        clickPrevious = Gdx.input.isButtonPressed(Input.Buttons.LEFT);
     }
 
     @Override

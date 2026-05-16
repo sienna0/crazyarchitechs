@@ -339,6 +339,14 @@ public class Zuko extends ObstacleSprite {
     @Override
     public void draw(SpriteBatch batch) {
         if (!drawVisible) return;
+
+        // Snap position to pixels to avoid "lines"
+        float units = obstacle.getPhysicsUnits();
+        Vector2 originalPos = new Vector2(obstacle.getPosition());
+        float snappedX = (float)Math.round(originalPos.x * units) / units;
+        float snappedY = (float)Math.round(originalPos.y * units) / units;
+        obstacle.setPosition(snappedX, snappedY);
+
         if (animator.isTongueActive() &&
                 animator.getTongueSpriteTexture() != null) {
 
@@ -361,24 +369,28 @@ public class Zuko extends ObstacleSprite {
 
         if (animator.isPlayingSpawn()) {
             float yOffset = (spawnDrawHeight - drawSize) / 2.0f;
-            mesh.set(-drawSize/2.0f, -spawnDrawHeight/2.0f + yOffset, drawSize, spawnDrawHeight);
+            mesh.set(-drawSize/2.0f, -spawnDrawHeight/2.0f + yOffset, drawSize + 0.25f, spawnDrawHeight + 0.25f);
         } else if (animator.isPlayingPortal()) {
             float yOffset = (portalDrawHeight - drawSize) / 2.0f;
-            mesh.set(-drawSize/2.0f, -portalDrawHeight/2.0f + yOffset, drawSize, portalDrawHeight);
+            mesh.set(-drawSize/2.0f, -portalDrawHeight/2.0f + yOffset, drawSize + 0.25f, portalDrawHeight + 0.25f);
         } else if (
                 (animator.isPlayingJump() ||
                         animator.isFalling(movement.isGrounded(), obstacle.getVY()))
                         && !animator.isPlayingPhoto()
                         && !animator.isPlayingDeathMelt()
+                        && !animator.isTongueActive()
         ) {
             float yOffset = (jumpDrawHeight - drawSize) / 2.0f;
-            mesh.set(-drawSize/2.0f, -jumpDrawHeight/2.0f + yOffset, drawSize, jumpDrawHeight);
+            mesh.set(-drawSize/2.0f, -jumpDrawHeight/2.0f + yOffset, drawSize + 0.25f, jumpDrawHeight + 0.25f);
         } else {
-            mesh.set(-drawSize/2.0f, -drawSize/2.0f, drawSize, drawSize);
+            mesh.set(-drawSize/2.0f, -drawSize/2.0f, drawSize + 0.25f, drawSize + 0.25f);
         }
         super.draw(batch, animator.getFlip(movement.isFacingRight()));
 
-        animator.drawTongue(batch, movement.isFacingRight(), obstacle.getX(), obstacle.getY(), obstacle.getPhysicsUnits());
+        // Restore original position
+        obstacle.setPosition(originalPos.x, originalPos.y);
+
+        animator.drawTongue(batch, movement.isFacingRight(), originalPos.x, originalPos.y, units);
     }
 
     /**
@@ -506,6 +518,14 @@ public class Zuko extends ObstacleSprite {
 
     public boolean isGrounded() {
         return movement.isGrounded();
+    }
+
+    /**
+     * Returns the current frame of the active animation
+     * @return the current frame index
+     */
+    public int getCurrentFrame() {
+        return animator.getCurrentFrame();
     }
 
 }
