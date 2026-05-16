@@ -18,6 +18,8 @@ import edu.cornell.gdiac.graphics.SpriteBatch;
 import edu.cornell.gdiac.math.PathFactory;
 import edu.cornell.gdiac.physics2.Obstacle;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 
 /**
  * Responsible for all non-physics rendering: HUD inventory bar, stuck-picture overlays (surface-with-photo combo art),
@@ -60,6 +62,9 @@ class LevelRenderer {
     private ArrayList<float[]> inRangeFlyPositions = new ArrayList<>();
     private final SpriteStripAnimation sparkleFlyAnim;
     private float flyAnimTime;
+    private final SpriteStripAnimation iceAnim;
+    /** Elapsed freeze time per stuck ice picture, keyed by Picture.getId(). Removed when picture is gone. */
+    private final HashMap<Integer, Float> iceElapsed = new HashMap<>();
 
     void setInRangeFlies(ArrayList<FlyCollectible> flies, ArrayList<float[]> positions) {
         this.inRangeFlies   = flies     != null ? flies     : new ArrayList<>();
@@ -74,7 +79,8 @@ class LevelRenderer {
                   Texture[][] stuckPictureTextures,
                   float stickDistance,
                   float takeDistance,
-                  SpriteStripAnimation sparkleFlyAnim) {
+                  SpriteStripAnimation sparkleFlyAnim,
+                  SpriteStripAnimation iceAnim) {
         this.worldState = worldState;
         this.inventoryTexture = inventoryTexture;
         this.settingsIconTexture = settingsIconTexture;
@@ -84,6 +90,7 @@ class LevelRenderer {
         this.stickDistance = stickDistance;
         this.takeDistance = takeDistance;
         this.sparkleFlyAnim = sparkleFlyAnim;
+        this.iceAnim = iceAnim;
     }
 
     /**
@@ -99,6 +106,7 @@ class LevelRenderer {
             return;
         }
         flyAnimTime += dt;
+        tickIceAnimations(dt);
 
         viewport.apply();
         batch.begin(camera);
@@ -333,6 +341,7 @@ class LevelRenderer {
                         combo.getHeight(),
                         false,
                         false);
+                if (picture.getSubjectType() == Obj.ICE) drawIceOverlay(batch, centerX, centerY, rotation, stickerInner, picture.getId());
                 continue;
             }
 
@@ -365,7 +374,48 @@ class LevelRenderer {
                         false,
                         false);
             }
+            if (picture.getSubjectType() == Obj.ICE) drawIceOverlay(batch, centerX, centerY, rotation, stickerInner, picture.getId());
         }
+    }
+
+    private void drawIceOverlay(SpriteBatch batch, float centerX, float centerY, float rotation, float stickerInner, int pictureId) {
+        if (iceAnim == null) return;
+        float elapsed = iceElapsed.getOrDefault(pictureId, 0f);
+        // Clamp to just before the loop wraps so getKeyFrame stays on the last frame.
+        float clampedTime = Math.min(elapsed, iceAnim.getLoopDurationSeconds() - 0.001f);
+        TextureRegion frame = iceAnim.getKeyFrame(clampedTime);
+        float sz = stickerInner * (34f / STUCK_PICTURE_REF_INNER) * 1.64f;
+        batch.setColor(1f, 1f, 1f, 0.9f);
+        batch.draw(frame,
+                centerX - sz * 0.5f,
+                centerY - sz * 0.5f,
+                sz * 0.5f,
+                sz * 0.5f,
+                sz, sz,
+                1f, 1f,
+                rotation,
+                false);
+        batch.setColor(Color.WHITE);
+    }
+
+    /** Advances each stuck ice picture's personal freeze timer and removes entries for gone pictures. */
+    private void tickIceAnimations(float dt) {
+        if (iceAnim == null) return;
+        float maxTime = iceAnim.getLoopDurationSeconds();
+
+        // Collect IDs that are currently active ice pictures.
+        HashSet<Integer> activeIds = new HashSet<>();
+        for (Picture p : worldState.getPictures()) {
+            if (p.getTarget() != null && p.getSubjectType() == Obj.ICE) {
+                int id = p.getId();
+                activeIds.add(id);
+                float prev = iceElapsed.getOrDefault(id, 0f);
+                // Cap at maxTime so the animation holds on the last frame.
+                iceElapsed.put(id, Math.min(prev + dt, maxTime));
+            }
+        }
+        // Remove entries for pictures that were unstuck or removed.
+        iceElapsed.keySet().removeIf(id -> !activeIds.contains(id));
     }
 
     /** Assets follow {@code picture_<surface>_with_<photographed type>.png} — index [target][subject]. */

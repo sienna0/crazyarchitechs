@@ -12,7 +12,6 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
 import edu.cornell.cis3152.physics.CanvasRender;
 import edu.cornell.cis3152.physics.graphics.SpriteStripAnimation;
@@ -21,7 +20,6 @@ import edu.cornell.gdiac.assets.AssetDirectory;
 import edu.cornell.gdiac.graphics.SpriteBatch;
 import edu.cornell.gdiac.graphics.TextAlign;
 import edu.cornell.gdiac.graphics.TextLayout;
-import org.w3c.dom.css.Rect;
 
 /**
  * Simple menu screen for selecting a level.
@@ -125,7 +123,6 @@ public class LevelSelectScene implements Screen {
     private final Texture starTexture;
     private final Texture lilyFlowerGrayTexture;
     private final Texture grayLilyPad;
-    public boolean MASTER_UNLOCK = false;
 
     private Texture[] numbersBlack = new Texture[10];
     private Texture[] numbersWhite = new Texture[10];
@@ -281,9 +278,7 @@ public class LevelSelectScene implements Screen {
         boolean confirmPressed = Gdx.input.isKeyPressed(Input.Keys.ENTER) || Gdx.input.isKeyPressed(Input.Keys.SPACE);
         boolean exitPressed = Gdx.input.isKeyPressed(Input.Keys.ESCAPE);
         boolean clickPressed = Gdx.input.isButtonPressed(Input.Buttons.LEFT);
-        if (Gdx.input.isKeyJustPressed(Input.Keys.K)) {
-            MASTER_UNLOCK = !MASTER_UNLOCK;
-        }
+
 
         if (upPressed && !upPrevious) {
             selectedIndex = (selectedIndex + totalLevels - 1) % totalLevels;
@@ -410,7 +405,7 @@ public class LevelSelectScene implements Screen {
         for (int ii = startIndex; ii < endIndex; ii++) {
             Vector2 pos = getLevelPosition(ii);
             if (pointer.dst(pos) < hoverRad) {
-                if (!(MASTER_UNLOCK || controller.isLevelOpen(ii + 1))){return -1;}
+                if (!controller.isLevelOpen(ii + 1)){return -1;}
                 return ii;
             }
         }
@@ -498,7 +493,7 @@ public class LevelSelectScene implements Screen {
             boolean selected = ii == selectedIndex;
 
             int score = controller.getLevelScore(ii+1);
-            boolean unlocked = MASTER_UNLOCK || controller.isLevelOpen(ii+1);
+            boolean unlocked = controller.isLevelOpen(ii+1);
 
             float size = selected && unlocked ? lilySizeSelected() : lilySizeNormal();
 

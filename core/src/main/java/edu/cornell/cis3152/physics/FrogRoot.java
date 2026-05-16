@@ -83,16 +83,6 @@ public class FrogRoot extends Game implements ScreenListener {
      */
     @Override
     public void render() {
-        if (Gdx.input.isKeyJustPressed(Input.Keys.Y)) {
-            setDesktopWindowSize(
-                    DesktopDisplayLayout.smallWindowWidth(), DesktopDisplayLayout.smallWindowHeight());
-        } else if (Gdx.input.isKeyJustPressed(Input.Keys.U)) {
-            setDesktopWindowSize(
-                    DesktopDisplayLayout.mediumWindowWidth(), DesktopDisplayLayout.mediumWindowHeight());
-        } else if (Gdx.input.isKeyJustPressed(Input.Keys.I)) {
-            setDesktopWindowSize(
-                    DesktopDisplayLayout.largeWindowWidth(), DesktopDisplayLayout.largeWindowHeight());
-        }
         super.render();
         Pixmap cursorPix = new Pixmap(Gdx.files.internal("shared/cursor.png"));
         Cursor cursor = Gdx.graphics.newCursor(cursorPix,0,0);

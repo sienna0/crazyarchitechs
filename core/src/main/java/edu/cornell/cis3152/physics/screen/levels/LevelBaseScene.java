@@ -131,6 +131,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     private PhotoSystem photoSystem;
     private LevelRenderer renderer;
     private SpriteStripAnimation sparkleFlyAnim;
+    private SpriteStripAnimation iceAnim;
 
     private float gooAnimPhaseTimer;
     private int gooAnimCycle;
@@ -251,6 +252,16 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
                     Gdx.app.error("LevelBaseScene", "Could not load sparkle fly sprite sheet", e);
                 }
             }
+            if (iceAnim == null) {
+                try {
+                    iceAnim = SpriteStripAnimation.loadSquareStrip(
+                            Gdx.files.internal("platform/ice_anim.png"),
+                            1f / 3f,
+                            Texture.TextureFilter.Nearest);
+                } catch (Exception e) {
+                    Gdx.app.error("LevelBaseScene", "Could not load ice animation", e);
+                }
+            }
             if (lilyFlowerTexture == null){
                 lilyFlowerTexture = requireTexture("shared-lotus", "shared/lilyflower.png");
             }
@@ -263,7 +274,8 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
                     pauseIconTexture, markerPixel,
                     stuckPictureTextures,
                     stickDist, takeDist,
-                    sparkleFlyAnim
+                    sparkleFlyAnim,
+                    iceAnim
             );
         }
     }

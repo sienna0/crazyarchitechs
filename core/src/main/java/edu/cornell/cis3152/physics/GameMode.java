@@ -400,7 +400,6 @@ public class GameMode implements Screen, ScreenListener {
                 return;
             }
         }
-        if (Gdx.input.isKeyPressed(Input.Keys.J)){levelController.getLevelProgress().resetSaveGame();}
     }
 
     /**

@@ -138,6 +138,7 @@
         "platform-honey"    : "platform/honey.png",
         "platform-cloud"    : "platform/cloud.png",
         "platform-pause"    : "platform/pause_icon.png",
+        "platform-ice-anim" : "platform/ice_anim.png",
         "platform-settings": {
             "file": "platform/settings_icon.png",
             "minfilter": "nearest",
