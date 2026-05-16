@@ -82,6 +82,9 @@
 	"goalPhotos": 2
 },
 {
+	"complete": true,
+	"minPhotosUsed": 1,
+	"bestTime": 11.350078,
 	"goalPhotos": 1
 },
 {},
