@@ -255,7 +255,7 @@ public class GameMode implements Screen, ScreenListener {
 
                 SoundEffect shutter = assets.getEntry("platform-plop", SoundEffect.class);
                 if (shutter != null) {
-                    shutter.play(0.3f);
+                    shutter.play(GameAudio.effectiveSfxVolume(0.3f));
                 }
 
                 if (transitioningToLevelSelect) {
