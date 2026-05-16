@@ -95,10 +95,21 @@ public class ZukoAnimator {
 
     private Texture baseTexture;
 
+    /** The current frame of the active animation */
+    private int currentFrame = 0;
+
     /** Cache for the affine flip */
     private final Affine2 flipCache = new Affine2();
 
     public Texture getBaseTexture() { return baseTexture; }
+
+    /**
+     * Returns the current frame of the active animation
+     * @return the current frame index
+     */
+    public int getCurrentFrame() {
+        return currentFrame;
+    }
 
     public void setBaseTexture(Texture texture) {
         baseTexture = texture;
@@ -324,8 +335,10 @@ public class ZukoAnimator {
                     playingDeathMelt = false;
                     deathMeltSheet.setFrame(0);
                 }
+                currentFrame = 0;
             } else {
                 deathMeltSheet.setFrame(frame);
+                currentFrame = frame;
             }
         }
         if (playingSpawn && spawnSheet != null) {
@@ -337,8 +350,10 @@ public class ZukoAnimator {
                 playingSpawn = false;
                 spawnFinished = true;
                 spawnSheet.setFrame(spawnSheet.getSize() - 1);
+                currentFrame = spawnSheet.getSize() - 1;
             } else {
                 spawnSheet.setFrame(frame);
+                currentFrame = frame;
             }
         } else if (playingPortal && portalSheet != null) {
             playingJump = false;
@@ -349,8 +364,10 @@ public class ZukoAnimator {
                 playingPortal = false;
                 portalFinished = true;
                 portalSheet.setFrame(portalSheet.getSize() - 1);
+                currentFrame = portalSheet.getSize() - 1;
             } else {
                 portalSheet.setFrame(frame);
+                currentFrame = frame;
             }
         } else if (playingPhoto && photoSheet != null) {
             playingJump = false;
@@ -359,8 +376,10 @@ public class ZukoAnimator {
             if (frame >= photoSheet.getSize()) {
                 playingPhoto = false;
                 photoSheet.setFrame(0);
+                currentFrame = 0;
             } else {
                 photoSheet.setFrame(frame);
+                currentFrame = frame;
             }
         } else if (playingJump && jumpSheet != null) {
             jumpAnimationTime += dt;
@@ -368,22 +387,28 @@ public class ZukoAnimator {
             if (frame >= jumpSheet.getSize()) {
                 playingJump = false;
                 jumpSheet.setFrame(jumpSheet.getSize() - 1);
+                currentFrame = jumpSheet.getSize() - 1;
             } else {
                 jumpSheet.setFrame(frame);
+                currentFrame = frame;
             }
         } else if (!isGrounded && velocityY < -0.1f && jumpSheet != null) {
             jumpSheet.setFrame(jumpSheet.getSize() - 1);
+            currentFrame = jumpSheet.getSize() - 1;
         } else if (walkSheet != null && isGrounded && Math.abs(velocityX) > 0.1f) {
             walkAnimationTime += dt;
             int frame = ((int)(walkAnimationTime / walkFrameDuration)) % walkSheet.getSize();
             walkSheet.setFrame(frame);
+            currentFrame = frame;
         } else if (idleSheet != null && isGrounded) {
             idleAnimationTime += dt;
             int frame = ((int)(idleAnimationTime / idleFrameDuration)) % idleSheet.getSize();
             idleSheet.setFrame(frame);
+            currentFrame = frame;
         } else if (walkSheet != null) {
             walkAnimationTime = 0f;
             walkSheet.setFrame(0);
+            currentFrame = 0;
         }
 
         if (tongueState == 1) {
