@@ -50,6 +50,7 @@ platform/env.png
 platform/honey.png
 platform/hover.wav
 platform/ice.png
+platform/ice_anim.png
 platform/introost.ogg
 platform/introost2.ogg
 platform/jump.wav
@@ -59,6 +60,7 @@ platform/levelostintro.ogg
 platform/mosquito.mp3
 platform/oldzuko.png
 platform/pause_icon.png
+platform/pauseicon.png
 platform/pew.wav
 platform/picture_cloud_with_honey.png
 platform/picture_cloud_with_ice.png
@@ -71,6 +73,7 @@ platform/portalenter.wav
 platform/ribbit.wav
 platform/rock.png
 platform/settings_icon.png
+platform/settings_icon2.png
 platform/tileset.png
 platform/tongue.wav
 platform/vines.png
@@ -110,7 +113,7 @@ shared/creditsnametext.png
 shared/creditstextmain.png
 shared/cursor.png
 shared/earthtile.png
-shared/exitbuttonoptions.png
+shared/exitbuttonoptions2.png
 shared/floortile.png
 shared/floortile1.png
 shared/flyPI.png
@@ -119,8 +122,8 @@ shared/goo_0.png
 shared/goo_1.png
 shared/goo_2.png
 shared/graylilypad.png
-shared/helpicongameplay.png
-shared/homebuttonlevelselect.png
+shared/helpicon.png
+shared/homebuttonlevelselect2.png
 shared/how-to-play/howtoplaytext.png
 shared/how-to-play/page1/controla.png
 shared/how-to-play/page1/controld.png
@@ -152,7 +155,6 @@ shared/inventory.png
 shared/leftarrow.png
 shared/levelbackground.png
 shared/levelbackgroundfuture.png
-shared/levelselectbuttonwin.png
 shared/lily1.png
 shared/lily2.png
 shared/lily3.png
@@ -161,6 +163,7 @@ shared/lilyflower-levelselect.png
 shared/lilyflower.png
 shared/lilyflower_gray.png
 shared/lotus.png
+shared/menubuttonlevel.png
 shared/musiciconoptions.png
 shared/musictextoptions.png
 shared/next.png
@@ -180,6 +183,7 @@ shared/pulley_carry.png
 shared/pulley_string.png
 shared/pulley_top.png
 shared/pulley_top1.png
+shared/restartbuttonpaused.png
 shared/restartbuttonwin.png
 shared/ribbittext.png
 shared/rightarrow.png

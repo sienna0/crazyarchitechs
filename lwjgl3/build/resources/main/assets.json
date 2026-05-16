@@ -37,8 +37,8 @@
         "shared-lily-3": "shared/lily3.png",
         "shared-blank-lily": "shared/blank-lily.png",
         "shared-background": "shared/background.png",
-        "shared-help": "shared/helpicongameplay.png",
-        "shared-home": "shared/homebuttonlevelselect.png",
+        "shared-help": "shared/helpicon.png",
+        "shared-home": "shared/homebuttonlevelselect2.png",
         "shared-parallax-demon-woods-bg": "shared/parallax-demon-woods-bg.png",
         "shared-parallax-demon-woods-far-trees": "shared/parallax-demon-woods-far-trees.png",
         "shared-parallax-demon-woods-mid-trees": "shared/parallax-demon-woods-mid-trees.png",
@@ -64,7 +64,7 @@
             "magfilter": "nearest"
         },
         "shared-pause-restart": {
-            "file": "shared/pause_restart.png",
+            "file": "shared/restartbuttonpaused.png",
             "minfilter": "nearest",
             "magfilter": "nearest"
         },
@@ -112,13 +112,13 @@
         "flies-text": "shared/how-to-play/page7/fliestext.png",
         "shared-left-arrow": "shared/leftarrow.png",
         "shared-right-arrow": "shared/rightarrow.png",
-        "shared-exit-button-options": "shared/exitbuttonoptions.png",
+        "shared-exit-button-options": "shared/exitbuttonoptions2.png",
         "shared-border-wooden" : "shared/borderwooden.png",
         "shared-gray-lilypad" : "shared/graylilypad.png",
       "shared-full-border-wooden": "shared/borderwoodenfull.png",
       "shared-ribbit-text": "shared/ribbittext.png",
       "shared-win-restart":"shared/restartbuttonwin.png",
-      "shared-win-levels": "shared/levelselectbuttonwin.png",
+      "shared-win-levels": "shared/menubuttonlevel.png",
       "shared-win-next": "shared/nextbuttonwin.png",
       "shared-win-fly": "shared/flyPI.png",
       "shared-win-polaroid": "shared/polaroidPI.png",
@@ -137,9 +137,10 @@
         "platform-ice"      : "platform/ice.png",
         "platform-honey"    : "platform/honey.png",
         "platform-cloud"    : "platform/cloud.png",
-        "platform-pause"    : "platform/pause_icon.png",
+        "platform-pause"    : "platform/pauseicon.png",
+        "platform-ice-anim" : "platform/ice_anim.png",
         "platform-settings": {
-            "file": "platform/settings_icon.png",
+            "file": "platform/settings_icon2.png",
             "minfilter": "nearest",
             "magfilter": "nearest"
         },

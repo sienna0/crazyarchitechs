@@ -453,8 +453,8 @@ public class LevelSelectScene implements Screen {
         float marginTop = MENU_BTN_TOP_MARGIN_REF * UI;
         float maxW = width * MENU_BTN_MAX_W_FRAC;
         float s = maxW / Math.max(1f, homeButtonTexture.getWidth());
-        float bw = menuButtonTexture.getWidth() * s * 0.7f;
-        float bh = menuButtonTexture.getHeight() * s * 0.7f;
+        float bw = homeButtonTexture.getWidth() * s * 0.7f;
+        float bh = homeButtonTexture.getHeight() * s * 0.7f;
         float x = width - marginTop - bw;
         float y = height - marginTop - bh;
         return new Rectangle(x, y, bw, bh);
@@ -467,7 +467,7 @@ public class LevelSelectScene implements Screen {
         float UI = CanvasRender.layoutScale();
         float marginTop = MENU_BTN_TOP_MARGIN_REF * UI;
         float maxW = width * MENU_BTN_MAX_W_FRAC;
-        float s = maxW / Math.max(1f, homeButtonTexture.getWidth());
+        float s = maxW / Math.max(1f, menuButtonTexture.getWidth());
         float bw = menuButtonTexture.getWidth() * s * 0.7f;
         float bh = menuButtonTexture.getHeight() * s * 0.7f;
         Rectangle home = getHomeButtonBounds();
