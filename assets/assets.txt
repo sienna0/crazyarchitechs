@@ -70,6 +70,7 @@ platform/ribbit.wav
 platform/rock.png
 platform/settings_icon.png
 platform/tileset.png
+platform/tileset2.png
 platform/vines.png
 platform/walltile.png
 platform/win.png
