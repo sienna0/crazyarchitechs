@@ -50,6 +50,8 @@ platform/env.png
 platform/honey.png
 platform/hover.wav
 platform/ice.png
+platform/introost.ogg
+platform/introost2.ogg
 platform/jump.wav
 platform/levelost.ogg
 platform/levelost2.ogg
@@ -70,6 +72,7 @@ platform/ribbit.wav
 platform/rock.png
 platform/settings_icon.png
 platform/tileset.png
+platform/tongue.wav
 platform/vines.png
 platform/walltile.png
 platform/win.png

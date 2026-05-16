@@ -377,7 +377,8 @@ public abstract class PhysicsScene implements Screen {
 
         // Handle resets
         if (input.didReset()) {
-            reset();
+            requestExit(EXIT_LOSE);
+            return false;
         }
 
         // Now it is time to maybe switch screens.

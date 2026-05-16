@@ -98,6 +98,8 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
     private SoundEffect portalEnterSound;
     /** The Zuko enter sound*/
     private SoundEffect zukoEnterSound;
+    /** Zuko's tongue sound */
+    private SoundEffect tongueSound;
     /** The default sound volume */
     private float volume;
 
@@ -191,6 +193,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             deathSound = directory.getEntry("platform-death", SoundEffect.class);
             portalEnterSound = directory.getEntry("platform-portalenter", SoundEffect.class);
             zukoEnterSound = directory.getEntry("platform-zukoenter", SoundEffect.class);
+            tongueSound = directory.getEntry("platform-tongue", SoundEffect.class);
             volume = constants.getFloat("volume", 0.35f);
         }
         if (parallaxTextures == null) {
@@ -756,6 +759,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
             FlyCollectible clickedFly = findFlyUnderCrosshair(crosshair, units);
             if (clickedFly != null && flyInRange(clickedFly) && flyHasLineOfSight(clickedFly)) {
                 avatar.startTongueAnimation(clickedFly.getObstacle().getX(), clickedFly.getObstacle().getY());
+                tongueSound.play(GameAudio.getSfxVolume());
                 pendingFlyCollection = clickedFly;
                 flyClicked = true;
             }
@@ -982,7 +986,7 @@ public class LevelBaseScene extends PhysicsScene implements ContactListener {
                 if (!hazardTriggered && !pendingHazardRestart) {
                     hazardTriggered = true;
                     hazardTimer = 0f;
-                    deathSound.play(0.5f);
+                    deathSound.play(GameAudio.getSfxVolume());
                     avatar.startDeathMeltAnimation();
                     avatar.setMovement(0f);
                     avatar.setJumping(false);

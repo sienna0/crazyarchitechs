@@ -44,6 +44,7 @@ public class GameMode implements Screen, ScreenListener {
     private static final float TRANSITION_DURATION = 0.5f;
     private boolean transitionSwapped = false;
     private int pendingLevel = -1;
+    private boolean transitioningToLevelSelect = false;
 
     private boolean deathTransitioning = false;
     private float deathTransitionTimer = 0f;
@@ -64,6 +65,10 @@ public class GameMode implements Screen, ScreenListener {
     private boolean musicWasOn = true;
     private float loopPlayTime = 0f;
     private static final float LOOP_MIN_PLAY_TIME = 5.0f; // ignore "finished" in first 5s
+
+    private boolean fadingTitleToLevel = false;
+    private float musicFadeTimer = 0f;
+    private static final float MUSIC_FADE_DURATION = 0.2f;
 
     private int width;
     private int height;
@@ -141,6 +146,7 @@ public class GameMode implements Screen, ScreenListener {
         } else if (exitCode == PhysicsScene.EXIT_QUIT) {
             showingLevelSelect = true;
             stopLevelMusic();
+            GameAudio.startTitleMusic(assets);
             levelSelectScene.show();
         } else if (exitCode == PhysicsScene.EXIT_WIN) {
             //levelController.markCurrentBeaten();
@@ -160,6 +166,19 @@ public class GameMode implements Screen, ScreenListener {
      */
     private void update(float delta) {
         boolean musicNowOn = GameAudio.isMusicOn();
+        if (fadingTitleToLevel) {
+            musicFadeTimer += delta;
+            float t = Math.min(musicFadeTimer / MUSIC_FADE_DURATION, 1f);
+
+            GameAudio.setTitleMusicVolume(GameAudio.getMusicVolume() * (1f - t));
+            setLevelMusicVolume(GameAudio.getMusicVolume() * t);
+
+            if (t >= 1f) {
+                fadingTitleToLevel = false;
+                GameAudio.stopTitleMusic();
+                setLevelMusicVolume(GameAudio.getMusicVolume());
+            }
+        }
         if (musicNowOn != musicWasOn) {
             musicWasOn = musicNowOn;
 
@@ -167,6 +186,8 @@ public class GameMode implements Screen, ScreenListener {
                 stopLevelMusic();
             } else if (!showingLevelSelect) {
                 startLevelMusic();
+                fadingTitleToLevel = true;
+                musicFadeTimer = 0f;
             }
         }
         if (GameAudio.isMusicOn() && !showingLevelSelect && levelLoopA != null && loopStarted) {
@@ -237,10 +258,23 @@ public class GameMode implements Screen, ScreenListener {
                     shutter.play(0.3f);
                 }
 
-                levelController.loadLevel(pendingLevel);
-                levelController.setScreenListener(this);
-                showingLevelSelect = false;
-                startLevelMusic();
+                if (transitioningToLevelSelect) {
+                    stopLevelMusic();
+                    GameAudio.startTitleMusic(assets);
+                    showingLevelSelect = true;
+                    levelSelectScene.show();
+                } else {
+                    levelController.loadLevel(pendingLevel);
+                    levelController.setScreenListener(this);
+                    showingLevelSelect = false;
+                    startLevelMusic();
+                    fadingTitleToLevel = true;
+                    musicFadeTimer = 0f;
+
+                    if (levelController.getCurrentScene() != null) {
+                        levelController.getCurrentScene().show();
+                    }
+                }
 
                 if (levelController.getCurrentScene() != null) {
                     levelController.getCurrentScene().show();
@@ -254,11 +288,13 @@ public class GameMode implements Screen, ScreenListener {
             return;
         }
         if (showingLevelSelect) {
+            GameAudio.updateTitleMusic(); // add this
             int selectedLevel = levelSelectScene.consumeChosenLevel();
             if (selectedLevel > 0) {
                 transitioning = true;
                 transitionTimer = 0f;
                 transitionSwapped = false;
+                transitioningToLevelSelect = false;
                 pendingLevel = selectedLevel;
             } else if (levelSelectScene.consumeExitRequested() && listener != null) {
                 pendingReturnToTitle = true;
@@ -307,15 +343,18 @@ public class GameMode implements Screen, ScreenListener {
 
                 }
                 if (choice == PauseMenuScene.RESTART) {
-                    levelController.restartCurrentLevel();
-                    levelController.getCurrentScene().setGamePaused(false);
                     paused = false;
+                    pauseMenuScene.hide();
+                    startDeathTransition();
                 }
                 if (choice == PauseMenuScene.QUIT)    {
                     paused = false;
-                    stopLevelMusic();
-                    showingLevelSelect = true;
-                    levelSelectScene.show();
+                    pauseMenuScene.hide();
+
+                    transitioning = true;
+                    transitionTimer = 0f;
+                    transitionSwapped = false;
+                    transitioningToLevelSelect = true;
                 }
                 if (choice == PauseMenuScene.HOW_TO_PLAY)    {
                     pauseMenuScene.hide();
@@ -344,21 +383,16 @@ public class GameMode implements Screen, ScreenListener {
                 else if (choice == WinScene.QUIT) {
                     showingWin = false;
                     winScene.hide();
-                    showingLevelSelect = true;
-                    stopLevelMusic();
-                    levelSelectScene.show();
+
+                    transitioning = true;
+                    transitionTimer = 0f;
+                    transitionSwapped = false;
+                    transitioningToLevelSelect = true;
                 }
                 if (choice == WinScene.RESTART) {
                     showingWin = false;
                     winScene.hide();
-
-                    levelController.restartCurrentLevel();
-                    levelController.setScreenListener(this);
-
-                    if (levelController.getCurrentScene() != null) {
-                        levelController.getCurrentScene().show();
-                        levelController.getCurrentScene().setGamePaused(false);
-                    }
+                    startDeathTransition();
                 }
             }
             if (!blockPauseForOptions && currentScene instanceof LevelBaseScene levelScene && levelScene.consumeHazardRestart()) {
@@ -477,7 +511,6 @@ public class GameMode implements Screen, ScreenListener {
         levelLoopA.setVolume(GameAudio.getMusicVolume());
         levelLoopB.setVolume(GameAudio.getMusicVolume());
 
-        levelIntro.setPosition(0f);
         levelIntro.play();
 
         loopStarted = false;
@@ -495,6 +528,12 @@ public class GameMode implements Screen, ScreenListener {
         loopPlayTime = 0f;
         crossfadeTimer = -1f;
         usingA = true;
+    }
+
+    private void setLevelMusicVolume(float volume) {
+        if (levelIntro != null) levelIntro.setVolume(volume);
+        if (levelLoopA != null) levelLoopA.setVolume(volume);
+        if (levelLoopB != null) levelLoopB.setVolume(volume);
     }
 
     /**

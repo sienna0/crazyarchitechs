@@ -342,8 +342,11 @@ public class LoadingScene implements Screen {
             mainAssetsFinalized = true;
             optionsOverlay = new GameplayOptionsOverlay(assets, batch, viewport);
             optionsOverlay.resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+
+            GameAudio.startTitleMusic(assets);
         }
         titleAnimTime += delta;
+        GameAudio.updateTitleMusic();
         updateMainMenu();
     }
 
